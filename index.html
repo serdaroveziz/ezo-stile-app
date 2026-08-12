@@ -1006,6 +1006,9 @@
             if (changed) {
               renderApp();
             }
+          } else {
+            // Auto seed cloud DB if empty
+            syncToCloud();
           }
         }
       } catch (err) {
@@ -1347,7 +1350,9 @@
     function updateServiceField(id, field, value) {
       const svc = state.services.find(s => s.id === id);
       if (svc) {
-        svc[field] = value;
+        svc[field] = field === 'price' ? Number(value) : value;
+        localStorage.setItem('gc_services', JSON.stringify(state.services));
+        syncToCloud();
       }
     }
 
