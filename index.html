@@ -551,7 +551,10 @@
             <span style="font-size: 11px; color: var(--text-muted);">Hoş Geldiniz:</span>
             <div style="font-weight: 800; font-size: 14px; color: #fff;">👤 ${state.currentUser.name} <span style="font-size: 12px; color: var(--gold-primary);">(${state.currentUser.phone})</span></div>
           </div>
-          <button onclick="logoutCustomer()" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">🚪 Çıkış Yap</button>
+          <div style="display: flex; gap: 6px;">
+            <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 6px 10px; border-radius: 10px; font-size: 10px; font-weight: 800; cursor: pointer;">🔄 Canlı Yenile</button>
+            <button onclick="logoutCustomer()" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">🚪 Çıkış Yap</button>
+          </div>
         </div>
       `;
 
@@ -903,15 +906,15 @@
                     <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
                       <div>
                         <label style="font-size: 10px; color: var(--text-muted);">Hizmet Adı:</label>
-                        <input type="text" value="${s.name}" onchange="updateServiceField('${s.id}', 'name', this.value)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+                        <input type="text" value="${s.name}" oninput="updateServiceField('${s.id}', 'name', this.value)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
                       </div>
                       <div>
                         <label style="font-size: 10px; color: var(--text-muted);">Süre:</label>
-                        <input type="text" value="${s.duration}" onchange="updateServiceField('${s.id}', 'duration', this.value)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+                        <input type="text" value="${s.duration}" oninput="updateServiceField('${s.id}', 'duration', this.value)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
                       </div>
                       <div>
                         <label style="font-size: 10px; color: var(--text-muted);">Fiyat (TL):</label>
-                        <input type="number" value="${s.price}" onchange="updateServiceField('${s.id}', 'price', Number(this.value))" class="input-field" style="padding: 6px 10px; font-size: 12px; color: var(--gold-primary); font-weight: 800;">
+                        <input type="number" value="${s.price}" oninput="updateServiceField('${s.id}', 'price', Number(this.value))" class="input-field" style="padding: 6px 10px; font-size: 12px; color: var(--gold-primary); font-weight: 800;">
                       </div>
                     </div>
                   </div>
