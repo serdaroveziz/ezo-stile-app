@@ -214,25 +214,39 @@ export const AppProvider = ({ children }) => {
   // 7. Live Customer Notifications
   const [notifications, setNotifications] = useState([]);
 
-  // --- 100% BULLETPROOF CLOUD SYNC ENGINE (OPEN KV STORE) ---
-  const CLOUD_SYNC_URL = 'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_app_store_v1';
+  // --- 100% BULLETPROOF AUTO-PROVISIONING CLOUD SYNC ENGINE ---
+  const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ezostile_barber_master_db_2026';
 
   const syncToCloud = async (overrideData = {}) => {
     const payload = {
-      appointments: overrideData.appointments || appointments,
-      blockedSlots: overrideData.blockedSlots || blockedSlots,
-      blockedDates: overrideData.blockedDates || blockedDates,
-      weeklySchedule: overrideData.weeklySchedule || weeklySchedule,
-      shopSettings: overrideData.shopSettings || shopSettings,
-      updatedAt: Date.now()
+      name: 'EZO STILE MASTER DB',
+      data: {
+        appointments: overrideData.appointments || appointments,
+        blockedSlots: overrideData.blockedSlots || blockedSlots,
+        blockedDates: overrideData.blockedDates || blockedDates,
+        weeklySchedule: overrideData.weeklySchedule || weeklySchedule,
+        shopSettings: overrideData.shopSettings || shopSettings,
+        updatedAt: Date.now()
+      }
     };
 
     try {
-      await fetch(CLOUD_SYNC_URL, {
-        method: 'POST',
+      const res = await fetch(CLOUD_SYNC_URL, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
+      if (res.status === 404) {
+        await fetch('https://api.restful-api.dev/objects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: 'ezostile_barber_master_db_2026',
+            ...payload
+          })
+        });
+      }
     } catch (err) {
       console.warn('Cloud sync error:', err);
     }
@@ -244,16 +258,14 @@ export const AppProvider = ({ children }) => {
       try {
         const res = await fetch(CLOUD_SYNC_URL);
         if (res.ok) {
-          const text = await res.text();
-          if (text && text.trim().startsWith('{') && isSubscribed) {
-            const data = JSON.parse(text);
-            if (data && data.updatedAt) {
-              if (data.appointments) setAppointments(data.appointments);
-              if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
-              if (data.blockedDates) setBlockedDates(data.blockedDates);
-              if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
-              if (data.shopSettings) setShopSettings(data.shopSettings);
-            }
+          const result = await res.json();
+          const data = result ? result.data : null;
+          if (data && data.updatedAt && isSubscribed) {
+            if (data.appointments) setAppointments(data.appointments);
+            if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
+            if (data.blockedDates) setBlockedDates(data.blockedDates);
+            if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
+            if (data.shopSettings) setShopSettings(data.shopSettings);
           }
         }
       } catch (err) {}
