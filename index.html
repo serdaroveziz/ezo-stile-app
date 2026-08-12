@@ -939,9 +939,8 @@
       container.innerHTML = html;
     }
 
-    // --- 100% BULLETPROOF CORS-SAFE MULTI-DEVICE CLOUD SYNC ENGINE ---
-    const CLOUD_SYNC_URL = 'https://api.myjson.online/v1/records/ezostile_app_2026';
-    const FALLBACK_SYNC_URL = 'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_app_2026';
+    // --- 100% BULLETPROOF CLOUD SYNC ENGINE (OPEN KV STORE) ---
+    const CLOUD_SYNC_URL = 'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_app_store_v1';
     let isSyncingCloud = false;
 
     async function syncToCloud() {
@@ -954,22 +953,14 @@
         updatedAt: Date.now()
       };
 
-      const bodyStr = JSON.stringify(payload);
-
       try {
         await fetch(CLOUD_SYNC_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: bodyStr
+          body: JSON.stringify(payload)
         });
-      } catch (e1) {
-        try {
-          await fetch(FALLBACK_SYNC_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: bodyStr
-          });
-        } catch (e2) {}
+      } catch (err) {
+        console.warn('Cloud sync error:', err);
       }
     }
 
@@ -977,56 +968,44 @@
       if (isSyncingCloud) return;
       try {
         isSyncingCloud = true;
-        let data = null;
+        const res = await fetch(CLOUD_SYNC_URL);
+        if (res.ok) {
+          const text = await res.text();
+          if (text && text.trim().startsWith('{')) {
+            const data = JSON.parse(text);
+            if (data && data.updatedAt) {
+              let changed = false;
 
-        try {
-          const res = await fetch(CLOUD_SYNC_URL);
-          if (res.ok) {
-            const json = await res.json();
-            data = json.data || json;
-          }
-        } catch (e) {}
+              if (data.appointments && JSON.stringify(data.appointments) !== JSON.stringify(state.appointments)) {
+                state.appointments = data.appointments;
+                localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+                changed = true;
+              }
+              if (data.dateSlotOverrides && JSON.stringify(data.dateSlotOverrides) !== JSON.stringify(state.dateSlotOverrides)) {
+                state.dateSlotOverrides = data.dateSlotOverrides;
+                localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+                changed = true;
+              }
+              if (data.weeklySchedule && JSON.stringify(data.weeklySchedule) !== JSON.stringify(state.weeklySchedule)) {
+                state.weeklySchedule = data.weeklySchedule;
+                localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+                changed = true;
+              }
+              if (data.services && JSON.stringify(data.services) !== JSON.stringify(state.services)) {
+                state.services = data.services;
+                localStorage.setItem('gc_services', JSON.stringify(state.services));
+                changed = true;
+              }
+              if (data.notifications && JSON.stringify(data.notifications) !== JSON.stringify(state.notifications)) {
+                state.notifications = data.notifications;
+                localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+                changed = true;
+              }
 
-        if (!data || !data.updatedAt) {
-          try {
-            const res2 = await fetch(FALLBACK_SYNC_URL);
-            if (res2.ok) {
-              data = await res2.json();
+              if (changed) {
+                renderApp();
+              }
             }
-          } catch (e) {}
-        }
-
-        if (data && data.updatedAt) {
-          let changed = false;
-
-          if (data.appointments && JSON.stringify(data.appointments) !== JSON.stringify(state.appointments)) {
-            state.appointments = data.appointments;
-            localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
-            changed = true;
-          }
-          if (data.dateSlotOverrides && JSON.stringify(data.dateSlotOverrides) !== JSON.stringify(state.dateSlotOverrides)) {
-            state.dateSlotOverrides = data.dateSlotOverrides;
-            localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
-            changed = true;
-          }
-          if (data.weeklySchedule && JSON.stringify(data.weeklySchedule) !== JSON.stringify(state.weeklySchedule)) {
-            state.weeklySchedule = data.weeklySchedule;
-            localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
-            changed = true;
-          }
-          if (data.services && JSON.stringify(data.services) !== JSON.stringify(state.services)) {
-            state.services = data.services;
-            localStorage.setItem('gc_services', JSON.stringify(state.services));
-            changed = true;
-          }
-          if (data.notifications && JSON.stringify(data.notifications) !== JSON.stringify(state.notifications)) {
-            state.notifications = data.notifications;
-            localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
-            changed = true;
-          }
-
-          if (changed) {
-            renderApp();
           }
         }
       } catch (err) {

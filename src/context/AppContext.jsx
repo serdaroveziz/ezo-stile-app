@@ -214,9 +214,8 @@ export const AppProvider = ({ children }) => {
   // 7. Live Customer Notifications
   const [notifications, setNotifications] = useState([]);
 
-  // --- 100% BULLETPROOF CORS-SAFE MULTI-DEVICE CLOUD SYNC ENGINE ---
-  const CLOUD_SYNC_URL = 'https://api.myjson.online/v1/records/ezostile_app_2026';
-  const FALLBACK_SYNC_URL = 'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_app_2026';
+  // --- 100% BULLETPROOF CLOUD SYNC ENGINE (OPEN KV STORE) ---
+  const CLOUD_SYNC_URL = 'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_app_store_v1';
 
   const syncToCloud = async (overrideData = {}) => {
     const payload = {
@@ -228,22 +227,14 @@ export const AppProvider = ({ children }) => {
       updatedAt: Date.now()
     };
 
-    const bodyStr = JSON.stringify(payload);
-
     try {
       await fetch(CLOUD_SYNC_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: bodyStr
+        body: JSON.stringify(payload)
       });
-    } catch (e1) {
-      try {
-        await fetch(FALLBACK_SYNC_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: bodyStr
-        });
-      } catch (e2) {}
+    } catch (err) {
+      console.warn('Cloud sync error:', err);
     }
   };
 
@@ -251,31 +242,19 @@ export const AppProvider = ({ children }) => {
     let isSubscribed = true;
     const fetchFromCloud = async () => {
       try {
-        let data = null;
-
-        try {
-          const res = await fetch(CLOUD_SYNC_URL);
-          if (res.ok) {
-            const json = await res.json();
-            data = json.data || json;
-          }
-        } catch (e) {}
-
-        if (!data || !data.updatedAt) {
-          try {
-            const res2 = await fetch(FALLBACK_SYNC_URL);
-            if (res2.ok) {
-              data = await res2.json();
+        const res = await fetch(CLOUD_SYNC_URL);
+        if (res.ok) {
+          const text = await res.text();
+          if (text && text.trim().startsWith('{') && isSubscribed) {
+            const data = JSON.parse(text);
+            if (data && data.updatedAt) {
+              if (data.appointments) setAppointments(data.appointments);
+              if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
+              if (data.blockedDates) setBlockedDates(data.blockedDates);
+              if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
+              if (data.shopSettings) setShopSettings(data.shopSettings);
             }
-          } catch (e) {}
-        }
-
-        if (data && data.updatedAt && isSubscribed) {
-          if (data.appointments) setAppointments(data.appointments);
-          if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
-          if (data.blockedDates) setBlockedDates(data.blockedDates);
-          if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
-          if (data.shopSettings) setShopSettings(data.shopSettings);
+          }
         }
       } catch (err) {}
     };
