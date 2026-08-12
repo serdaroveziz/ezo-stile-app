@@ -1029,10 +1029,9 @@
       }
     }
 
-    // Initial sync and auto poll cloud DB every 2 seconds for instant multi-device sync
-    syncToCloud();
-    setInterval(fetchFromCloud, 2000);
+    // Initial fetch from cloud DB and auto poll every 2 seconds for instant multi-device sync
     fetchFromCloud();
+    setInterval(fetchFromCloud, 2000);
 
     // --- USER INTERACTIONS ---
     function selectService(id) {

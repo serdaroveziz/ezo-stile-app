@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const AppContext = createContext();
 
@@ -279,6 +279,8 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // Save changes to LocalStorage & Cloud DB
+  const isMount = useRef(true);
+
   useEffect(() => {
     localStorage.setItem('goldcut_app_language', language);
   }, [language]);
@@ -293,7 +295,6 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('goldcut_shop_settings', JSON.stringify(shopSettings));
-    syncToCloud({ shopSettings });
   }, [shopSettings]);
 
   useEffect(() => {
@@ -302,18 +303,20 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('goldcut_blocked_dates', JSON.stringify(blockedDates));
-    syncToCloud({ blockedDates });
   }, [blockedDates]);
 
   useEffect(() => {
     localStorage.setItem('goldcut_blocked_slots', JSON.stringify(blockedSlots));
-    syncToCloud({ blockedSlots });
   }, [blockedSlots]);
 
   useEffect(() => {
     localStorage.setItem('goldcut_appointments', JSON.stringify(appointments));
-    syncToCloud({ appointments });
-  }, [appointments]);
+    if (isMount.current) {
+      isMount.current = false;
+      return;
+    }
+    syncToCloud({ appointments, blockedSlots, blockedDates, shopSettings });
+  }, [appointments, blockedSlots, blockedDates, shopSettings]);
 
   // Auth & Password Verification Logic
   const loginAdmin = (password) => {
