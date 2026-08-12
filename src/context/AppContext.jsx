@@ -214,8 +214,8 @@ export const AppProvider = ({ children }) => {
   // 7. Live Customer Notifications
   const [notifications, setNotifications] = useState([]);
 
-  // --- 100% BULLETPROOF REALTIME CLOUD SYNC ENGINE ---
-  const CLOUD_SYNC_URL = 'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_master_key_v5';
+  // --- 100% BULLETPROOF NPOINT REALTIME CLOUD BACKEND ---
+  const NPOINT_URL = 'https://api.npoint.io/e7f4c519d08e2f891b2c';
 
   const syncToCloud = async (overrideData = {}) => {
     const payload = {
@@ -228,7 +228,7 @@ export const AppProvider = ({ children }) => {
     };
 
     try {
-      await fetch(CLOUD_SYNC_URL, {
+      await fetch(NPOINT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -242,21 +242,16 @@ export const AppProvider = ({ children }) => {
     let isSubscribed = true;
     const fetchFromCloud = async () => {
       try {
-        const res = await fetch(CLOUD_SYNC_URL);
+        const res = await fetch(NPOINT_URL);
         if (res.ok) {
-          const text = await res.text();
-          if (text && text.trim().startsWith('{') && isSubscribed) {
-            const data = JSON.parse(text);
-            if (data && data.updatedAt) {
-              if (data.appointments) setAppointments(data.appointments);
-              if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
-              if (data.blockedDates) setBlockedDates(data.blockedDates);
-              if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
-              if (data.shopSettings) setShopSettings(data.shopSettings);
-            }
+          const data = await res.json();
+          if (data && data.updatedAt && isSubscribed) {
+            if (data.appointments) setAppointments(data.appointments);
+            if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
+            if (data.blockedDates) setBlockedDates(data.blockedDates);
+            if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
+            if (data.shopSettings) setShopSettings(data.shopSettings);
           }
-        } else if (res.status === 404) {
-          syncToCloud();
         }
       } catch (err) {}
     };
