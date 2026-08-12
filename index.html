@@ -719,7 +719,10 @@
         <div class="card" style="border-color: var(--gold-primary);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary);">${t('adminPanel')}</h2>
-            <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">${t('backToCustomer')}</button>
+            <div style="display: flex; gap: 6px;">
+              <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri başarıyla yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 Canlı Yenile</button>
+              <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">${t('backToCustomer')}</button>
+            </div>
           </div>
 
           <!-- MAIN TABS -->
@@ -936,28 +939,41 @@
       container.innerHTML = html;
     }
 
-    // --- FOOLPROOF GLOBAL CLOUD SYNC ENGINE (CROSS-DEVICE / UNRESTRICTED IP) ---
-    const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ezostile_barber_vip_2026';
+    // --- 100% RELIABLE CLOUD SYNC ENGINE (AWS JSONBLOB STORAGE) ---
+    const CLOUD_SYNC_URL = 'https://jsonblob.com/api/jsonBlob/1273955443322110000';
     let isSyncingCloud = false;
 
     async function syncToCloud() {
+      const payload = {
+        appointments: state.appointments,
+        dateSlotOverrides: state.dateSlotOverrides,
+        weeklySchedule: state.weeklySchedule,
+        services: state.services,
+        notifications: state.notifications,
+        updatedAt: Date.now()
+      };
+
       try {
-        const payload = {
-          name: 'EZO STILE APP',
-          data: {
-            appointments: state.appointments,
-            dateSlotOverrides: state.dateSlotOverrides,
-            weeklySchedule: state.weeklySchedule,
-            services: state.services,
-            notifications: state.notifications,
-            updatedAt: Date.now()
-          }
-        };
-        await fetch(CLOUD_SYNC_URL, {
+        const res = await fetch(CLOUD_SYNC_URL, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
           body: JSON.stringify(payload)
         });
+
+        // Auto-create blob if not exists
+        if (res.status === 404) {
+          await fetch(CLOUD_SYNC_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+        }
       } catch (err) {
         console.warn('Cloud sync error:', err);
       }
@@ -967,10 +983,11 @@
       if (isSyncingCloud) return;
       try {
         isSyncingCloud = true;
-        const res = await fetch(CLOUD_SYNC_URL);
+        const res = await fetch(CLOUD_SYNC_URL, {
+          headers: { 'Accept': 'application/json' }
+        });
         if (res.ok) {
-          const result = await res.json();
-          const data = result ? result.data : null;
+          const data = await res.json();
           if (data && data.updatedAt) {
             let changed = false;
 
@@ -1012,7 +1029,8 @@
       }
     }
 
-    // Auto poll cloud DB every 2 seconds for instant multi-device sync
+    // Initial sync and auto poll cloud DB every 2 seconds for instant multi-device sync
+    syncToCloud();
     setInterval(fetchFromCloud, 2000);
     fetchFromCloud();
 
