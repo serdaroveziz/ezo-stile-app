@@ -936,8 +936,8 @@
       container.innerHTML = html;
     }
 
-    // --- REALTIME CLOUD SYNC ENGINE ---
-    const CLOUD_DB_URL = 'https://ezostile-barber-default-rtdb.firebaseio.com/ezostile_app_data.json';
+    // --- REALTIME CLOUD SYNC ENGINE (OPEN CORS KV STORE) ---
+    const CLOUD_DB_URL = 'https://kvdb.io/9eB5z2n9K8v3W4L7P1M0/ezostile_db';
     let isSyncingCloud = false;
 
     async function syncToCloud() {
@@ -951,7 +951,7 @@
           updatedAt: Date.now()
         };
         await fetch(CLOUD_DB_URL, {
-          method: 'PUT',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -966,50 +966,53 @@
         isSyncingCloud = true;
         const res = await fetch(CLOUD_DB_URL);
         if (res.ok) {
-          const data = await res.json();
-          if (data && data.updatedAt) {
-            let changed = false;
+          const text = await res.text();
+          if (text) {
+            const data = JSON.parse(text);
+            if (data && data.updatedAt) {
+              let changed = false;
 
-            if (data.appointments && JSON.stringify(data.appointments) !== JSON.stringify(state.appointments)) {
-              state.appointments = data.appointments;
-              localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
-              changed = true;
-            }
-            if (data.dateSlotOverrides && JSON.stringify(data.dateSlotOverrides) !== JSON.stringify(state.dateSlotOverrides)) {
-              state.dateSlotOverrides = data.dateSlotOverrides;
-              localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
-              changed = true;
-            }
-            if (data.weeklySchedule && JSON.stringify(data.weeklySchedule) !== JSON.stringify(state.weeklySchedule)) {
-              state.weeklySchedule = data.weeklySchedule;
-              localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
-              changed = true;
-            }
-            if (data.services && JSON.stringify(data.services) !== JSON.stringify(state.services)) {
-              state.services = data.services;
-              localStorage.setItem('gc_services', JSON.stringify(state.services));
-              changed = true;
-            }
-            if (data.notifications && JSON.stringify(data.notifications) !== JSON.stringify(state.notifications)) {
-              state.notifications = data.notifications;
-              localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
-              changed = true;
-            }
+              if (data.appointments && JSON.stringify(data.appointments) !== JSON.stringify(state.appointments)) {
+                state.appointments = data.appointments;
+                localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+                changed = true;
+              }
+              if (data.dateSlotOverrides && JSON.stringify(data.dateSlotOverrides) !== JSON.stringify(state.dateSlotOverrides)) {
+                state.dateSlotOverrides = data.dateSlotOverrides;
+                localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+                changed = true;
+              }
+              if (data.weeklySchedule && JSON.stringify(data.weeklySchedule) !== JSON.stringify(state.weeklySchedule)) {
+                state.weeklySchedule = data.weeklySchedule;
+                localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+                changed = true;
+              }
+              if (data.services && JSON.stringify(data.services) !== JSON.stringify(state.services)) {
+                state.services = data.services;
+                localStorage.setItem('gc_services', JSON.stringify(state.services));
+                changed = true;
+              }
+              if (data.notifications && JSON.stringify(data.notifications) !== JSON.stringify(state.notifications)) {
+                state.notifications = data.notifications;
+                localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+                changed = true;
+              }
 
-            if (changed) {
-              renderApp();
+              if (changed) {
+                renderApp();
+              }
             }
           }
         }
       } catch (err) {
-        // Silently handle if offline
+        // Silently handle offline
       } finally {
         isSyncingCloud = false;
       }
     }
 
-    // Auto poll cloud DB every 3 seconds for instant multi-device sync
-    setInterval(fetchFromCloud, 3000);
+    // Auto poll cloud DB every 2.5 seconds for instant multi-device sync
+    setInterval(fetchFromCloud, 2500);
     fetchFromCloud();
 
     // --- USER INTERACTIONS ---

@@ -214,8 +214,8 @@ export const AppProvider = ({ children }) => {
   // 7. Live Customer Notifications
   const [notifications, setNotifications] = useState([]);
 
-  // --- CLOUD SYNC ENGINE ---
-  const CLOUD_DB_URL = 'https://ezostile-barber-default-rtdb.firebaseio.com/ezostile_app_data.json';
+  // --- CLOUD SYNC ENGINE (OPEN CORS KV STORE) ---
+  const CLOUD_DB_URL = 'https://kvdb.io/9eB5z2n9K8v3W4L7P1M0/ezostile_db';
 
   const syncToCloud = async (overrideData = {}) => {
     try {
@@ -228,7 +228,7 @@ export const AppProvider = ({ children }) => {
         updatedAt: Date.now()
       };
       await fetch(CLOUD_DB_URL, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -243,20 +243,23 @@ export const AppProvider = ({ children }) => {
       try {
         const res = await fetch(CLOUD_DB_URL);
         if (res.ok) {
-          const data = await res.json();
-          if (data && data.updatedAt && isSubscribed) {
-            if (data.appointments) setAppointments(data.appointments);
-            if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
-            if (data.blockedDates) setBlockedDates(data.blockedDates);
-            if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
-            if (data.shopSettings) setShopSettings(data.shopSettings);
+          const text = await res.text();
+          if (text && isSubscribed) {
+            const data = JSON.parse(text);
+            if (data && data.updatedAt) {
+              if (data.appointments) setAppointments(data.appointments);
+              if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
+              if (data.blockedDates) setBlockedDates(data.blockedDates);
+              if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
+              if (data.shopSettings) setShopSettings(data.shopSettings);
+            }
           }
         }
       } catch (err) {}
     };
 
     fetchFromCloud();
-    const interval = setInterval(fetchFromCloud, 3000);
+    const interval = setInterval(fetchFromCloud, 2500);
     return () => {
       isSubscribed = false;
       clearInterval(interval);
