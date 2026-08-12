@@ -214,21 +214,24 @@ export const AppProvider = ({ children }) => {
   // 7. Live Customer Notifications
   const [notifications, setNotifications] = useState([]);
 
-  // --- CLOUD SYNC ENGINE (OPEN CORS KV STORE) ---
-  const CLOUD_DB_URL = 'https://kvdb.io/9eB5z2n9K8v3W4L7P1M0/ezostile_db';
+  // --- CLOUD SYNC ENGINE (CROSS-DEVICE / UNRESTRICTED IP) ---
+  const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ezostile_barber_vip_2026';
 
   const syncToCloud = async (overrideData = {}) => {
     try {
       const payload = {
-        appointments: overrideData.appointments || appointments,
-        blockedSlots: overrideData.blockedSlots || blockedSlots,
-        blockedDates: overrideData.blockedDates || blockedDates,
-        weeklySchedule: overrideData.weeklySchedule || weeklySchedule,
-        shopSettings: overrideData.shopSettings || shopSettings,
-        updatedAt: Date.now()
+        name: 'EZO STILE APP',
+        data: {
+          appointments: overrideData.appointments || appointments,
+          blockedSlots: overrideData.blockedSlots || blockedSlots,
+          blockedDates: overrideData.blockedDates || blockedDates,
+          weeklySchedule: overrideData.weeklySchedule || weeklySchedule,
+          shopSettings: overrideData.shopSettings || shopSettings,
+          updatedAt: Date.now()
+        }
       };
-      await fetch(CLOUD_DB_URL, {
-        method: 'POST',
+      await fetch(CLOUD_SYNC_URL, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -241,25 +244,23 @@ export const AppProvider = ({ children }) => {
     let isSubscribed = true;
     const fetchFromCloud = async () => {
       try {
-        const res = await fetch(CLOUD_DB_URL);
+        const res = await fetch(CLOUD_SYNC_URL);
         if (res.ok) {
-          const text = await res.text();
-          if (text && isSubscribed) {
-            const data = JSON.parse(text);
-            if (data && data.updatedAt) {
-              if (data.appointments) setAppointments(data.appointments);
-              if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
-              if (data.blockedDates) setBlockedDates(data.blockedDates);
-              if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
-              if (data.shopSettings) setShopSettings(data.shopSettings);
-            }
+          const result = await res.json();
+          const data = result ? result.data : null;
+          if (data && data.updatedAt && isSubscribed) {
+            if (data.appointments) setAppointments(data.appointments);
+            if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
+            if (data.blockedDates) setBlockedDates(data.blockedDates);
+            if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
+            if (data.shopSettings) setShopSettings(data.shopSettings);
           }
         }
       } catch (err) {}
     };
 
     fetchFromCloud();
-    const interval = setInterval(fetchFromCloud, 2500);
+    const interval = setInterval(fetchFromCloud, 2000);
     return () => {
       isSubscribed = false;
       clearInterval(interval);
