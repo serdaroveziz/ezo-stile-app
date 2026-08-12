@@ -936,6 +936,82 @@
       container.innerHTML = html;
     }
 
+    // --- REALTIME CLOUD SYNC ENGINE ---
+    const CLOUD_DB_URL = 'https://ezostile-barber-default-rtdb.firebaseio.com/ezostile_app_data.json';
+    let isSyncingCloud = false;
+
+    async function syncToCloud() {
+      try {
+        const payload = {
+          appointments: state.appointments,
+          dateSlotOverrides: state.dateSlotOverrides,
+          weeklySchedule: state.weeklySchedule,
+          services: state.services,
+          notifications: state.notifications,
+          updatedAt: Date.now()
+        };
+        await fetch(CLOUD_DB_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn('Cloud sync push warning:', err);
+      }
+    }
+
+    async function fetchFromCloud() {
+      if (isSyncingCloud) return;
+      try {
+        isSyncingCloud = true;
+        const res = await fetch(CLOUD_DB_URL);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.updatedAt) {
+            let changed = false;
+
+            if (data.appointments && JSON.stringify(data.appointments) !== JSON.stringify(state.appointments)) {
+              state.appointments = data.appointments;
+              localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+              changed = true;
+            }
+            if (data.dateSlotOverrides && JSON.stringify(data.dateSlotOverrides) !== JSON.stringify(state.dateSlotOverrides)) {
+              state.dateSlotOverrides = data.dateSlotOverrides;
+              localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+              changed = true;
+            }
+            if (data.weeklySchedule && JSON.stringify(data.weeklySchedule) !== JSON.stringify(state.weeklySchedule)) {
+              state.weeklySchedule = data.weeklySchedule;
+              localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+              changed = true;
+            }
+            if (data.services && JSON.stringify(data.services) !== JSON.stringify(state.services)) {
+              state.services = data.services;
+              localStorage.setItem('gc_services', JSON.stringify(state.services));
+              changed = true;
+            }
+            if (data.notifications && JSON.stringify(data.notifications) !== JSON.stringify(state.notifications)) {
+              state.notifications = data.notifications;
+              localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+              changed = true;
+            }
+
+            if (changed) {
+              renderApp();
+            }
+          }
+        }
+      } catch (err) {
+        // Silently handle if offline
+      } finally {
+        isSyncingCloud = false;
+      }
+    }
+
+    // Auto poll cloud DB every 3 seconds for instant multi-device sync
+    setInterval(fetchFromCloud, 3000);
+    fetchFromCloud();
+
     // --- USER INTERACTIONS ---
     function selectService(id) {
       state.selectedServiceId = id;
@@ -987,6 +1063,7 @@
 
       state.appointments.unshift(newApt);
       localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+      syncToCloud();
       window.dispatchEvent(new Event('storage'));
       alert('🎉 Randevu talebiniz başarıyla alındı! Yönetici onayından sonra randevunuz kesinleşecektir.');
       renderApp();
@@ -999,6 +1076,7 @@
         if (apt) {
           apt.status = 'cancelled';
           localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+          syncToCloud();
           window.dispatchEvent(new Event('storage'));
           alert('🚫 Randevunuz iptal edildi.');
           renderApp();
@@ -1051,6 +1129,7 @@
         apt.time = newTime;
         apt.status = 'pending'; // Requires new admin approval
         localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+        syncToCloud();
         window.dispatchEvent(new Event('storage'));
         closeModal();
         alert('🔄 Randevu saatiniz değiştirildi ve yönetici onayına gönderildi!');
@@ -1164,18 +1243,21 @@
     function toggleDayOpen(idx) {
       state.weeklySchedule[idx].isOpen = !state.weeklySchedule[idx].isOpen;
       localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+      syncToCloud();
       renderApp();
     }
 
     function updateScheduleTime(idx, key, val) {
       state.weeklySchedule[idx][key] = val;
       localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+      syncToCloud();
     }
 
     function confirmScheduleChanges() {
       localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
       localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
       localStorage.setItem('gc_services', JSON.stringify(state.services));
+      syncToCloud();
       window.dispatchEvent(new Event('storage'));
       alert(t('scheduleConfirmedToast'));
       renderApp();
@@ -1195,6 +1277,7 @@
         state.dateSlotOverrides.push({ date, time, status: 'blocked' });
       }
       localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+      syncToCloud();
       window.dispatchEvent(new Event('storage'));
       renderApp();
     }
@@ -1216,6 +1299,7 @@
         state.notifications.unshift(notif);
         localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
 
+        syncToCloud();
         window.dispatchEvent(new Event('storage'));
         alert(`✅ ${apt.customerName} kişisinin randevusu onaylandı! Müşteriye bildirim gönderildi.`);
         renderApp();
@@ -1238,6 +1322,7 @@
         state.notifications.unshift(notif);
         localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
 
+        syncToCloud();
         window.dispatchEvent(new Event('storage'));
         alert(`❌ ${apt.customerName} kişisinin randevusu reddedildi / iptal edildi. Müşteriye bildirim gönderildi.`);
         renderApp();
@@ -1247,6 +1332,7 @@
     function dismissNotif(notifId) {
       state.notifications = state.notifications.filter(n => n.id !== notifId);
       localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+      syncToCloud();
       renderApp();
     }
 
@@ -1277,6 +1363,7 @@
 
       state.services.push(newSvc);
       localStorage.setItem('gc_services', JSON.stringify(state.services));
+      syncToCloud();
       alert(`✅ "${name}" hizmeti başarıyla eklendi!`);
       renderApp();
     }
@@ -1288,11 +1375,13 @@
       }
       state.services = state.services.filter(s => s.id !== id);
       localStorage.setItem('gc_services', JSON.stringify(state.services));
+      syncToCloud();
       renderApp();
     }
 
     function saveServices() {
       localStorage.setItem('gc_services', JSON.stringify(state.services));
+      syncToCloud();
       alert('✅ Tüm hizmet isimleri ve fiyatlar başarıyla kaydedildi!');
       renderApp();
     }

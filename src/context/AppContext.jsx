@@ -214,7 +214,56 @@ export const AppProvider = ({ children }) => {
   // 7. Live Customer Notifications
   const [notifications, setNotifications] = useState([]);
 
-  // Save changes to LocalStorage
+  // --- CLOUD SYNC ENGINE ---
+  const CLOUD_DB_URL = 'https://ezostile-barber-default-rtdb.firebaseio.com/ezostile_app_data.json';
+
+  const syncToCloud = async (overrideData = {}) => {
+    try {
+      const payload = {
+        appointments: overrideData.appointments || appointments,
+        blockedSlots: overrideData.blockedSlots || blockedSlots,
+        blockedDates: overrideData.blockedDates || blockedDates,
+        weeklySchedule: overrideData.weeklySchedule || weeklySchedule,
+        shopSettings: overrideData.shopSettings || shopSettings,
+        updatedAt: Date.now()
+      };
+      await fetch(CLOUD_DB_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn('Cloud sync error:', err);
+    }
+  };
+
+  useEffect(() => {
+    let isSubscribed = true;
+    const fetchFromCloud = async () => {
+      try {
+        const res = await fetch(CLOUD_DB_URL);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.updatedAt && isSubscribed) {
+            if (data.appointments) setAppointments(data.appointments);
+            if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
+            if (data.blockedDates) setBlockedDates(data.blockedDates);
+            if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
+            if (data.shopSettings) setShopSettings(data.shopSettings);
+          }
+        }
+      } catch (err) {}
+    };
+
+    fetchFromCloud();
+    const interval = setInterval(fetchFromCloud, 3000);
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Save changes to LocalStorage & Cloud DB
   useEffect(() => {
     localStorage.setItem('goldcut_app_language', language);
   }, [language]);
@@ -229,6 +278,7 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('goldcut_shop_settings', JSON.stringify(shopSettings));
+    syncToCloud({ shopSettings });
   }, [shopSettings]);
 
   useEffect(() => {
@@ -237,14 +287,17 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('goldcut_blocked_dates', JSON.stringify(blockedDates));
+    syncToCloud({ blockedDates });
   }, [blockedDates]);
 
   useEffect(() => {
     localStorage.setItem('goldcut_blocked_slots', JSON.stringify(blockedSlots));
+    syncToCloud({ blockedSlots });
   }, [blockedSlots]);
 
   useEffect(() => {
     localStorage.setItem('goldcut_appointments', JSON.stringify(appointments));
+    syncToCloud({ appointments });
   }, [appointments]);
 
   // Auth & Password Verification Logic
