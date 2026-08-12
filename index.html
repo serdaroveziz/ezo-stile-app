@@ -10,6 +10,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="EZO STİLE">
   <meta name="theme-color" content="#070c1a">
+  <!-- GOOGLE FIREBASE REALTIME WEBSOCKET SDK FOR INSTANT MULTI-DEVICE SYNC -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     /* VIP EZO STİLE DESIGN SYSTEM & CSS TOKENS */
     :root {
@@ -939,11 +942,57 @@
       container.innerHTML = html;
     }
 
-    // --- 100% BULLETPROOF REALTIME CLOUD SYNC ENGINE ---
-    const CLOUD_SYNC_URL = 'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_master_key_v5';
-    let isSyncingCloud = false;
+    // --- OFFICIAL GOOGLE FIREBASE REALTIME WEBSOCKET SYNC ENGINE ---
+    const firebaseConfig = {
+      databaseURL: "https://ezostile-barber-default-rtdb.firebaseio.com"
+    };
 
-    async function syncToCloud() {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+    const liveRef = db.ref('ezostile_live_store');
+
+    // 1. Instant Realtime Push Listener across ALL devices worldwide
+    liveRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.updatedAt) {
+        let changed = false;
+
+        if (data.appointments && JSON.stringify(data.appointments) !== JSON.stringify(state.appointments)) {
+          state.appointments = data.appointments;
+          localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+          changed = true;
+        }
+        if (data.dateSlotOverrides && JSON.stringify(data.dateSlotOverrides) !== JSON.stringify(state.dateSlotOverrides)) {
+          state.dateSlotOverrides = data.dateSlotOverrides;
+          localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+          changed = true;
+        }
+        if (data.weeklySchedule && JSON.stringify(data.weeklySchedule) !== JSON.stringify(state.weeklySchedule)) {
+          state.weeklySchedule = data.weeklySchedule;
+          localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+          changed = true;
+        }
+        if (data.services && JSON.stringify(data.services) !== JSON.stringify(state.services)) {
+          state.services = data.services;
+          localStorage.setItem('gc_services', JSON.stringify(state.services));
+          changed = true;
+        }
+        if (data.notifications && JSON.stringify(data.notifications) !== JSON.stringify(state.notifications)) {
+          state.notifications = data.notifications;
+          localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+          changed = true;
+        }
+
+        if (changed) {
+          renderApp();
+        }
+      }
+    });
+
+    // 2. Instant Push to Firebase Cloud Database on user action
+    function syncToCloud() {
       const payload = {
         appointments: state.appointments,
         dateSlotOverrides: state.dateSlotOverrides,
@@ -952,74 +1001,22 @@
         notifications: state.notifications,
         updatedAt: Date.now()
       };
-
-      try {
-        await fetch(CLOUD_SYNC_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } catch (err) {
-        console.warn('Cloud sync push err:', err);
-      }
+      liveRef.set(payload).catch(err => console.warn('Firebase push err:', err));
     }
 
-    async function fetchFromCloud() {
-      if (isSyncingCloud) return;
-      try {
-        isSyncingCloud = true;
-        const res = await fetch(CLOUD_SYNC_URL);
-        if (res.ok) {
-          const text = await res.text();
-          if (text && text.trim().startsWith('{')) {
-            const data = JSON.parse(text);
-            if (data && data.updatedAt) {
-              let changed = false;
-
-              if (data.appointments && JSON.stringify(data.appointments) !== JSON.stringify(state.appointments)) {
-                state.appointments = data.appointments;
-                localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
-                changed = true;
-              }
-              if (data.dateSlotOverrides && JSON.stringify(data.dateSlotOverrides) !== JSON.stringify(state.dateSlotOverrides)) {
-                state.dateSlotOverrides = data.dateSlotOverrides;
-                localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
-                changed = true;
-              }
-              if (data.weeklySchedule && JSON.stringify(data.weeklySchedule) !== JSON.stringify(state.weeklySchedule)) {
-                state.weeklySchedule = data.weeklySchedule;
-                localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
-                changed = true;
-              }
-              if (data.services && JSON.stringify(data.services) !== JSON.stringify(state.services)) {
-                state.services = data.services;
-                localStorage.setItem('gc_services', JSON.stringify(state.services));
-                changed = true;
-              }
-              if (data.notifications && JSON.stringify(data.notifications) !== JSON.stringify(state.notifications)) {
-                state.notifications = data.notifications;
-                localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
-                changed = true;
-              }
-
-              if (changed) {
-                renderApp();
-              }
-            }
-          }
-        } else if (res.status === 404) {
-          syncToCloud();
+    function fetchFromCloud() {
+      liveRef.once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (data && data.updatedAt) {
+          state.appointments = data.appointments || state.appointments;
+          state.dateSlotOverrides = data.dateSlotOverrides || state.dateSlotOverrides;
+          state.weeklySchedule = data.weeklySchedule || state.weeklySchedule;
+          state.services = data.services || state.services;
+          state.notifications = data.notifications || state.notifications;
+          renderApp();
         }
-      } catch (err) {
-        // Silent catch
-      } finally {
-        isSyncingCloud = false;
-      }
+      });
     }
-
-    // Initial fetch from cloud DB and auto poll every 2 seconds for instant multi-device sync
-    fetchFromCloud();
-    setInterval(fetchFromCloud, 2000);
 
     // --- USER INTERACTIONS ---
     function selectService(id) {
