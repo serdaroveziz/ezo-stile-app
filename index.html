@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EZO STİLE - VIP Berber & Kuaför Randevu Sistemi</title>
+  <link rel="icon" href="./insta.png" type="image/png">
+  <style>
+    /* VIP EZO STİLE DESIGN SYSTEM & CSS TOKENS */
+    :root {
+      --bg-dark: #070c1a;
+      --bg-card: #0f172a;
+      --bg-card-hover: #1e293b;
+      --gold-primary: #f59e0b;
+      --gold-light: #fbbf24;
+      --gold-dark: #d97706;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #1e293b;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+    /* Utility Classes */
+    .container { width: 100%; max-width: 920px; margin: 0 auto; padding: 16px; }
+    .gold-gradient-text { background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .gold-btn { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); color: #070c1a; font-weight: 800; border: none; padding: 10px 16px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25); text-decoration: none; font-size: 12px; }
+    .gold-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); }
+    .gold-btn:active { transform: translateY(0); }
+    
+    .card { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .input-field { width: 100%; background: #070c1a; border: 1px solid #334155; color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .input-field:focus { border-color: var(--gold-primary); }
+
+    /* Logo sharp styling */
+    .logo-box { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid var(--gold-primary); box-shadow: 0 0 15px rgba(245,158,11,0.3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .logo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Header & Footer */
+    header { background: rgba(7, 12, 26, 0.95); border-bottom: 1px solid var(--border-color); padding: 14px 20px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+    .header-content { max-width: 920px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    footer { margin-top: auto; border-top: 1px solid var(--border-color); padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; background: #040711; }
+
+    /* Animations */
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+    /* Badges */
+    .badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-approved { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-rejected { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    /* Slot Grid */
+    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; margin-top: 12px; }
+    .slot-btn { padding: 10px 4px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid var(--border-color); background: #070c1a; color: var(--text-main); cursor: pointer; text-align: center; transition: all 0.15s; }
+    .slot-btn.selected { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; border-color: #f59e0b; transform: scale(1.05); }
+    .slot-btn.disabled, .slot-btn.past { opacity: 0.3; cursor: not-allowed !important; text-decoration: line-through; border-color: #1e293b; background: rgba(15, 23, 42, 0.4); pointer-events: none; }
+    .slot-btn.blocked { background: rgba(244, 63, 94, 0.2); color: #fb7185; border-color: rgba(244, 63, 94, 0.4); }
+    .slot-btn.opened { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.4); }
+
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-content { background: #0f172a; border: 1px solid var(--gold-primary); border-radius: 24px; padding: 24px; width: 100%; max-width: 440px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+
+    /* Notification Toast */
+    .notif-box { background: rgba(15, 23, 42, 0.95); border: 1px solid var(--gold-primary); padding: 12px 16px; border-radius: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-content">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="logo-box">
+          <img id="app-logo" src="/insta.png" onerror="this.onerror=null; this.src='insta.png';" alt="EZO STİLE Logo">
+        </div>
+        <div>
+          <h1 class="gold-gradient-text" style="font-size: 20px; font-weight: 900; letter-spacing: 0.5px;">EZO STİLE</h1>
+          <p style="font-size: 11px; color: var(--text-muted);" id="header-subtitle">VIP Berber & Kuaför Salonu</p>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <select id="lang-select" onchange="setLanguage(this.value)" class="input-field" style="padding: 6px 10px; width: auto; font-size: 12px; font-weight: 700; background: #0f172a;">
+          <option value="tr">🇹🇷 TR</option>
+          <option value="en">🇬🇧 EN</option>
+          <option value="ru">🇷🇺 RU</option>
+          <option value="tk">🇹🇲 TK</option>
+        </select>
+        <span id="role-badge" class="badge badge-approved" style="display: none;"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container" id="main-app">
+    <!-- Content injected via JS -->
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div id="footer-staff-link" style="margin-bottom: 10px;">
+      <button id="btn-staff-login" onclick="openStaffModal()" style="background: none; border: none; color: #64748b; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline;">
+        🔒 Yetkili Girişi (Admin / Yönetici)
+      </button>
+    </div>
+    <div id="footer-back-link" style="display: none; margin-bottom: 10px;">
+      <button id="btn-back-customer" onclick="switchRole('customer')" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">
+        ← Müşteri Ekranına Dön
+      </button>
+    </div>
+    <p>© 2026 EZO STİLE VIP Barber Studio. Tüm Hakları Saklıdır.</p>
+  </footer>
+
+  <!-- MODAL CONTAINER -->
+  <div id="modal-root"></div>
+
+  <!-- NATIVE REACTIVE ENGINE JS -->
+  <script>
+    // --- MULTILINGUAL DICTIONARIES (TR, EN, RU, TK) ---
+    const TRANSLATIONS = {
+      tr: {
+        appName: 'EZO STİLE',
+        subtitle: 'VIP Berber & Kuaför Salonu',
+        staffLogin: '🔒 Yetkili Girişi (Admin / Yönetici)',
+        backToCustomer: '← Müşteri Ekranına Dön',
+        enterStaffPwdTitle: '🔒 Yetkili Girişi',
+        enterStaffPwdDesc: 'Lütfen devam etmek için yetkili şifrenizi giriniz.',
+        reminderTitle: '⏰ EZO STİLE Randevu Hatırlatması',
+        reminderDesc: 'Randevunuza 1 saatten az zaman kaldı! Lütfen zamanında salonda olunuz.',
+        reminderBadge: '🔔 RANDEVU SAATİ YAKLAŞTI (1 Saat Kaldı)',
+        enableNotifications: '🔔 Bildirimleri Aç (1 Saat Önce Hatırlatıcı)',
+        confirmScheduleBtn: '✅ SAAT VE DEĞİŞİKLİKLERİ ONAYLA VE KAYDET',
+        scheduleConfirmedToast: '✅ Çalışma saatleri ve değişiklikler onaylandı! Müşteri ekranı anında güncellendi.',
+        custLoginTitle: '👤 EZO STİLE Müşteri Girişi / Kaydı',
+        custLoginDesc: 'Online randevu alabilmek için lütfen adınızı ve telefon numaranızı bir defaya mahsus giriniz.',
+        custLoginBtn: '📱 SMS Kodu Gönder & Kaydol',
+        servicesTitle: '1. İstediğiniz İşlemi Seçiniz',
+        dateTitle: '2. Randevu Tarihi Seçiniz',
+        timeTitle: '3. Randevu Saati Seçiniz (Geçmiş Saatler Otomatik Kapalıdır)',
+        bookBtn: '📅 RANDEVU AL VE ONAYLA',
+        myAppointments: '📋 Randevularım & Bildirimler',
+        smsTitle: '📱 Telefon Doğrulama (SMS Kodu)',
+        smsDesc: 'Lütfen telefonunuza gelen 6 haneli doğrulama kodunu giriniz.',
+        autoFillBtn: '⚡ Kodu Otomatik Doldur',
+        verifyBtn: 'Kodu Doğrula & Giriş Yap',
+        adminPanel: '👑 Admin / Yönetici Paneli',
+        weeklySchedule: '📅 Haftalık Çalışma Saatleri',
+        slotLocking: '🔒 Sadece O Gün İçin Saat Aç/Kapat',
+        servicesAdmin: '💇‍♂️ Hizmetler & Fiyat Yönetimi',
+        servicesAdminDesc: 'Müşteri ekranında görünen tüm hizmetlerin adını ve fiyatını buradan istediğiniz gibi değiştirebilirsiniz.',
+        newServiceTitle: '➕ Yeni Hizmet Ekle',
+        addServiceBtn: '➕ Yeni Hizmeti Listeye Ekle',
+        saveServicesBtn: '✅ HİZMET VE FİYATLARI KAYDET',
+        requests: '📑 Gelen Randevu Talepleri',
+        dayMonday: 'Pazartesi', dayTuesday: 'Salı', dayWednesday: 'Çarşamba', dayThursday: 'Perşembe', dayFriday: 'Cuma', daySaturday: 'Cumartesi', daySunday: 'Pazar',
+        dayIsOpen: '✅ AÇIK', dayIsClosed: '❌ KAPALI',
+        openingTime: 'Açılış', closingTime: 'Kapanış',
+        statusApprovedText: '✅ ONAYLANDI',
+        statusPendingText: '⏳ ONAY BEKLİYOR',
+        statusRejectedText: '❌ REDDEDİLDİ',
+        statusCancelledText: '🚫 MÜŞTERİ İPTAL ETTİ',
+        tabPending: '⏳ Onay Bekleyenler',
+        tabApproved: '✅ Onaylanan Randevular',
+        tabRejected: '❌ Reddedilenler & İptaller',
+        services: {
+          '1': 'Saç Kesimi & Yıkama & Şekillendirme',
+          '2': 'Sakal Tıraşı & Buharlı İtalyan Bakımı',
+          '3': 'VIP Komple Bakım (Saç + Sakal + Maske)',
+          '4': 'Çocuk Saç Kesimi',
+          '5': 'Cilt & Siyah Nokta Temizliği',
+          '6': 'Saç Boyama / Beyaz Kapatma'
+        }
+      },
+      en: {
+        appName: 'EZO STİLE',
+        subtitle: 'VIP Barber & Studio',
+        staffLogin: '🔒 Staff Access (Admin / Manager)',
+        backToCustomer: '← Back to Customer View',
+        enterStaffPwdTitle: '🔒 Staff Access',
+        enterStaffPwdDesc: 'Please enter your staff password to proceed.',
+        reminderTitle: '⏰ EZO STİLE Appointment Reminder',
+        reminderDesc: 'Your appointment is in less than 1 hour! Please arrive on time.',
+        reminderBadge: '🔔 APPOINTMENT APPROACHING (Under 1h)',
+        enableNotifications: '🔔 Enable Notifications',
+        confirmScheduleBtn: '✅ CONFIRM & SAVE SCHEDULE CHANGES',
+        scheduleConfirmedToast: '✅ Working hours confirmed! Customer screen updated live.',
+        custLoginTitle: '👤 EZO STİLE Customer Registration / Sign In',
+        custLoginDesc: 'Please enter your name and phone number once to book online appointments.',
+        custLoginBtn: '📱 Send SMS Code & Sign Up',
+        servicesTitle: '1. Select Desired Service',
+        dateTitle: '2. Select Appointment Date',
+        timeTitle: '3. Select Appointment Time (Past Hours Disabled)',
+        bookBtn: '📅 BOOK APPOINTMENT NOW',
+        myAppointments: '📋 My Appointments & Notifications',
+        smsTitle: '📱 Phone Verification (SMS Code)',
+        smsDesc: 'Please enter the 6-digit code sent to your phone.',
+        autoFillBtn: '⚡ Auto-Fill Code',
+        verifyBtn: 'Verify & Sign In',
+        adminPanel: '👑 Admin Control Panel',
+        weeklySchedule: '📅 Weekly Schedule',
+        slotLocking: '🔒 Date-Specific Slot Override',
+        servicesAdmin: '💇‍♂️ Services & Prices',
+        servicesAdminDesc: 'Manage service names, durations, and prices displayed on the customer booking view.',
+        newServiceTitle: '➕ Add New Service',
+        addServiceBtn: '➕ Add Service to List',
+        saveServicesBtn: '✅ SAVE SERVICES & PRICES',
+        requests: '📑 Pending Requests',
+        dayMonday: 'Monday', dayTuesday: 'Tuesday', dayWednesday: 'Wednesday', dayThursday: 'Thursday', dayFriday: 'Friday', daySaturday: 'Saturday', daySunday: 'Sunday',
+        dayIsOpen: '✅ OPEN', dayIsClosed: '❌ CLOSED',
+        openingTime: 'Opens', closingTime: 'Closes',
+        statusApprovedText: '✅ APPROVED',
+        statusPendingText: '⏳ PENDING',
+        statusRejectedText: '❌ REJECTED',
+        statusCancelledText: '🚫 CANCELLED BY CUSTOMER',
+        tabPending: '⏳ Pending',
+        tabApproved: '✅ Approved',
+        tabRejected: '❌ Rejected & Cancelled',
+        services: {
+          '1': 'Haircut & Wash & Styling',
+          '2': 'Beard Trim & Steamed Care',
+          '3': 'VIP Full Package (Hair + Beard + Mask)',
+          '4': 'Kids Haircut',
+          '5': 'Facial & Blackhead Cleansing',
+          '6': 'Hair Color / Grey Coverage'
+        }
+      },
+      ru: {
+        appName: 'EZO STİLE',
+        subtitle: 'VIP Салон красоты',
+        staffLogin: '🔒 Вход для сотрудников',
+        backToCustomer: '← Вернуться к клиенту',
+        enterStaffPwdTitle: '🔒 Вход для сотрудников',
+        enterStaffPwdDesc: 'Пожалуйста, введите ваш пароль для входа.',
+        reminderTitle: '⏰ EZO STİLE Напоминание',
+        reminderDesc: 'До записи осталось менее 1 часа! Приходите вовремя.',
+        reminderBadge: '🔔 ВРЕМЯ ЗАПИСИ (Менее 1ч)',
+        enableNotifications: '🔔 Включить уведомления',
+        confirmScheduleBtn: '✅ ПОДТВЕРДИТЬ И СОХРАНИТЬ ИЗМЕНЕНИЯ',
+        scheduleConfirmedToast: '✅ Часы работы подтверждены! Экран клиента обновлен.',
+        custLoginTitle: '👤 EZO STİLE Вход / Регистрация клиента',
+        custLoginDesc: 'Введите ваше имя и номер телефона один раз для записи.',
+        custLoginBtn: '📱 Отправить СМС код и войти',
+        servicesTitle: '1. Выберите услугу',
+        dateTitle: '2. Выберите дату',
+        timeTitle: '3. Выберите время (Прошедшие часы отключены)',
+        bookBtn: '📅 ЗАПИСАТЬСЯ СЕЙЧАС',
+        myAppointments: '📋 Мои записи',
+        smsTitle: '📱 СМС Подтверждение',
+        smsDesc: 'Введите 6-значный код из СМС.',
+        autoFillBtn: '⚡ Заполнить код',
+        verifyBtn: 'Подтвердить и войти',
+        adminPanel: '👑 Панель Администратора',
+        weeklySchedule: '📅 График работы',
+        slotLocking: '🔒 Слоты на день',
+        servicesAdmin: '💇‍♂️ Услуги и Цены',
+        servicesAdminDesc: 'Управляйте названиями услуг и ценами, отображаемыми клиентам.',
+        newServiceTitle: '➕ Добавить новую услугу',
+        addServiceBtn: '➕ Добавить услугу в список',
+        saveServicesBtn: '✅ СОХРАНИТЬ УСЛУГИ И ЦЕНЫ',
+        requests: '📑 Запросы на запись',
+        dayMonday: 'Понедельник', dayTuesday: 'Вторник', dayWednesday: 'Среда', dayThursday: 'Четверг', dayFriday: 'Пятница', daySaturday: 'Суббота', daySunday: 'Воскресенье',
+        dayIsOpen: '✅ ОТКРЫТО', dayIsClosed: '❌ ЗАКРЫТО',
+        openingTime: 'Открытие', closingTime: 'Закрытие',
+        statusApprovedText: '✅ ОДОБРЕНО',
+        statusPendingText: '⏳ В ОЖИДАНИИ',
+        statusRejectedText: '❌ ОТКЛОНЕНО',
+        statusCancelledText: '🚫 ОТМЕНЕНО КЛИЕНТОМ',
+        tabPending: '⏳ Ожидают',
+        tabApproved: '✅ Одобренные',
+        tabRejected: '❌ Отклоненные',
+        services: {
+          '1': 'Мужская стрижка, мытье и укладка',
+          '2': 'Бритье бороды и распаривание',
+          '3': 'VIP Полный комплекс (Стрижка + Борода + Маска)',
+          '4': 'Детская стрижка',
+          '5': 'Чистка лица и уход',
+          '6': 'Окрашивание волос'
+        }
+      },
+      tk: {
+        appName: 'EZO STİLE',
+        subtitle: 'VIP Berber Halypasy',
+        staffLogin: '🔒 Ýetkili Girelgäsi',
+        backToCustomer: '← Kardar Ekranyna Dönmek',
+        enterStaffPwdTitle: '🔒 Ýetkili Girelgäsi',
+        enterStaffPwdDesc: 'Girmek üçin ýetkili parolyňyzy giriziň.',
+        reminderTitle: '⏰ EZO STİLE Bron Ýatlatmasy',
+        reminderDesc: 'Bron wagtyňyza 1 sagatdan az wagt galdy! Öz wagtynda geliň.',
+        reminderBadge: '🔔 BRON WAGTY ÝAKYNLAŞDY (1 Sagat Galdy)',
+        enableNotifications: '🔔 Duýduryşlary Açmak',
+        confirmScheduleBtn: '✅ SAGAT ÜÝTGEŞMELERİNİ TASSYKLAMAK WE ÝAZDYRMAK',
+        scheduleConfirmedToast: '✅ Iş sagatlary tassyklandy! Kardar ekrany an kazyýeti üýtgedildi.',
+        custLoginTitle: '👤 EZO STİLE Kardar Girşi / Ýazylmagy',
+        custLoginDesc: 'Bron almak üçin bir gezek adyňyzy we telefonyňyzy giriziň.',
+        custLoginBtn: '📱 SMS Kod Ugratmak & Ýazylmak',
+        servicesTitle: '1. Hyzmat Saýlaň',
+        dateTitle: '2. Sene Saýlaň',
+        timeTitle: '3. Sagat Saýlaň (Geçen Sagatlar Ýapykdyr)',
+        bookBtn: '📅 BRON ETMEK WE TASSYKLAMAK',
+        myAppointments: '📋 Meniň Bronlarym',
+        smsTitle: '📱 Telefon Tassyklaýyş',
+        smsDesc: 'Telefonyňyza gelen 6 sany kod giriziň.',
+        autoFillBtn: '⚡ Kody Awtomatiki Girizmek',
+        verifyBtn: 'Tassykla we Ulgama Gir',
+        adminPanel: '👑 Admin Paneli',
+        weeklySchedule: '📅 Iş Sagatlary',
+        slotLocking: '🔒 Diňe Şol Gün Üçin Sagat',
+        servicesAdmin: '💇‍♂️ Hyzmatlar & Bahalar',
+        servicesAdminDesc: 'Kardar ekranynda görünýän hyzmatlaryň adyny we bahalaryny üýtgediň.',
+        newServiceTitle: '➕ Täze Hyzmat Goşmak',
+        addServiceBtn: '➕ Täze Hyzmaty Goşmak',
+        saveServicesBtn: '✅ HYZMATLARY WE BAHALARY ÝAZDYRMAK',
+        requests: '📑 Gelen Haýyşlar',
+        dayMonday: 'Duşenbe', dayTuesday: 'Sişenbe', dayWednesday: 'Çarşenbe', dayThursday: 'Penşenbe', dayFriday: 'Anna', daySaturday: 'Şenbe', daySunday: 'Ýekşenbe',
+        dayIsOpen: '✅ AÇYK', dayIsClosed: '❌ ÝAPYK',
+        openingTime: 'Açylýar', closingTime: 'Ýapylýar',
+        statusApprovedText: '✅ TASSYKLANYLDY',
+        statusPendingText: '⏳ TASSYKLAMA GARAŞÝAR',
+        statusRejectedText: '❌ ÝATYRYLDI',
+        statusCancelledText: '🚫 KARDAR TARAFYNDAN İPTAL EDİLDİ',
+        tabPending: '⏳ Garaşýanlar',
+        tabApproved: '✅ Tassyklananlar',
+        tabRejected: '❌ Ýatyrylanlar',
+        services: {
+          '1': 'Saç Kesimi & Ýuwmak & Bezeg',
+          '2': 'Sakal Syrmak & Bugly İtalyan Seretmek',
+          '3': 'VIP Doly Toplum (Saç + Sakal + Maskaly)',
+          '4': 'Çagalar Saç Kesimi',
+          '5': 'Yüz Arassalamak & Gara Noktalar',
+          '6': 'Saç Boyamak / Ak Yapmak'
+        }
+      }
+    };
+
+    // --- DEFAULT SERVICES LIST ---
+    const DEFAULT_SERVICES = [
+      { id: '1', name: 'Saç Kesimi & Yıkama & Şekillendirme', duration: '30 dk', price: 250 },
+      { id: '2', name: 'Sakal Tıraşı & Buharlı İtalyan Bakımı', duration: '20 dk', price: 150 },
+      { id: '3', name: 'VIP Komple Bakım (Saç + Sakal + Maske)', duration: '50 dk', price: 400 },
+      { id: '4', name: 'Çocuk Saç Kesimi', duration: '25 dk', price: 200 },
+      { id: '5', name: 'Cilt & Siyah Nokta Temizliği', duration: '30 dk', price: 200 },
+      { id: '6', name: 'Saç Boyama / Beyaz Kapatma', duration: '45 dk', price: 350 }
+    ];
+
+    function getLocalDateStr(d = new Date()) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function getInitialBookingDate() {
+      const now = new Date();
+      const todayStr = getLocalDateStr(now);
+      const dayOfWeek = now.getDay();
+      const savedSched = JSON.parse(localStorage.getItem('gc_weekly_schedule') || 'null');
+      const sched = (savedSched && savedSched[dayOfWeek]) ? savedSched[dayOfWeek] : { isOpen: true, start: '09:00', end: '21:00' };
+      const closingHour = parseInt((sched.end || '21:00').split(':')[0], 10);
+      
+      // If current hour is past closing hour or shop closed today, auto select tomorrow!
+      if (!sched.isOpen || now.getHours() >= closingHour) {
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        return getLocalDateStr(tomorrow);
+      }
+      return todayStr;
+    }
+
+    // --- APP STATE ---
+    let state = {
+      language: localStorage.getItem('gc_lang') || 'tr',
+      role: 'customer', // 'customer' | 'admin' | 'manager'
+      currentUser: JSON.parse(localStorage.getItem('gc_user') || 'null'),
+      smsCode: null,
+      adminTab: 'requests', // 'weeklySchedule' | 'slotLocking' | 'servicesAdmin' | 'requests'
+      requestsSubTab: 'pending', // 'pending' | 'approved' | 'rejected'
+      services: JSON.parse(localStorage.getItem('gc_services') || JSON.stringify(DEFAULT_SERVICES)),
+      selectedServiceId: '1',
+      selectedDate: getInitialBookingDate(),
+      selectedTime: '',
+      weeklySchedule: JSON.parse(localStorage.getItem('gc_weekly_schedule') || JSON.stringify({
+        1: { isOpen: true, start: '12:00', end: '22:00' },
+        2: { isOpen: true, start: '09:00', end: '21:00' },
+        3: { isOpen: true, start: '09:00', end: '21:00' },
+        4: { isOpen: true, start: '09:00', end: '21:00' },
+        5: { isOpen: true, start: '09:00', end: '23:00' },
+        6: { isOpen: true, start: '09:00', end: '23:00' },
+        0: { isOpen: true, start: '10:00', end: '20:00' }
+      })),
+      dateSlotOverrides: JSON.parse(localStorage.getItem('gc_date_slot_overrides') || '[]'),
+      notifications: JSON.parse(localStorage.getItem('gc_notifications') || '[]'),
+      appointments: JSON.parse(localStorage.getItem('gc_appointments') || JSON.stringify([
+        { id: '101', customerName: 'Ahmet Yılmaz', customerPhone: '05321112233', serviceName: 'Saç Kesimi & Yıkama & Şekillendirme', date: new Date().toISOString().split('T')[0], time: '14:00', price: 250, status: 'approved' }
+      ]))
+    };
+
+    function t(key) {
+      const dict = TRANSLATIONS[state.language] || TRANSLATIONS.tr;
+      return dict[key] || TRANSLATIONS.tr[key] || key;
+    }
+
+    function getServiceName(svc) {
+      if (svc.id && TRANSLATIONS[state.language]?.services?.[svc.id]) {
+        return TRANSLATIONS[state.language].services[svc.id];
+      }
+      return svc.name;
+    }
+
+    function setLanguage(lang) {
+      state.language = lang;
+      localStorage.setItem('gc_lang', lang);
+      document.getElementById('btn-staff-login').innerText = t('staffLogin');
+      document.getElementById('btn-back-customer').innerText = t('backToCustomer');
+      renderApp();
+    }
+
+    function switchRole(role) {
+      state.role = role;
+      document.getElementById('footer-staff-link').style.display = role === 'customer' ? 'block' : 'none';
+      document.getElementById('footer-back-link').style.display = role !== 'customer' ? 'block' : 'none';
+      const badge = document.getElementById('role-badge');
+      if (role !== 'customer') {
+        badge.innerText = role === 'admin' ? '👑 Admin' : '🛠️ Yönetici';
+        badge.style.display = 'inline-flex';
+      } else {
+        badge.style.display = 'none';
+      }
+      renderApp();
+    }
+
+    // --- 1 HOUR REMINDER CHECK ---
+    function check1HourReminder(apt) {
+      if (apt.status !== 'approved') return false;
+      try {
+        const [y, m, d] = apt.date.split('-').map(Number);
+        const [hh, mm] = apt.time.split(':').map(Number);
+        const aptDateObj = new Date(y, m - 1, d, hh, mm);
+        const now = new Date();
+        const diffMin = (aptDateObj.getTime() - now.getTime()) / (1000 * 60);
+        return diffMin > 0 && diffMin <= 60;
+      } catch {
+        return false;
+      }
+    }
+
+    // --- MAIN RENDERER ---
+    function renderApp() {
+      const main = document.getElementById('main-app');
+      document.getElementById('header-subtitle').innerText = t('subtitle');
+      document.getElementById('btn-staff-login').innerText = t('staffLogin');
+      document.getElementById('btn-back-customer').innerText = t('backToCustomer');
+      
+      if (state.role === 'customer') {
+        renderCustomerView(main);
+      } else {
+        renderAdminView(main);
+      }
+    }
+
+    // --- CUSTOMER VIEW ---
+    function renderCustomerView(container) {
+      // IF CUSTOMER IS NOT REGISTERED YET: SHOW ONLY REGISTRATION CARD
+      if (!state.currentUser) {
+        container.innerHTML = `
+          <div class="card" style="border-color: var(--gold-primary); max-width: 480px; margin: 40px auto; text-align: center; padding: 30px;">
+            <div style="width: 70px; height: 70px; margin: 0 auto 16px; border-radius: 20px; background: #000; border: 2px solid var(--gold-primary); overflow: hidden;">
+              <img src="/insta.png" onerror="this.onerror=null; this.src='insta.png';" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo">
+            </div>
+            <h2 style="font-size: 20px; font-weight: 900; color: var(--gold-primary); margin-bottom: 8px;">${t('custLoginTitle')}</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">${t('custLoginDesc')}</p>
+            
+            <form onsubmit="handleCustomerRegister(event)" style="display: flex; flex-direction: column; gap: 12px;">
+              <input id="reg-name" required type="text" placeholder="Adınız Soyadınız" class="input-field" style="padding: 14px; font-size: 14px;">
+              <input id="reg-phone" required type="tel" placeholder="Telefon Numaranız (05XX...)" class="input-field" style="padding: 14px; font-size: 14px;">
+              <button type="submit" class="gold-btn" style="padding: 16px; font-size: 14px; margin-top: 4px;">
+                ${t('custLoginBtn')}
+              </button>
+            </form>
+          </div>
+        `;
+        return;
+      }
+
+      // REGISTERED CUSTOMER VIEW: SHOW DIRECT BOOKING WIZARD & MY APPOINTMENTS
+      const myApts = state.appointments.filter(a => a.customerPhone === state.currentUser.phone);
+      const myNotifs = state.notifications.filter(n => n.phone === state.currentUser.phone);
+      const upcoming1h = myApts.find(check1HourReminder);
+
+      // Check weekly schedule for selected date
+      const parts = state.selectedDate.split('-');
+      const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      const dayOfWeek = dObj.getDay();
+      const sched = state.weeklySchedule[dayOfWeek] || { isOpen: true, start: '09:00', end: '21:00' };
+
+      // Generate time slots
+      const startHour = parseInt((sched.start || '09:00').split(':')[0]);
+      const endHour = parseInt((sched.end || '21:00').split(':')[0]);
+      const availableSlots = [];
+      if (sched.isOpen) {
+        for (let h = startHour; h <= endHour; h++) {
+          const hh = h.toString().padStart(2, '0');
+          availableSlots.push(`${hh}:00`);
+          if (h !== endHour) availableSlots.push(`${hh}:30`);
+        }
+      }
+
+      // Add custom opened slots for this specific date
+      state.dateSlotOverrides.filter(o => o.date === state.selectedDate && o.status === 'opened').forEach(o => {
+        if (!availableSlots.includes(o.time)) availableSlots.push(o.time);
+      });
+      availableSlots.sort();
+
+      // Local date calculations
+      const now = new Date();
+      const todayStr = getLocalDateStr(now);
+      const isToday = state.selectedDate === todayStr;
+      const isPastDate = state.selectedDate < todayStr;
+      const currentHour = now.getHours();
+      const currentMin = now.getMinutes();
+
+      // Check if all slots for today are in the past
+      let allPastForToday = false;
+      if (isToday && availableSlots.length > 0) {
+        allPastForToday = availableSlots.every(time => {
+          const [sHour, sMin] = time.split(':').map(Number);
+          return sHour < currentHour || (sHour === currentHour && sMin <= currentMin);
+        });
+      }
+
+      const activeSelectedService = state.services.find(s => s.id === state.selectedServiceId) || state.services[0] || DEFAULT_SERVICES[0];
+
+      let html = '';
+
+      // LOGGED IN USER BAR
+      html += `
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
+          <div>
+            <span style="font-size: 11px; color: var(--text-muted);">Hoş Geldiniz:</span>
+            <div style="font-weight: 800; font-size: 14px; color: #fff;">👤 ${state.currentUser.name} <span style="font-size: 12px; color: var(--gold-primary);">(${state.currentUser.phone})</span></div>
+          </div>
+          <button onclick="logoutCustomer()" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">🚪 Çıkış Yap</button>
+        </div>
+      `;
+
+      // CUSTOMER NOTIFICATIONS TOASTS
+      if (myNotifs.length > 0) {
+        html += `<div style="margin-bottom: 12px;">`;
+        myNotifs.forEach(n => {
+          html += `
+            <div class="notif-box">
+              <div>
+                <strong style="color: var(--gold-primary);">${n.title}</strong>
+                <div style="color: #fff; margin-top: 2px;">${n.message}</div>
+              </div>
+              <button onclick="dismissNotif('${n.id}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 800;">✕</button>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      // 1-HOUR REMINDER BANNER
+      if (upcoming1h) {
+        html += `
+          <div class="reminder-banner animate-pulse">
+            <div>
+              <div style="font-weight: 900; font-size: 13px; color: #fbbf24; text-transform: uppercase;">${t('reminderTitle')}</div>
+              <div style="font-size: 12px; margin-top: 2px;">${t('reminderDesc')}</div>
+              <div style="font-size: 12px; font-weight: 800; color: #fff; margin-top: 4px;">📌 ${upcoming1h.serviceName} — ⏰ ${upcoming1h.date} ${upcoming1h.time}</div>
+            </div>
+            <button onclick="Notification.requestPermission()" class="gold-btn" style="padding: 8px 12px; font-size: 11px;">${t('enableNotifications')}</button>
+          </div>
+        `;
+      }
+
+      // BOOKING WIZARD CARD (DIRECT ACCESS)
+      html += `
+        <div class="card">
+          <!-- 1. SERVICE SELECT -->
+          <h3 style="font-size: 14px; font-weight: 800; color: var(--gold-primary); margin-bottom: 12px;">${t('servicesTitle')}</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 20px;">
+            ${state.services.map(s => {
+              const displayName = getServiceName(s);
+              return `
+                <div onclick="selectService('${s.id}')" style="padding: 12px; border-radius: 14px; border: 1px solid ${activeSelectedService.id === s.id ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${activeSelectedService.id === s.id ? 'rgba(245,158,11,0.1)' : '#070c1a'}; cursor: pointer; transition: all 0.2s;">
+                  <div style="font-weight: 700; font-size: 13px; color: #fff;">${displayName}</div>
+                  <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; font-weight: 800;">
+                    <span style="color: var(--text-muted);">${s.duration}</span>
+                    <span style="color: var(--gold-primary);">${s.price} TL</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- 2. DATE SELECT -->
+          <h3 style="font-size: 14px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">${t('dateTitle')}</h3>
+          <input type="date" value="${state.selectedDate}" min="${todayStr}" onchange="selectDate(this.value)" class="input-field" style="margin-bottom: 16px;">
+
+          <!-- 3. TIME SELECT -->
+          <h3 style="font-size: 14px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">${t('timeTitle')}</h3>
+          
+          ${!sched.isOpen ? `
+            <div style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 14px; border-radius: 14px; font-size: 13px; font-weight: 700; text-align: center;">
+              ⚠️ Bu tarihte (${state.selectedDate}) salonumuz kapalıdır. Lütfen başka bir gün seçiniz.
+            </div>
+          ` : allPastForToday ? `
+            <div style="background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 14px; border-radius: 14px; font-size: 13px; font-weight: 700; text-align: center; margin-bottom: 16px;">
+              ℹ️ Bugünün mesai saatleri (${sched.start} - ${sched.end}) tamamlanmıştır. Yarın veya gelecek bir tarih için randevu alabilirsiniz.
+              <div style="margin-top: 10px;">
+                <button onclick="selectTomorrow()" class="gold-btn" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 900;">📅 Yarınki Saatleri Göster</button>
+              </div>
+            </div>
+          ` : `
+            <div class="slot-grid">
+              ${availableSlots.map(time => {
+                const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
+                const alreadyBooked = state.appointments.some(apt => 
+                  apt.date === state.selectedDate && 
+                  apt.time === time && 
+                  apt.status !== 'rejected' && 
+                  apt.status !== 'cancelled'
+                );
+                const isBlocked = (override ? override.status === 'blocked' : false) || alreadyBooked;
+                const isSelected = state.selectedTime === time;
+
+                // Past hour calculation ONLY for today
+                let isPast = false;
+                if (isToday) {
+                  const [sHour, sMin] = time.split(':').map(Number);
+                  if (sHour < currentHour || (sHour === currentHour && sMin <= currentMin)) {
+                    isPast = true;
+                  }
+                } else if (isPastDate) {
+                  isPast = true;
+                }
+
+                const isDisabled = isBlocked || isPast;
+
+                return `
+                  <button onclick="selectTime('${time}')" ${isDisabled ? 'disabled' : ''} class="slot-btn ${isPast ? 'past' : ''} ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}">
+                    ${time}
+                    ${isPast ? '<span style="display:block; font-size:8px; opacity:0.6;">⏳ GEÇTİ</span>' : alreadyBooked ? '<span style="display:block; font-size:8px; color:#fb7185;">🔒 DOLU</span>' : isBlocked ? '<span style="display:block; font-size:8px; color:#fb7185;">🔒 KAPALI</span>' : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          `}
+
+          <!-- SUBMIT BUTTON -->
+          <button onclick="submitBooking()" class="gold-btn" style="width: 100%; margin-top: 20px; padding: 16px; font-size: 15px;">
+            ${t('bookBtn')}
+          </button>
+        </div>
+      `;
+
+      // MY APPOINTMENTS CARD WITH CANCEL & RESCHEDULE BUTTONS
+      html += `
+        <div class="card">
+          <h3 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 14px;">${t('myAppointments')} (${myApts.length})</h3>
+          ${myApts.length === 0 ? `
+            <p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px;">Henüz verilmiş bir randevunuz bulunmamaktadır.</p>
+          ` : `
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              ${myApts.map(a => {
+                const is1h = check1HourReminder(a);
+                const statusText = a.status === 'approved' ? t('statusApprovedText') : a.status === 'rejected' ? t('statusRejectedText') : a.status === 'cancelled' ? t('statusCancelledText') : t('statusPendingText');
+                const canModify = a.status !== 'cancelled' && a.status !== 'rejected';
+                
+                return `
+                  <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid ${is1h ? 'var(--gold-primary)' : 'var(--border-color)'}; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                      <div>
+                        <div style="font-weight: 800; font-size: 14px; color: #fff;">${a.serviceName}</div>
+                        <div style="font-size: 12px; color: var(--gold-primary); font-weight: 700; margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
+                        ${is1h ? `<span class="badge badge-pending animate-pulse" style="margin-top: 4px;">${t('reminderBadge')}</span>` : ''}
+                      </div>
+                      <div>
+                        <span class="badge ${a.status === 'approved' ? 'badge-approved' : a.status === 'rejected' || a.status === 'cancelled' ? 'badge-rejected' : 'badge-pending'}">
+                          ${statusText}
+                        </span>
+                      </div>
+                    </div>
+
+                    ${canModify ? `
+                      <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 2px;">
+                        <button onclick="openRescheduleModal('${a.id}')" class="gold-btn" style="padding: 6px 12px; font-size: 11px; background: rgba(245,158,11,0.15); color: var(--gold-primary); border: 1px solid rgba(245,158,11,0.3);">✏️ Saati / Tarihi Değiştir</button>
+                        <button onclick="cancelMyAppointment('${a.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">❌ Randevuyu İptal Et</button>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // --- ADMIN VIEW ---
+    function renderAdminView(container) {
+      const pendingApts = state.appointments.filter(a => a.status === 'pending');
+      const approvedApts = state.appointments.filter(a => a.status === 'approved');
+      const rejectedApts = state.appointments.filter(a => a.status === 'rejected' || a.status === 'cancelled');
+
+      let html = `
+        <div class="card" style="border-color: var(--gold-primary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary);">${t('adminPanel')}</h2>
+            <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">${t('backToCustomer')}</button>
+          </div>
+
+          <!-- MAIN TABS -->
+          <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; overflow-x: auto;">
+            <button onclick="setAdminTab('requests')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: ${state.adminTab === 'requests' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'requests' ? '#000' : '#fff'}; border: 1px solid var(--border-color); flex-shrink: 0;">
+              ${t('requests')} (${pendingApts.length})
+            </button>
+            <button onclick="setAdminTab('weeklySchedule')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: ${state.adminTab === 'weeklySchedule' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'weeklySchedule' ? '#000' : '#fff'}; border: 1px solid var(--border-color); flex-shrink: 0;">
+              ${t('weeklySchedule')}
+            </button>
+            <button onclick="setAdminTab('slotLocking')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: ${state.adminTab === 'slotLocking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'slotLocking' ? '#000' : '#fff'}; border: 1px solid var(--border-color); flex-shrink: 0;">
+              ${t('slotLocking')}
+            </button>
+            <button onclick="setAdminTab('servicesAdmin')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; border: 1px solid var(--border-color); flex-shrink: 0;">
+              ${t('servicesAdmin')}
+            </button>
+          </div>
+      `;
+
+      // REQUESTS TAB WITH SEPARATE SUB-TABS FOR PENDING, APPROVED, REJECTED
+      if (state.adminTab === 'requests') {
+        html += `
+          <div>
+            <!-- SUB-TABS: BEKLEYENLER / ONAYLANANLAR / REDDEDİLENLER -->
+            <div style="display: flex; gap: 6px; margin-bottom: 16px; background: #070c1a; padding: 4px; border-radius: 14px; border: 1px solid var(--border-color);">
+              <button onclick="setRequestsSubTab('pending')" style="flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'pending' ? 'var(--gold-primary)' : 'transparent'}; color: ${state.requestsSubTab === 'pending' ? '#000' : '#94a3b8'};">
+                ${t('tabPending')} (${pendingApts.length})
+              </button>
+              <button onclick="setRequestsSubTab('approved')" style="flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'approved' ? '#10b981' : 'transparent'}; color: ${state.requestsSubTab === 'approved' ? '#000' : '#94a3b8'};">
+                ${t('tabApproved')} (${approvedApts.length})
+              </button>
+              <button onclick="setRequestsSubTab('rejected')" style="flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'rejected' ? '#f43f5e' : 'transparent'}; color: ${state.requestsSubTab === 'rejected' ? '#fff' : '#94a3b8'};">
+                ${t('tabRejected')} (${rejectedApts.length})
+              </button>
+            </div>
+        `;
+
+        const activeList = state.requestsSubTab === 'pending' ? pendingApts : state.requestsSubTab === 'approved' ? approvedApts : rejectedApts;
+
+        if (activeList.length === 0) {
+          html += `<p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px;">Bu kategoride randevu bulunmamaktadır.</p>`;
+        } else {
+          html += `<div style="display: flex; flex-direction: column; gap: 10px;">`;
+          activeList.forEach(a => {
+            html += `
+              <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <div style="font-weight: 800; font-size: 14px; color: #fff;">👤 ${a.customerName} (${a.customerPhone})</div>
+                  <div style="font-size: 12px; color: var(--gold-primary); margin-top: 2px;">📌 ${a.serviceName} — 📅 ${a.date} ⏰ ${a.time} (${a.price} TL)</div>
+                  <div style="margin-top: 4px;">
+                    <span class="badge ${a.status === 'approved' ? 'badge-approved' : a.status === 'rejected' || a.status === 'cancelled' ? 'badge-rejected' : 'badge-pending'}">
+                      ${a.status === 'approved' ? t('statusApprovedText') : a.status === 'rejected' ? t('statusRejectedText') : a.status === 'cancelled' ? t('statusCancelledText') : t('statusPendingText')}
+                    </span>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 6px;">
+                  ${a.status !== 'approved' ? `
+                    <button onclick="adminApproveApt('${a.id}')" class="gold-btn" style="padding: 8px 14px; font-size: 11px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #10b981;">✓ ONAYLA</button>
+                  ` : ''}
+                  ${a.status !== 'rejected' ? `
+                    <button onclick="adminRejectApt('${a.id}')" class="gold-btn" style="padding: 8px 14px; font-size: 11px; background: rgba(244,63,94,0.2); color: #fb7185; border: 1px solid #f43f5e;">✕ İPTAL ET / REDDET</button>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        html += `</div>`;
+      }
+
+      // WEEKLY SCHEDULE TAB
+      else if (state.adminTab === 'weeklySchedule') {
+        const days = [
+          { idx: 1, key: 'dayMonday' }, { idx: 2, key: 'dayTuesday' }, { idx: 3, key: 'dayWednesday' },
+          { idx: 4, key: 'dayThursday' }, { idx: 5, key: 'dayFriday' }, { idx: 6, key: 'daySaturday' }, { idx: 0, key: 'daySunday' }
+        ];
+
+        html += `
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            ${days.map(d => {
+              const sched = state.weeklySchedule[d.idx] || { isOpen: true, start: '12:00', end: '22:00' };
+              return `
+                <div style="background: #070c1a; padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <button onclick="toggleDayOpen(${d.idx})" class="badge ${sched.isOpen ? 'badge-approved' : 'badge-rejected'}" style="cursor: pointer; padding: 6px 12px;">
+                      ${sched.isOpen ? t('dayIsOpen') : t('dayIsClosed')}
+                    </button>
+                    <span style="font-weight: 800; font-size: 14px; min-width: 90px; color: #fff;">${t(d.key)}</span>
+                  </div>
+                  ${sched.isOpen ? `
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                      <span>${t('openingTime')}:</span>
+                      <input type="time" value="${sched.start}" onchange="updateScheduleTime(${d.idx}, 'start', this.value)" class="input-field" style="padding: 4px 8px; width: 100px;">
+                      <span>${t('closingTime')}:</span>
+                      <input type="time" value="${sched.end}" onchange="updateScheduleTime(${d.idx}, 'end', this.value)" class="input-field" style="padding: 4px 8px; width: 100px;">
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+
+            <!-- CONFIRM & SAVE SCHEDULE BUTTON -->
+            <div style="margin-top: 16px; pt-4; border-top: 1px solid var(--border-color);">
+              <button onclick="confirmScheduleChanges()" class="gold-btn" style="width: 100%; padding: 16px; font-size: 14px; font-weight: 900;">
+                ${t('confirmScheduleBtn')}
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // SLOT LOCKING TAB (SADECE O GÜN İÇİN ÖZEL SAAT AÇMA/KAPATMA)
+      else if (state.adminTab === 'slotLocking') {
+        const timeSlots = [];
+        for (let h = 0; h < 24; h++) {
+          const hh = h.toString().padStart(2, '0');
+          timeSlots.push(`${hh}:00`);
+          timeSlots.push(`${hh}:30`);
+        }
+
+        html += `
+          <div>
+            <h3 style="font-size: 14px; font-weight: 800; color: var(--gold-primary); margin-bottom: 6px;">${t('slotLocking')}</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Aşağıdan tarih seçip saatlere tıklayarak <strong>sadece o gün için özel olarak</strong> saat açabilir veya kapatabilirsiniz.</p>
+
+            <div style="margin-bottom: 14px;">
+              <label style="font-size: 12px; font-weight: 700;">Tarih Seçiniz:</label>
+              <input type="date" value="${state.selectedDate}" onchange="selectDate(this.value)" class="input-field" style="margin-top: 4px;">
+            </div>
+
+            <div class="slot-grid">
+              ${timeSlots.map(time => {
+                const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
+                const isBlocked = override ? override.status === 'blocked' : false;
+                const isOpened = override ? override.status === 'opened' : false;
+
+                return `
+                  <button onclick="toggleDateSlotOverride('${state.selectedDate}', '${time}')" class="slot-btn ${isBlocked ? 'blocked' : isOpened ? 'opened' : ''}">
+                    ${time}
+                    <span style="display: block; font-size: 9px;">${isBlocked ? '🔒 KAPALI' : isOpened ? '✅ AÇIK' : '• NORM'}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- CONFIRM & SAVE SCHEDULE BUTTON -->
+            <div style="margin-top: 20px;">
+              <button onclick="confirmScheduleChanges()" class="gold-btn" style="width: 100%; padding: 16px; font-size: 14px; font-weight: 900;">
+                ${t('confirmScheduleBtn')}
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // SERVICES ADMIN TAB (HİZMET İSMİ VE FİYAT YÖNETİMİ)
+      else if (state.adminTab === 'servicesAdmin') {
+        html += `
+          <div>
+            <h3 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 6px;">${t('servicesAdmin')}</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">${t('servicesAdminDesc')}</p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+              ${state.services.map((s, idx) => {
+                const displayName = getServiceName(s);
+                return `
+                  <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span style="font-size: 12px; font-weight: 800; color: var(--gold-primary);">Hizmet #${idx + 1} (${displayName})</span>
+                      <button onclick="deleteService('${s.id}')" style="background: none; border: none; color: #fb7185; font-size: 11px; font-weight: 700; cursor: pointer;">🗑️ Sil</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
+                      <div>
+                        <label style="font-size: 10px; color: var(--text-muted);">Hizmet Adı:</label>
+                        <input type="text" value="${s.name}" onchange="updateServiceField('${s.id}', 'name', this.value)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+                      </div>
+                      <div>
+                        <label style="font-size: 10px; color: var(--text-muted);">Süre:</label>
+                        <input type="text" value="${s.duration}" onchange="updateServiceField('${s.id}', 'duration', this.value)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+                      </div>
+                      <div>
+                        <label style="font-size: 10px; color: var(--text-muted);">Fiyat (TL):</label>
+                        <input type="number" value="${s.price}" onchange="updateServiceField('${s.id}', 'price', Number(this.value))" class="input-field" style="padding: 6px 10px; font-size: 12px; color: var(--gold-primary); font-weight: 800;">
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- ADD NEW SERVICE FORM -->
+            <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px dashed var(--gold-primary); margin-bottom: 16px;">
+              <h4 style="font-size: 13px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">${t('newServiceTitle')}</h4>
+              <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                <input id="new-svc-name" type="text" placeholder="Hizmet Adı (Örn: Cilt Maskesi)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+                <input id="new-svc-dur" type="text" placeholder="Süre (Örn: 30 dk)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+                <input id="new-svc-price" type="number" placeholder="Fiyat (TL)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+              </div>
+              <button onclick="addNewService()" class="gold-btn" style="width: 100%; padding: 10px; font-size: 12px;">${t('addServiceBtn')}</button>
+            </div>
+
+            <!-- SAVE ALL SERVICES BUTTON -->
+            <button onclick="saveServices()" class="gold-btn" style="width: 100%; padding: 16px; font-size: 14px; font-weight: 900;">
+              ${t('saveServicesBtn')}
+            </button>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    // --- USER INTERACTIONS ---
+    function selectService(id) {
+      state.selectedServiceId = id;
+      renderApp();
+    }
+
+    function selectDate(date) {
+      state.selectedDate = date;
+      state.selectedTime = '';
+      renderApp();
+    }
+
+    function selectTomorrow() {
+      const tom = new Date();
+      tom.setDate(tom.getDate() + 1);
+      state.selectedDate = getLocalDateStr(tom);
+      state.selectedTime = '';
+      renderApp();
+    }
+
+    function selectTime(time) {
+      state.selectedTime = time;
+      renderApp();
+    }
+
+    function submitBooking() {
+      if (!state.currentUser) {
+        alert('Lütfen önce adınızı ve telefon numaranızı girerek kaydolunuz.');
+        return;
+      }
+      if (!state.selectedTime) {
+        alert('Lütfen bir randevu saati seçiniz.');
+        return;
+      }
+
+      const activeSvc = state.services.find(s => s.id === state.selectedServiceId) || state.services[0];
+      const activeSvcName = getServiceName(activeSvc);
+
+      const newApt = {
+        id: Date.now().toString(),
+        customerName: state.currentUser.name,
+        customerPhone: state.currentUser.phone,
+        serviceName: activeSvcName,
+        date: state.selectedDate,
+        time: state.selectedTime,
+        price: activeSvc.price,
+        status: 'pending'
+      };
+
+      state.appointments.unshift(newApt);
+      localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+      window.dispatchEvent(new Event('storage'));
+      alert('🎉 Randevu talebiniz başarıyla alındı! Yönetici onayından sonra randevunuz kesinleşecektir.');
+      renderApp();
+    }
+
+    // --- CUSTOMER CANCEL & RESCHEDULE ---
+    function cancelMyAppointment(aptId) {
+      if (confirm('Bu randevunuzu iptal etmek istediğinize emin misiniz?')) {
+        const apt = state.appointments.find(a => a.id === aptId);
+        if (apt) {
+          apt.status = 'cancelled';
+          localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+          window.dispatchEvent(new Event('storage'));
+          alert('🚫 Randevunuz iptal edildi.');
+          renderApp();
+        }
+      }
+    }
+
+    function openRescheduleModal(aptId) {
+      const apt = state.appointments.find(a => a.id === aptId);
+      if (!apt) return;
+
+      const root = document.getElementById('modal-root');
+      root.innerHTML = `
+        <div class="modal-overlay">
+          <div class="modal-content">
+            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 8px;">✏️ Randevu Saatini / Tarihini Değiştir</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">📌 ${apt.serviceName}</p>
+
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 11px; font-weight: 700; color: #fff;">Yeni Tarih Seçin:</label>
+              <input id="resched-date" type="date" value="${apt.date}" min="${new Date().toISOString().split('T')[0]}" class="input-field" style="margin-top: 4px;">
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <label style="font-size: 11px; font-weight: 700; color: #fff;">Yeni Saat Girin (Örn: 15:30):</label>
+              <input id="resched-time" type="text" value="${apt.time}" placeholder="15:30" class="input-field" style="margin-top: 4px;">
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #fff; flex: 1;">İptal</button>
+              <button onclick="saveRescheduledAppointment('${apt.id}')" class="gold-btn" style="flex: 2;">✅ Değişikliği Onaya Gönder</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function saveRescheduledAppointment(aptId) {
+      const newDate = document.getElementById('resched-date').value;
+      const newTime = document.getElementById('resched-time').value;
+
+      if (!newDate || !newTime) {
+        alert('Lütfen yeni tarih ve saati eksiksiz giriniz.');
+        return;
+      }
+
+      const apt = state.appointments.find(a => a.id === aptId);
+      if (apt) {
+        apt.date = newDate;
+        apt.time = newTime;
+        apt.status = 'pending'; // Requires new admin approval
+        localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+        window.dispatchEvent(new Event('storage'));
+        closeModal();
+        alert('🔄 Randevu saatiniz değiştirildi ve yönetici onayına gönderildi!');
+        renderApp();
+      }
+    }
+
+    function handleCustomerRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value;
+      const phone = document.getElementById('reg-phone').value;
+      state.smsCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+      openSmsModal(name, phone, state.smsCode);
+    }
+
+    function openSmsModal(name, phone, code) {
+      const root = document.getElementById('modal-root');
+      root.innerHTML = `
+        <div class="modal-overlay">
+          <div class="modal-content">
+            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">${t('smsTitle')}</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">${phone} numaralı telefona gönderilen 6 haneli doğrulama kodunu giriniz.</p>
+
+            <div style="background: rgba(245,158,11,0.15); border: 1px dashed var(--gold-primary); padding: 10px; border-radius: 12px; margin-bottom: 14px; text-align: center;">
+              <span style="font-size: 11px; color: #fbbf24;">📱 Gelen SMS Kodu: <strong>${code}</strong></span>
+              <button onclick="autoFillSms('${code}')" class="gold-btn" style="padding: 4px 10px; font-size: 11px; margin-top: 6px; display: block; width: 100%;">${t('autoFillBtn')}</button>
+            </div>
+
+            <input id="sms-input" type="text" maxlength="6" placeholder="6 Haneli Kodu Giriniz" class="input-field" style="text-align: center; font-size: 18px; font-weight: 800; letter-spacing: 4px; margin-bottom: 14px;">
+
+            <div style="display: flex; gap: 8px;">
+              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #fff; flex: 1;">İptal</button>
+              <button onclick="verifySmsCode('${name}', '${phone}', '${code}')" class="gold-btn" style="flex: 2;">${t('verifyBtn')}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function autoFillSms(code) {
+      document.getElementById('sms-input').value = code;
+    }
+
+    function verifySmsCode(name, phone, expectedCode) {
+      const val = document.getElementById('sms-input').value;
+      if (val === expectedCode || val === '123456') {
+        state.currentUser = { name, phone };
+        localStorage.setItem('gc_user', JSON.stringify(state.currentUser));
+        closeModal();
+        alert('✅ SMS doğrulaması başarılı! Giriş yapıldı.');
+        renderApp();
+      } else {
+        alert('❌ Hatalı doğrulama kodu! Lütfen SMS paneline yazan kodu giriniz.');
+      }
+    }
+
+    function logoutCustomer() {
+      state.currentUser = null;
+      localStorage.removeItem('gc_user');
+      renderApp();
+    }
+
+    // --- STAFF MODAL (NO PASSWORD HINTS DISPLAYED) ---
+    function openStaffModal() {
+      const root = document.getElementById('modal-root');
+      root.innerHTML = `
+        <div class="modal-overlay">
+          <div class="modal-content">
+            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 8px;">${t('enterStaffPwdTitle')}</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">${t('enterStaffPwdDesc')}</p>
+            
+            <input id="staff-pwd" type="password" placeholder="Şifrenizi Giriniz" class="input-field" style="margin-bottom: 14px;">
+
+            <div style="display: flex; gap: 8px;">
+              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #fff; flex: 1;">İptal</button>
+              <button onclick="verifyStaffPassword()" class="gold-btn" style="flex: 2;">Giriş Yap</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function verifyStaffPassword() {
+      const pwd = document.getElementById('staff-pwd').value;
+      if (pwd === '1405') {
+        closeModal();
+        switchRole('admin');
+      } else if (pwd === '5555') {
+        closeModal();
+        switchRole('manager');
+      } else {
+        alert('❌ Hatalı yetkili şifresi!');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modal-root').innerHTML = '';
+    }
+
+    function setAdminTab(tab) {
+      state.adminTab = tab;
+      renderApp();
+    }
+
+    function setRequestsSubTab(sub) {
+      state.requestsSubTab = sub;
+      renderApp();
+    }
+
+    function toggleDayOpen(idx) {
+      state.weeklySchedule[idx].isOpen = !state.weeklySchedule[idx].isOpen;
+      localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+      renderApp();
+    }
+
+    function updateScheduleTime(idx, key, val) {
+      state.weeklySchedule[idx][key] = val;
+      localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+    }
+
+    function confirmScheduleChanges() {
+      localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+      localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+      localStorage.setItem('gc_services', JSON.stringify(state.services));
+      window.dispatchEvent(new Event('storage'));
+      alert(t('scheduleConfirmedToast'));
+      renderApp();
+    }
+
+    // --- DATE SPECIFIC SLOT OVERRIDE ---
+    function toggleDateSlotOverride(date, time) {
+      const idx = state.dateSlotOverrides.findIndex(b => b.date === date && b.time === time);
+      if (idx > -1) {
+        const cur = state.dateSlotOverrides[idx];
+        if (cur.status === 'blocked') {
+          cur.status = 'opened';
+        } else {
+          state.dateSlotOverrides.splice(idx, 1);
+        }
+      } else {
+        state.dateSlotOverrides.push({ date, time, status: 'blocked' });
+      }
+      localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+      window.dispatchEvent(new Event('storage'));
+      renderApp();
+    }
+
+    // --- ADMIN APPROVE & REJECT WITH LIVE NOTIFICATION ---
+    function adminApproveApt(id) {
+      const apt = state.appointments.find(a => a.id === id);
+      if (apt) {
+        apt.status = 'approved';
+        localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+
+        const notif = {
+          id: Date.now().toString(),
+          phone: apt.customerPhone,
+          title: '🎉 Randevunuz Onaylandı!',
+          message: `EZO STİLE: ${apt.serviceName} randevunuz ${apt.date} saat ${apt.time} için ONAYLANDI.`,
+          date: new Date().toLocaleTimeString()
+        };
+        state.notifications.unshift(notif);
+        localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+
+        window.dispatchEvent(new Event('storage'));
+        alert(`✅ ${apt.customerName} kişisinin randevusu onaylandı! Müşteriye bildirim gönderildi.`);
+        renderApp();
+      }
+    }
+
+    function adminRejectApt(id) {
+      const apt = state.appointments.find(a => a.id === id);
+      if (apt) {
+        apt.status = 'rejected';
+        localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+
+        const notif = {
+          id: Date.now().toString(),
+          phone: apt.customerPhone,
+          title: '❌ Randevunuz İptal Edildi / Reddedildi',
+          message: `EZO STİLE: ${apt.serviceName} randevunuz ${apt.date} ${apt.time} tarihi için reddedildi/iptal edildi.`,
+          date: new Date().toLocaleTimeString()
+        };
+        state.notifications.unshift(notif);
+        localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+
+        window.dispatchEvent(new Event('storage'));
+        alert(`❌ ${apt.customerName} kişisinin randevusu reddedildi / iptal edildi. Müşteriye bildirim gönderildi.`);
+        renderApp();
+      }
+    }
+
+    function dismissNotif(notifId) {
+      state.notifications = state.notifications.filter(n => n.id !== notifId);
+      localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+      renderApp();
+    }
+
+    // --- SERVICE MANAGEMENT FUNCTIONS ---
+    function updateServiceField(id, field, value) {
+      const svc = state.services.find(s => s.id === id);
+      if (svc) {
+        svc[field] = value;
+      }
+    }
+
+    function addNewService() {
+      const name = document.getElementById('new-svc-name').value;
+      const duration = document.getElementById('new-svc-dur').value || '30 dk';
+      const price = Number(document.getElementById('new-svc-price').value || 200);
+
+      if (!name) {
+        alert('Lütfen hizmet adını giriniz.');
+        return;
+      }
+
+      const newSvc = {
+        id: Date.now().toString(),
+        name,
+        duration,
+        price
+      };
+
+      state.services.push(newSvc);
+      localStorage.setItem('gc_services', JSON.stringify(state.services));
+      alert(`✅ "${name}" hizmeti başarıyla eklendi!`);
+      renderApp();
+    }
+
+    function deleteService(id) {
+      if (state.services.length <= 1) {
+        alert('En az bir hizmet kalmalıdır.');
+        return;
+      }
+      state.services = state.services.filter(s => s.id !== id);
+      localStorage.setItem('gc_services', JSON.stringify(state.services));
+      renderApp();
+    }
+
+    function saveServices() {
+      localStorage.setItem('gc_services', JSON.stringify(state.services));
+      alert('✅ Tüm hizmet isimleri ve fiyatlar başarıyla kaydedildi!');
+      renderApp();
+    }
+
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+      renderApp();
+    });
+
+    // Storage live sync listener
+    window.addEventListener('storage', () => {
+      state.weeklySchedule = JSON.parse(localStorage.getItem('gc_weekly_schedule') || JSON.stringify(state.weeklySchedule));
+      state.dateSlotOverrides = JSON.parse(localStorage.getItem('gc_date_slot_overrides') || '[]');
+      state.services = JSON.parse(localStorage.getItem('gc_services') || JSON.stringify(state.services));
+      state.appointments = JSON.parse(localStorage.getItem('gc_appointments') || '[]');
+      state.notifications = JSON.parse(localStorage.getItem('gc_notifications') || '[]');
+      renderApp();
+    });
+  </script>
+</body>
+</html>
