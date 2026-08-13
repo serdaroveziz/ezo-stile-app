@@ -13,6 +13,21 @@
   <!-- GOOGLE FIREBASE REALTIME WEBSOCKET SDK FOR INSTANT MULTI-DEVICE SYNC -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- ONESIGNAL WEB PUSH SDK -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "65d749fe-443e-48d7-96c9-25600a3b8456",
+        safari_web_id: "web.onesignal.auto.65d749fe-443e-48d7-96c9-25600a3b8456",
+        notifyButton: {
+          enable: true,
+        },
+        allowLocalhostAsSecureOrigin: true,
+      });
+    });
+  </script>
   <style>
     /* VIP EZO STİLE DESIGN SYSTEM & CSS TOKENS */
     :root {
@@ -947,8 +962,7 @@
 
     // --- TRIPLE-REDUNDANT HIGH-AVAILABILITY REAL-TIME CLOUD BACKEND ENGINE ---
     const CLOUD_ENDPOINTS = [
-      'https://ezostile-barber-default-rtdb.firebaseio.com/ezostile_master_v3.json',
-      'https://ezostile-backup-default-rtdb.firebaseio.com/ezostile_master_v3.json'
+      'https://ezostile-barber-default-rtdb.europe-west1.firebasedatabase.app/ezostile_v5.json'
     ];
     let isSyncingCloud = false;
     let lastCloudUpdateTimestamp = Number(localStorage.getItem('gc_last_cloud_ts') || 0);
@@ -1022,8 +1036,8 @@
         }
 
         if (latestData && latestData.updatedAt) {
-          // If cloud has newer data than what we last loaded/synced
-          if (latestData.updatedAt > lastCloudUpdateTimestamp && latestData.updatedAt > (lastLocalUpdateTimestamp - 500)) {
+          // Sadece başka bir cihazdan gelen yeni veriyi kabul et
+          if (latestData.updatedAt > lastCloudUpdateTimestamp && Math.abs(latestData.updatedAt - lastLocalUpdateTimestamp) > 1000) {
             
             // Check for new pending appointments for Admin audio chime
             if (state.role !== 'customer' && latestData.appointments) {
