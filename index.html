@@ -1197,6 +1197,26 @@
       `;
     }
 
+    // --- WHATSAPP & SMS QUICK ACTION HELPERS ---
+    function formatPhoneForWa(phone) {
+      let clean = (phone || '').replace(/\D/g, '');
+      if (clean.startsWith('0')) clean = '90' + clean.substring(1);
+      else if (!clean.startsWith('90') && clean.length === 10) clean = '90' + clean;
+      return clean;
+    }
+
+    function sendCustomerWhatsApp(phone, text) {
+      const waPhone = formatPhoneForWa(phone);
+      const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    function sendCustomerSms(phone, text) {
+      const cleanPhone = (phone || '').replace(/\D/g, '');
+      const url = `sms:${cleanPhone}?body=${encodeURIComponent(text)}`;
+      window.open(url, '_self');
+    }
+
     function saveRescheduledAppointment(aptId) {
       const newDate = document.getElementById('resched-date').value;
       const newTime = document.getElementById('resched-time').value;
@@ -1365,7 +1385,42 @@
       renderApp();
     }
 
-    // --- ADMIN APPROVE & REJECT WITH LIVE NOTIFICATION ---
+    // --- ADMIN APPROVE & REJECT WITH LIVE NOTIFICATION & SMS/WA ---
+    function openNotificationActionModal(apt, type) {
+      const isApprove = type === 'approved';
+      const title = isApprove ? '🎉 Randevu Onaylandı' : '❌ Randevu İptal/Reddedildi';
+      const msgText = isApprove 
+        ? `Sayın ${apt.customerName}, EZO STİLE için ${apt.date} saat ${apt.time} tarihindeki (${apt.serviceName}) randevunuz ONAYLANMIŞTIR. Bekliyoruz!`
+        : `Sayın ${apt.customerName}, EZO STİLE için ${apt.date} saat ${apt.time} tarihindeki randevunuz maalesef onaylanamamıştır. Saygılarımızla.`;
+
+      const root = document.getElementById('modal-root');
+      root.innerHTML = `
+        <div class="modal-overlay">
+          <div class="modal-content" style="text-align: center;">
+            <h3 style="font-size: 16px; font-weight: 900; color: ${isApprove ? 'var(--emerald)' : 'var(--rose)'}; margin-bottom: 8px;">${title}</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Müşteriye anında bilgi vermek ister misiniz?</p>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; font-size: 11px; color: #fff; margin-bottom: 16px; text-align: left;">
+              <strong>Örnek Mesaj Metni:</strong><br/>
+              <em>"${msgText}"</em>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button onclick="sendCustomerWhatsApp('${apt.customerPhone}', '${msgText.replace(/'/g, "\\'")}'); closeModal();" class="gold-btn" style="background: #25D366; color: #fff; border: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                💬 WhatsApp İle Bilgi Gönder
+              </button>
+              <button onclick="sendCustomerSms('${apt.customerPhone}', '${msgText.replace(/'/g, "\\'")}'); closeModal();" class="gold-btn" style="background: #3b82f6; color: #fff; border: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                📱 Normal SMS İle Gönder
+              </button>
+              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #aaa;">
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function adminApproveApt(id) {
       const apt = state.appointments.find(a => a.id === id);
       if (apt) {
@@ -1384,8 +1439,8 @@
 
         syncToCloud();
         window.dispatchEvent(new Event('storage'));
-        alert(`✅ ${apt.customerName} kişisinin randevusu onaylandı! Müşteriye bildirim gönderildi.`);
         renderApp();
+        openNotificationActionModal(apt, 'approved');
       }
     }
 
@@ -1407,8 +1462,8 @@
 
         syncToCloud();
         window.dispatchEvent(new Event('storage'));
-        alert(`❌ ${apt.customerName} kişisinin randevusu reddedildi / iptal edildi. Müşteriye bildirim gönderildi.`);
         renderApp();
+        openNotificationActionModal(apt, 'rejected');
       }
     }
 
