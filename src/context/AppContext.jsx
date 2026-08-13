@@ -214,27 +214,33 @@ export const AppProvider = ({ children }) => {
   // 7. Live Customer Notifications
   const [notifications, setNotifications] = useState([]);
 
-  // --- TRIPLE-REDUNDANT HIGH-AVAILABILITY CLOUD BACKEND ENGINE ---
+  // --- TRIPLE-REDUNDANT HIGH-AVAILABILITY REAL-TIME CLOUD BACKEND ENGINE ---
   const CLOUD_ENDPOINTS = [
-    'https://api.npoint.io/e7f4c519d08e2f891b2c',
-    'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_master_key_v5'
+    'https://ezostile-barber-default-rtdb.firebaseio.com/ezostile_master_v3.json',
+    'https://ezostile-backup-default-rtdb.firebaseio.com/ezostile_master_v3.json'
   ];
+  const lastCloudTsRef = useRef(Number(localStorage.getItem('goldcut_last_cloud_ts') || 0));
+  const lastLocalTsRef = useRef(Number(localStorage.getItem('goldcut_last_local_ts') || 0));
 
   const syncToCloud = async (overrideData = {}) => {
+    const now = Date.now();
+    lastLocalTsRef.current = now;
+    localStorage.setItem('goldcut_last_local_ts', now.toString());
+
     const payload = {
       appointments: overrideData.appointments || appointments,
       blockedSlots: overrideData.blockedSlots || blockedSlots,
       blockedDates: overrideData.blockedDates || blockedDates,
       weeklySchedule: overrideData.weeklySchedule || weeklySchedule,
       shopSettings: overrideData.shopSettings || shopSettings,
-      updatedAt: Date.now()
+      updatedAt: now
     };
 
     const bodyStr = JSON.stringify(payload);
 
     await Promise.allSettled(CLOUD_ENDPOINTS.map(url =>
       fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: bodyStr
       }).catch(() => {})
@@ -245,39 +251,50 @@ export const AppProvider = ({ children }) => {
     let isSubscribed = true;
     const fetchFromCloud = async () => {
       try {
-        let data = null;
+        let latestData = null;
 
         for (const url of CLOUD_ENDPOINTS) {
           try {
-            const res = await fetch(url);
+            const res = await fetch(url, { cache: 'no-store' });
             if (res.ok) {
               const text = await res.text();
               if (text && text.trim().startsWith('{')) {
                 const parsed = JSON.parse(text);
                 if (parsed && parsed.updatedAt) {
-                  data = parsed;
-                  break;
+                  if (!latestData || parsed.updatedAt > latestData.updatedAt) {
+                    latestData = parsed;
+                  }
                 }
               }
             }
           } catch (e) {}
         }
 
-        if (data && data.updatedAt && isSubscribed) {
-          if (data.appointments) setAppointments(data.appointments);
-          if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
-          if (data.blockedDates) setBlockedDates(data.blockedDates);
-          if (data.weeklySchedule) setWeeklySchedule(data.weeklySchedule);
-          if (data.shopSettings) setShopSettings(data.shopSettings);
+        if (latestData && latestData.updatedAt && isSubscribed) {
+          if (latestData.updatedAt > lastCloudTsRef.current && latestData.updatedAt > (lastLocalTsRef.current - 500)) {
+            lastCloudTsRef.current = latestData.updatedAt;
+            localStorage.setItem('goldcut_last_cloud_ts', latestData.updatedAt.toString());
+
+            if (latestData.appointments) setAppointments(latestData.appointments);
+            if (latestData.blockedSlots) setBlockedSlots(latestData.blockedSlots);
+            if (latestData.blockedDates) setBlockedDates(latestData.blockedDates);
+            if (latestData.weeklySchedule) setWeeklySchedule(latestData.weeklySchedule);
+            if (latestData.shopSettings) setShopSettings(latestData.shopSettings);
+          }
         }
       } catch (err) {}
     };
 
     fetchFromCloud();
-    const interval = setInterval(fetchFromCloud, 2000);
+    const interval = setInterval(fetchFromCloud, 1500);
+
+    const onFocus = () => fetchFromCloud();
+    window.addEventListener('focus', onFocus);
+
     return () => {
       isSubscribed = false;
       clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
     };
   }, []);
 

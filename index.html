@@ -945,32 +945,57 @@
       container.innerHTML = html;
     }
 
-    // --- TRIPLE-REDUNDANT HIGH-AVAILABILITY CLOUD BACKEND ENGINE ---
+    // --- TRIPLE-REDUNDANT HIGH-AVAILABILITY REAL-TIME CLOUD BACKEND ENGINE ---
     const CLOUD_ENDPOINTS = [
-      'https://api.npoint.io/e7f4c519d08e2f891b2c',
-      'https://kvdb.io/A8Z9X1W2Q3V4M5N6P7R8/ezostile_master_key_v5'
+      'https://ezostile-barber-default-rtdb.firebaseio.com/ezostile_master_v3.json',
+      'https://ezostile-backup-default-rtdb.firebaseio.com/ezostile_master_v3.json'
     ];
     let isSyncingCloud = false;
+    let lastCloudUpdateTimestamp = Number(localStorage.getItem('gc_last_cloud_ts') || 0);
+    let lastLocalUpdateTimestamp = Number(localStorage.getItem('gc_last_local_ts') || 0);
 
-    async function syncToCloud() {
-      const payload = {
+    async function syncToCloud(overridePayload = null) {
+      const now = Date.now();
+      lastLocalUpdateTimestamp = now;
+      localStorage.setItem('gc_last_local_ts', now.toString());
+
+      const payload = overridePayload || {
         appointments: state.appointments,
         dateSlotOverrides: state.dateSlotOverrides,
         weeklySchedule: state.weeklySchedule,
         services: state.services,
         notifications: state.notifications,
-        updatedAt: Date.now()
+        updatedAt: now
       };
 
       const bodyStr = JSON.stringify(payload);
 
       await Promise.allSettled(CLOUD_ENDPOINTS.map(url =>
         fetch(url, {
-          method: 'POST',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: bodyStr
         }).catch(() => {})
       ));
+    }
+
+    function playNotificationSound() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.45);
+      } catch (e) {}
     }
 
     async function fetchFromCloud() {
@@ -981,7 +1006,7 @@
 
         for (const url of CLOUD_ENDPOINTS) {
           try {
-            const res = await fetch(url);
+            const res = await fetch(url, { cache: 'no-store' });
             if (res.ok) {
               const text = await res.text();
               if (text && text.trim().startsWith('{')) {
@@ -997,29 +1022,46 @@
         }
 
         if (latestData && latestData.updatedAt) {
-          if (latestData.appointments) {
-            state.appointments = latestData.appointments;
-            localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
-          }
-          if (latestData.dateSlotOverrides) {
-            state.dateSlotOverrides = latestData.dateSlotOverrides;
-            localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
-          }
-          if (latestData.weeklySchedule) {
-            state.weeklySchedule = latestData.weeklySchedule;
-            localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
-          }
-          if (latestData.services) {
-            state.services = latestData.services;
-            localStorage.setItem('gc_services', JSON.stringify(state.services));
-          }
-          if (latestData.notifications) {
-            state.notifications = latestData.notifications;
-            localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
-          }
+          // If cloud has newer data than what we last loaded/synced
+          if (latestData.updatedAt > lastCloudUpdateTimestamp && latestData.updatedAt > (lastLocalUpdateTimestamp - 500)) {
+            
+            // Check for new pending appointments for Admin audio chime
+            if (state.role !== 'customer' && latestData.appointments) {
+              const oldPending = (state.appointments || []).filter(a => a.status === 'pending').length;
+              const newPending = latestData.appointments.filter(a => a.status === 'pending').length;
+              if (newPending > oldPending) {
+                playNotificationSound();
+              }
+            }
 
-          renderApp();
-        } else {
+            lastCloudUpdateTimestamp = latestData.updatedAt;
+            localStorage.setItem('gc_last_cloud_ts', latestData.updatedAt.toString());
+
+            if (latestData.appointments) {
+              state.appointments = latestData.appointments;
+              localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+            }
+            if (latestData.dateSlotOverrides) {
+              state.dateSlotOverrides = latestData.dateSlotOverrides;
+              localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+            }
+            if (latestData.weeklySchedule) {
+              state.weeklySchedule = latestData.weeklySchedule;
+              localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+            }
+            if (latestData.services) {
+              state.services = latestData.services;
+              localStorage.setItem('gc_services', JSON.stringify(state.services));
+            }
+            if (latestData.notifications) {
+              state.notifications = latestData.notifications;
+              localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+            }
+
+            renderApp();
+          }
+        } else if (lastLocalUpdateTimestamp === 0 && (!latestData || !latestData.updatedAt)) {
+          // Initial seed sync if cloud is completely empty
           syncToCloud();
         }
       } catch (err) {
@@ -1029,9 +1071,15 @@
       }
     }
 
-    // Auto poll cloud DB every 2 seconds for instant multi-device sync
+    // Auto poll cloud DB every 1.5 seconds for instant multi-device sync
     fetchFromCloud();
-    setInterval(fetchFromCloud, 2000);
+    setInterval(fetchFromCloud, 1500);
+
+    // Sync on tab focus or visibility change
+    window.addEventListener('focus', fetchFromCloud);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) fetchFromCloud();
+    });
 
     // --- USER INTERACTIONS ---
     function selectService(id) {
