@@ -1366,21 +1366,49 @@
       }
     }
 
+    function isValidTurkishGsm(phone) {
+      let clean = (phone || '').replace(/\D/g, '');
+      if (clean.startsWith('90')) clean = clean.substring(2);
+      if (clean.startsWith('0')) clean = clean.substring(1);
+      
+      if (clean.length !== 10 || !clean.startsWith('5')) return false;
+      
+      // Reject repetitive or obvious fake numbers
+      if (/^(\d)\1{9}$/.test(clean)) return false;
+      if (clean === '1234567890' || clean === '5454646352' || clean === '5000000000') return false;
+
+      const prefix = parseInt(clean.substring(0, 3));
+      // Valid TR & KKTC GSM prefixes: 501-509, 530-539, 540-549, 551-559, 561
+      if ((prefix >= 501 && prefix <= 509) || 
+          (prefix >= 530 && prefix <= 539) || 
+          (prefix >= 540 && prefix <= 549) || 
+          (prefix >= 551 && prefix <= 559) || 
+          prefix === 561) {
+        return true;
+      }
+      return false;
+    }
+
     function handleCustomerRegister(e) {
       if (e && e.preventDefault) e.preventDefault();
-      const name = document.getElementById('reg-name')?.value || '';
-      const phone = document.getElementById('reg-phone')?.value || '';
+      const name = (document.getElementById('reg-name')?.value || '').trim();
+      const phone = (document.getElementById('reg-phone')?.value || '').trim();
 
-      if (!name || !phone) {
-        alert('Lütfen Ad Soyad ve Telefon Numaranızı giriniz.');
+      if (!name || name.length < 3) {
+        alert('Lütfen Adınızı ve Soyadınızı eksiksiz giriniz.');
+        return;
+      }
+
+      if (!isValidTurkishGsm(phone)) {
+        alert('❌ Geçersiz GSM Numarası!\n\nKayıt olabilmek için lütfen gerçek cep telefonu numaranızı (Örn: 05XX XXX XX XX) giriniz. Uydurma veya sahte numaralar kabul edilmez.');
         return;
       }
 
       state.smsCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-      // Dispatch SMS to customer phone via native SMS intent
       const cleanPhone = phone.replace(/\D/g, '');
-      const smsBody = `EZO STİLE Doğrulama Şifreniz: ${state.smsCode}`;
+      const smsBody = `EZO STİLE SMS Doğrulama Şifreniz: ${state.smsCode}`;
+
       try {
         window.open(`sms:${cleanPhone}?body=${encodeURIComponent(smsBody)}`, '_self');
       } catch(err) {}
@@ -1394,23 +1422,25 @@
         <div class="modal-overlay">
           <div class="modal-content" style="max-width: 420px; text-align: center; border: 1px solid var(--gold-primary); box-shadow: 0 15px 40px rgba(0,0,0,0.8);">
             <div style="font-size: 42px; margin-bottom: 6px;">📲</div>
-            <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">Telefonunuza SMS Gönderildi</h3>
-            <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 14px;"><strong>${phone}</strong> numaralı telefonunuza SMS ile iletilen 6 haneli doğrulama şifresini giriniz.</p>
+            <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">SMS Doğrulama Şifresi Gönderildi</h3>
+            <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 16px; line-height: 1.4;">
+              <strong>${phone}</strong> numaralı hattınıza SMS ile gönderilen 6 haneli doğrulama şifresini giriniz.
+            </p>
 
-            <div style="background: rgba(245,158,11,0.12); border: 1px dashed var(--gold-primary); padding: 12px; border-radius: 14px; margin-bottom: 16px; text-align: center;">
-              <span style="font-size: 12px; color: #fbbf24;">📩 Telefonunuza Gönderilen Şifre: <strong>${code}</strong></span>
-              <button onclick="autoFillSms('${code}')" class="gold-btn" style="padding: 6px 12px; font-size: 11px; margin-top: 8px; display: block; width: 100%;">${t('autoFillBtn')}</button>
+            <div style="background: rgba(245,158,11,0.1); border: 1px dashed var(--gold-primary); padding: 12px; border-radius: 14px; margin-bottom: 16px; text-align: left;">
+              <div style="font-size: 11px; color: #fbbf24; font-weight: 800;">🔒 Güvenli Numara Doğrulaması</div>
+              <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Telefonunuza gelen SMS şifresini girmeden hesabınız aktifleştirilmez.</div>
             </div>
 
-            <input id="sms-input" type="text" maxlength="6" placeholder="6 Haneli Kodu Giriniz" class="input-field" style="text-align: center; font-size: 22px; font-weight: 900; letter-spacing: 8px; margin-bottom: 16px; background: #040711; border-color: var(--gold-primary);">
+            <input id="sms-input" type="text" maxlength="6" placeholder="6 Haneli SMS Şifresi" class="input-field" style="text-align: center; font-size: 24px; font-weight: 900; letter-spacing: 8px; margin-bottom: 16px; background: #040711; border-color: var(--gold-primary);">
 
             <div style="display: flex; flex-direction: column; gap: 10px;">
               <button onclick="verifySmsCode('${name}', '${phone}', '${code}')" class="gold-btn" style="width: 100%; padding: 14px; font-size: 14px; font-weight: 800;">
                 ✅ Şifreyi Doğrula ve Giriş Yap
               </button>
               
-              <button onclick="autoFillSms('${code}'); verifySmsCode('${name}', '${phone}', '${code}');" class="gold-btn" style="width: 100%; padding: 12px; background: #1e293b; color: #fff; font-size: 12px;">
-                ⚡ Otomatik Doldur ve Giriş Yap
+              <button onclick="handleCustomerRegister(new Event('submit'))" class="gold-btn" style="width: 100%; padding: 10px; font-size: 12px; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);">
+                🔄 Kodu Tekrar Gönder
               </button>
               
               <button onclick="closeModal()" class="gold-btn" style="width: 100%; padding: 8px; font-size: 11px; background: transparent; border: none; color: #94a3b8;">
