@@ -6,7 +6,7 @@
   "homepage": "https://serdaroveziz.github.io/ezo-stile-app",
   "scripts": {
     "dev": "vite",
-    "build": "node -e \"const fs=require('fs'); if(!fs.existsSync('public')) fs.mkdirSync('public'); if(fs.existsSync('insta.png')) fs.copyFileSync('insta.png','public/insta.png');\" && vite build",
+    "build": "node -e \"const fs=require('fs'); if(!fs.existsSync('public')) fs.mkdirSync('public'); if(fs.existsSync('insta.png')) fs.copyFileSync('insta.png','public/insta.png');\" && vite build && node -e \"const fs=require('fs'); fs.cpSync('docs','dist',{recursive:true});\"",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
