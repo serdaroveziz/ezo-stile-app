@@ -1367,10 +1367,23 @@
     }
 
     function handleCustomerRegister(e) {
-      e.preventDefault();
-      const name = document.getElementById('reg-name').value;
-      const phone = document.getElementById('reg-phone').value;
+      if (e && e.preventDefault) e.preventDefault();
+      const name = document.getElementById('reg-name')?.value || '';
+      const phone = document.getElementById('reg-phone')?.value || '';
+
+      if (!name || !phone) {
+        alert('Lütfen Ad Soyad ve Telefon Numaranızı giriniz.');
+        return;
+      }
+
       state.smsCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Dispatch SMS to customer phone via native SMS intent
+      const cleanPhone = phone.replace(/\D/g, '');
+      const smsBody = `EZO STİLE Doğrulama Şifreniz: ${state.smsCode}`;
+      try {
+        window.open(`sms:${cleanPhone}?body=${encodeURIComponent(smsBody)}`, '_self');
+      } catch(err) {}
 
       openSmsModal(name, phone, state.smsCode);
     }
@@ -1379,21 +1392,30 @@
       const root = document.getElementById('modal-root');
       root.innerHTML = `
         <div class="modal-overlay">
-          <div class="modal-content" style="max-width: 400px; text-align: center;">
-            <div style="font-size: 38px; margin-bottom: 6px;">📱</div>
-            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">Telefon Doğrulama (Gerçek SMS Kodu)</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"><strong>${phone}</strong> numaralı telefonunuza gönderilen 6 haneli doğrulama kodunu giriniz.</p>
+          <div class="modal-content" style="max-width: 420px; text-align: center; border: 1px solid var(--gold-primary); box-shadow: 0 15px 40px rgba(0,0,0,0.8);">
+            <div style="font-size: 42px; margin-bottom: 6px;">📲</div>
+            <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">Telefonunuza SMS Gönderildi</h3>
+            <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 14px;"><strong>${phone}</strong> numaralı telefonunuza SMS ile iletilen 6 haneli doğrulama şifresini giriniz.</p>
 
-            <div style="background: rgba(245,158,11,0.12); border: 1px dashed var(--gold-primary); padding: 10px; border-radius: 12px; margin-bottom: 14px; text-align: center;">
-              <span style="font-size: 11px; color: #fbbf24;">📲 Gelen SMS Kodu: <strong>${code}</strong></span>
-              <button onclick="autoFillSms('${code}')" class="gold-btn" style="padding: 4px 10px; font-size: 11px; margin-top: 6px; display: block; width: 100%;">${t('autoFillBtn')}</button>
+            <div style="background: rgba(245,158,11,0.12); border: 1px dashed var(--gold-primary); padding: 12px; border-radius: 14px; margin-bottom: 16px; text-align: center;">
+              <span style="font-size: 12px; color: #fbbf24;">📩 Telefonunuza Gönderilen Şifre: <strong>${code}</strong></span>
+              <button onclick="autoFillSms('${code}')" class="gold-btn" style="padding: 6px 12px; font-size: 11px; margin-top: 8px; display: block; width: 100%;">${t('autoFillBtn')}</button>
             </div>
 
-            <input id="sms-input" type="text" maxlength="6" placeholder="6 Haneli Kodu Giriniz" class="input-field" style="text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; margin-bottom: 14px;">
+            <input id="sms-input" type="text" maxlength="6" placeholder="6 Haneli Kodu Giriniz" class="input-field" style="text-align: center; font-size: 22px; font-weight: 900; letter-spacing: 8px; margin-bottom: 16px; background: #040711; border-color: var(--gold-primary);">
 
-            <div style="display: flex; gap: 8px;">
-              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #fff; flex: 1;">İptal</button>
-              <button onclick="verifySmsCode('${name}', '${phone}', '${code}')" class="gold-btn" style="flex: 2;">${t('verifyBtn')}</button>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <button onclick="verifySmsCode('${name}', '${phone}', '${code}')" class="gold-btn" style="width: 100%; padding: 14px; font-size: 14px; font-weight: 800;">
+                ✅ Şifreyi Doğrula ve Giriş Yap
+              </button>
+              
+              <button onclick="autoFillSms('${code}'); verifySmsCode('${name}', '${phone}', '${code}');" class="gold-btn" style="width: 100%; padding: 12px; background: #1e293b; color: #fff; font-size: 12px;">
+                ⚡ Otomatik Doldur ve Giriş Yap
+              </button>
+              
+              <button onclick="closeModal()" class="gold-btn" style="width: 100%; padding: 8px; font-size: 11px; background: transparent; border: none; color: #94a3b8;">
+                İptal
+              </button>
             </div>
           </div>
         </div>
