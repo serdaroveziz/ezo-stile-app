@@ -466,6 +466,8 @@
       smsCode: null,
       adminTab: 'requests', // 'weeklySchedule' | 'slotLocking' | 'servicesAdmin' | 'requests'
       requestsSubTab: 'pending', // 'pending' | 'approved' | 'rejected'
+      adminPhone: localStorage.getItem('gc_admin_phone') || '05338000000',
+      accordionStep: 1, // 1: Service open, 2: Date open, 3: Time open, 4: All collapsed & Confirm open
       services: JSON.parse(localStorage.getItem('gc_services') || JSON.stringify(DEFAULT_SERVICES)),
       customerTab: 'booking', // 'booking' | 'myAppointments'
       selectedServiceId: '1',
@@ -679,110 +681,157 @@
         </div>
       `;
 
-      // 3. BOOKING TAB CONTENT (2 + 3 HİBRİT ZERO-SCROLL TASARIM)
+      // 3. BOOKING TAB CONTENT (AKILLI KATLANABİLİR ADIM SİSTEMİ - SMART ACCORDION FLOW)
       if (state.customerTab === 'booking') {
+        html += `<div class="card" style="padding: 16px 14px;">`;
+
+        // STEP 1: HİZMET SEÇİMİ (KATLANABİLİR)
+        const isStep1Open = !state.accordionStep || state.accordionStep === 1;
         html += `
-          <div class="card" style="padding: 16px 14px;">
-            <!-- 1. SERVICE SELECT (YATAY KAYDIRMALI KARUSEL) -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <h3 style="font-size: 14px; font-weight: 900; color: var(--gold-primary);">1. İşlem Seçiniz</h3>
-              <span style="font-size: 10px; color: var(--text-muted);">👈 Sağa kaydırabilirsiniz</span>
-            </div>
-            
-            <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 14px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;">
-              ${state.services.map(s => {
-                const displayName = getServiceName(s);
-                const isSel = activeSelectedService.id === s.id;
-                return `
-                  <div onclick="selectService('${s.id}')" style="flex: 0 0 160px; scroll-snap-align: start; padding: 10px 12px; border-radius: 14px; border: 2px solid ${isSel ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${isSel ? 'rgba(245,158,11,0.16)' : '#070c1a'}; cursor: pointer; transition: all 0.2s ease; box-shadow: ${isSel ? '0 4px 12px rgba(245,158,11,0.25)' : 'none'};">
-                    <div style="font-weight: 800; font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayName}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                      <span style="font-size: 11px; color: var(--text-muted);">⏱️ ${s.duration}</span>
-                      <span style="font-size: 13px; font-weight: 900; color: var(--gold-primary);">${s.price} TL</span>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-
-            <!-- 2. DATE SELECT (KOMPAKT YAN YANA SEÇİM) -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <h3 style="font-size: 14px; font-weight: 900; color: var(--gold-primary);">2. Tarih Seçiniz</h3>
-            </div>
-            <div style="display: flex; gap: 6px; margin-bottom: 14px;">
-              <button onclick="selectDate('${todayStr}')" style="flex: 1; padding: 8px 4px; border-radius: 10px; font-size: 11px; font-weight: 800; border: 1px solid ${state.selectedDate === todayStr ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.selectedDate === todayStr ? 'var(--gold-primary)' : '#070c1a'}; color: ${state.selectedDate === todayStr ? '#000' : '#fff'}; cursor: pointer;">
-                📅 Bugün
-              </button>
-              <button onclick="selectDate('${tomorrowStr}')" style="flex: 1; padding: 8px 4px; border-radius: 10px; font-size: 11px; font-weight: 800; border: 1px solid ${state.selectedDate === tomorrowStr ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.selectedDate === tomorrowStr ? 'var(--gold-primary)' : '#070c1a'}; color: ${state.selectedDate === tomorrowStr ? '#000' : '#fff'}; cursor: pointer;">
-                📅 Yarın
-              </button>
-              <input type="date" value="${state.selectedDate}" min="${todayStr}" onchange="selectDate(this.value)" class="input-field" style="flex: 1.2; padding: 6px 8px; font-size: 11px; font-weight: 700;">
-            </div>
-
-            <!-- 3. TIME SELECT (KOMPAKT 4 SÜTUNLU IZGARA) -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <h3 style="font-size: 14px; font-weight: 900; color: var(--gold-primary);">3. Saat Seçiniz</h3>
-              ${state.selectedTime ? `<span style="font-size: 12px; font-weight: 900; color: var(--gold-primary);">⏰ ${state.selectedTime}</span>` : '<span style="font-size: 11px; color: #fb7185; font-weight: 700;">(Saat Seçiniz)</span>'}
-            </div>
-            
-            ${!sched.isOpen ? `
-              <div style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 14px; border-radius: 14px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 14px;">
-                ⚠️ Bu tarihte (${state.selectedDate}) salonumuz kapalıdır.
+          <div style="background: #070c1a; border-radius: 14px; border: 1px solid ${isStep1Open ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 12px; margin-bottom: 12px; transition: all 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary);">1. İŞLEM SEÇİMİ</span>
+                <div style="font-size: 13px; font-weight: 800; color: #fff; margin-top: 2px;">
+                  ✓ ${getServiceName(activeSelectedService)} (${activeSelectedService.price} TL)
+                </div>
               </div>
-            ` : allPastForToday ? `
-              <div style="background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 12px; border-radius: 14px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 14px;">
-                ℹ️ Bugünün mesai saatleri tamamlanmıştır. Yarın için alabilirsiniz.
-                <button onclick="selectTomorrow()" class="gold-btn" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 900;">📅 Yarınki Saatleri Göster</button>
-              </div>
-            ` : `
-              <div class="slot-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 16px;">
-                ${availableSlots.map(time => {
-                  const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
-                  const alreadyBooked = state.appointments.some(apt => 
-                    apt.date === state.selectedDate && 
-                    apt.time === time && 
-                    apt.status !== 'rejected' && 
-                    apt.status !== 'cancelled'
-                  );
-                  const isBlocked = (override ? override.status === 'blocked' : false) || alreadyBooked;
-                  const isSelected = state.selectedTime === time;
+              <button onclick="setAccordionStep(${isStep1Open ? 0 : 1})" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                ${isStep1Open ? '▲ Kapat' : '✏️ Değiştir'}
+              </button>
+            </div>
 
-                  let isPast = false;
-                  if (isToday) {
-                    const [sHour, sMin] = time.split(':').map(Number);
-                    if (sHour < currentHour || (sHour === currentHour && sMin <= currentMin)) {
-                      isPast = true;
-                    }
-                  } else if (isPastDate) {
-                    isPast = true;
-                  }
-
-                  const isDisabled = isBlocked || isPast;
-
+            ${isStep1Open ? `
+              <div style="display: flex; gap: 8px; overflow-x: auto; padding-top: 12px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;">
+                ${state.services.map(s => {
+                  const displayName = getServiceName(s);
+                  const isSel = activeSelectedService.id === s.id;
                   return `
-                    <button onclick="selectTime('${time}')" ${isDisabled ? 'disabled' : ''} class="slot-btn ${isPast ? 'past' : ''} ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
-                      ${time}
-                      ${isPast ? '<span style="display:block; font-size:7px; opacity:0.6;">GEÇTİ</span>' : alreadyBooked ? '<span style="display:block; font-size:7px; color:#fb7185;">DOLU</span>' : isBlocked ? '<span style="display:block; font-size:7px; color:#fb7185;">KAPALI</span>' : ''}
-                    </button>
+                    <div onclick="selectServiceAccordion('${s.id}')" style="flex: 0 0 160px; scroll-snap-align: start; padding: 10px 12px; border-radius: 12px; border: 2px solid ${isSel ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${isSel ? 'rgba(245,158,11,0.16)' : '#0f172a'}; cursor: pointer; transition: all 0.2s ease;">
+                      <div style="font-weight: 800; font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayName}</div>
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                        <span style="font-size: 11px; color: var(--text-muted);">⏱️ ${s.duration}</span>
+                        <span style="font-size: 13px; font-weight: 900; color: var(--gold-primary);">${s.price} TL</span>
+                      </div>
+                    </div>
                   `;
                 }).join('')}
               </div>
-            `}
-
-            <!-- 4. SMART GLOWING CONFIRM BAR (AUTO-FOCUSED & ZERO-SCROLL) -->
-            <div id="booking-confirm-bar" style="background: ${state.selectedTime ? 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.12))' : '#070c1a'}; border: 1.5px solid ${state.selectedTime ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 14px; padding: 12px 14px; text-align: center; transition: all 0.3s ease; box-shadow: ${state.selectedTime ? '0 0 20px rgba(245,158,11,0.3)' : 'none'};">
-              <div style="font-size: 13px; font-weight: 800; color: #fff;">
-                ✨ ${getServiceName(activeSelectedService)} — <span style="color: var(--gold-primary); font-weight: 900;">${activeSelectedService.price} TL</span>
-              </div>
-              <div style="font-size: 12px; font-weight: 700; color: ${state.selectedTime ? 'var(--gold-primary)' : 'var(--text-muted)'}; margin-top: 2px;">
-                📅 ${state.selectedDate} — ⏰ ${state.selectedTime ? state.selectedTime : 'Lütfen saat seçiniz...'}
-              </div>
-              <button onclick="submitBooking()" class="gold-btn ${state.selectedTime ? 'animate-pulse' : ''}" style="width: 100%; margin-top: 10px; padding: 14px; font-size: 15px; font-weight: 900; background: ${state.selectedTime ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#1e293b'}; color: ${state.selectedTime ? '#000' : 'var(--text-muted)'}; border: 1px solid ${state.selectedTime ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 12px;">
-                ${state.selectedTime ? '📅 RANDEVUYU ONAYLA (ŞİMDİ TIKLAYIN)' : '⏰ LÜTFEN BİR SAAT SEÇİNİZ'}
-              </button>
-            </div>
+            ` : ''}
           </div>
         `;
+
+        // STEP 2: TARİH SEÇİMİ (KATLANABİLİR)
+        const isStep2Open = state.accordionStep === 2;
+        html += `
+          <div style="background: #070c1a; border-radius: 14px; border: 1px solid ${isStep2Open ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 12px; margin-bottom: 12px; transition: all 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary);">2. TARİH SEÇİMİ</span>
+                <div style="font-size: 13px; font-weight: 800; color: #fff; margin-top: 2px;">
+                  📅 ${state.selectedDate === todayStr ? 'Bugün (' + state.selectedDate + ')' : state.selectedDate === tomorrowStr ? 'Yarın (' + state.selectedDate + ')' : state.selectedDate}
+                </div>
+              </div>
+              <button onclick="setAccordionStep(${isStep2Open ? 0 : 2})" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                ${isStep2Open ? '▲ Kapat' : '✏️ Değiştir'}
+              </button>
+            </div>
+
+            ${isStep2Open ? `
+              <div style="display: flex; gap: 6px; margin-top: 12px;">
+                <button onclick="selectDateAccordion('${todayStr}')" style="flex: 1; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; border: 1px solid ${state.selectedDate === todayStr ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.selectedDate === todayStr ? 'var(--gold-primary)' : '#0f172a'}; color: ${state.selectedDate === todayStr ? '#000' : '#fff'}; cursor: pointer;">
+                  📅 Bugün
+                </button>
+                <button onclick="selectDateAccordion('${tomorrowStr}')" style="flex: 1; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; border: 1px solid ${state.selectedDate === tomorrowStr ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.selectedDate === tomorrowStr ? 'var(--gold-primary)' : '#0f172a'}; color: ${state.selectedDate === tomorrowStr ? '#000' : '#fff'}; cursor: pointer;">
+                  📅 Yarın
+                </button>
+                <input type="date" value="${state.selectedDate}" min="${todayStr}" onchange="selectDateAccordion(this.value)" class="input-field" style="flex: 1.2; padding: 8px; font-size: 11px; font-weight: 700;">
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+        // STEP 3: SAAT SEÇİMİ (KATLANABİLİR)
+        const isStep3Open = state.accordionStep === 3;
+        html += `
+          <div style="background: #070c1a; border-radius: 14px; border: 1px solid ${isStep3Open ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 12px; margin-bottom: 14px; transition: all 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary);">3. SAAT SEÇİMİ</span>
+                <div style="font-size: 13px; font-weight: 800; color: ${state.selectedTime ? '#fff' : '#fb7185'}; margin-top: 2px;">
+                  ${state.selectedTime ? '⏰ ' + state.selectedTime : '⚠️ Saat Seçilmedi'}
+                </div>
+              </div>
+              <button onclick="setAccordionStep(${isStep3Open ? 0 : 3})" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                ${isStep3Open ? '▲ Kapat' : '✏️ Değiştir'}
+              </button>
+            </div>
+
+            ${isStep3Open ? `
+              ${!sched.isOpen ? `
+                <div style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center; margin-top: 10px;">
+                  ⚠️ Bu tarihte salonumuz kapalıdır.
+                </div>
+              ` : allPastForToday ? `
+                <div style="background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center; margin-top: 10px;">
+                  ℹ️ Bugünün mesai saatleri tamamlanmıştır.
+                  <button onclick="selectDateAccordion('${tomorrowStr}')" class="gold-btn" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 900;">📅 Yarınki Saatleri Göster</button>
+                </div>
+              ` : `
+                <div class="slot-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px;">
+                  ${availableSlots.map(time => {
+                    const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
+                    const alreadyBooked = state.appointments.some(apt => 
+                      apt.date === state.selectedDate && 
+                      apt.time === time && 
+                      apt.status !== 'rejected' && 
+                      apt.status !== 'cancelled'
+                    );
+                    const isBlocked = (override ? override.status === 'blocked' : false) || alreadyBooked;
+                    const isSelected = state.selectedTime === time;
+
+                    let isPast = false;
+                    if (isToday) {
+                      const [sHour, sMin] = time.split(':').map(Number);
+                      if (sHour < currentHour || (sHour === currentHour && sMin <= currentMin)) {
+                        isPast = true;
+                      }
+                    } else if (isPastDate) {
+                      isPast = true;
+                    }
+
+                    const isDisabled = isBlocked || isPast;
+
+                    return `
+                      <button onclick="selectTimeAccordion('${time}')" ${isDisabled ? 'disabled' : ''} class="slot-btn ${isPast ? 'past' : ''} ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                        ${time}
+                        ${isPast ? '<span style="display:block; font-size:7px; opacity:0.6;">GEÇTİ</span>' : alreadyBooked ? '<span style="display:block; font-size:7px; color:#fb7185;">DOLU</span>' : isBlocked ? '<span style="display:block; font-size:7px; color:#fb7185;">KAPALI</span>' : ''}
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              `}
+            ` : ''}
+          </div>
+        `;
+
+        // STEP 4: BIG DEV CONFIRMATION BUTTON
+        html += `
+          <div id="booking-confirm-bar" style="background: ${state.selectedTime ? 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(251,191,36,0.15))' : '#070c1a'}; border: 2px solid ${state.selectedTime ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 16px; padding: 16px; text-align: center; transition: all 0.3s ease; box-shadow: ${state.selectedTime ? '0 0 25px rgba(245,158,11,0.35)' : 'none'};">
+            <div style="font-size: 14px; font-weight: 900; color: #fff;">
+              📋 ${getServiceName(activeSelectedService)} — <span style="color: var(--gold-primary); font-size: 16px;">${activeSelectedService.price} TL</span>
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: ${state.selectedTime ? 'var(--gold-primary)' : 'var(--text-muted)'}; margin-top: 4px;">
+              📅 ${state.selectedDate} — ⏰ ${state.selectedTime ? state.selectedTime : 'Lütfen Saat Seçiniz'}
+            </div>
+
+            <button onclick="submitBooking()" class="gold-btn ${state.selectedTime ? 'animate-pulse' : ''}" style="width: 100%; margin-top: 12px; padding: 16px; font-size: 16px; font-weight: 900; background: ${state.selectedTime ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#1e293b'}; color: ${state.selectedTime ? '#000' : 'var(--text-muted)'}; border: 1px solid ${state.selectedTime ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 12px;">
+              ${state.selectedTime ? '📅 RANDEVUYU ONAYLA (ŞİMDİ TIKLAYIN)' : '⏰ ÖNCE SAAT SEÇİNİZ'}
+            </button>
+          </div>
+        `;
+
+        html += `</div>`;
       }
 
       // 4. MY APPOINTMENTS TAB CONTENT
@@ -857,7 +906,7 @@
           </div>
 
           <!-- MAIN 4 NAVIGATION TABS -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px;">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
             <button onclick="setAdminTab('requests')" style="padding: 12px 8px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'requests' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'requests' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'requests' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
               📋 Talepler (${pendingApts.length})
             </button>
@@ -870,6 +919,16 @@
             <button onclick="setAdminTab('servicesAdmin')" style="padding: 12px 8px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'servicesAdmin' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
               ✂️ Hizmet & Fiyat
             </button>
+          </div>
+
+          <!-- ADMIN PHONE CONFIGURATION BOX -->
+          <div style="background: #070c1a; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--gold-primary); margin-bottom: 20px;">
+            <div style="font-weight: 800; font-size: 12px; color: var(--gold-primary); margin-bottom: 4px;">📱 WhatsApp & SMS Randevu Bildirim Numarası</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Müşterilerin randevu onay mesajı göndereceği telefon numarası:</div>
+            <div style="display: flex; gap: 8px;">
+              <input id="admin-phone-input" type="text" value="${state.adminPhone || '05338000000'}" class="input-field" style="flex: 1; padding: 8px 12px; font-weight: 800; font-size: 13px; color: var(--gold-primary);">
+              <button onclick="saveAdminPhone(document.getElementById('admin-phone-input').value)" class="gold-btn" style="padding: 8px 14px; font-size: 11px; font-weight: 900; white-space: nowrap;">💾 Numarayı Kaydet</button>
+            </div>
           </div>
       `;
 
@@ -1119,6 +1178,7 @@
         weeklySchedule: state.weeklySchedule,
         services: state.services,
         notifications: state.notifications,
+        adminPhone: state.adminPhone,
         updatedAt: now
       };
 
@@ -1223,6 +1283,10 @@
               state.services = latestData.services;
               localStorage.setItem('gc_services', JSON.stringify(state.services));
             }
+            if (latestData.adminPhone) {
+              state.adminPhone = latestData.adminPhone;
+              localStorage.setItem('gc_admin_phone', latestData.adminPhone);
+            }
             if (latestData.notifications) {
               state.notifications = latestData.notifications;
               localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
@@ -1277,13 +1341,44 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function selectTime(time) {
+    function setAccordionStep(step) {
+      state.accordionStep = step;
+      renderApp();
+    }
+
+    function selectServiceAccordion(id) {
+      state.selectedServiceId = id;
+      state.accordionStep = 2; // Auto collapse Service and open Date
+      renderApp();
+    }
+
+    function selectDateAccordion(date) {
+      state.selectedDate = date;
+      state.selectedTime = '';
+      state.accordionStep = 3; // Auto collapse Date and open Time
+      renderApp();
+    }
+
+    function selectTimeAccordion(time) {
       state.selectedTime = time;
+      state.accordionStep = 4; // Auto collapse Time to show Big Confirm Button
       renderApp();
       setTimeout(() => {
         const bar = document.getElementById('booking-confirm-bar');
         if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 50);
+    }
+
+    function saveAdminPhone(phone) {
+      if (!phone || phone.trim() === '') {
+        alert('Lütfen geçerli bir telefon numarası giriniz.');
+        return;
+      }
+      state.adminPhone = phone.trim();
+      localStorage.setItem('gc_admin_phone', state.adminPhone);
+      syncToCloud();
+      alert(`✅ WhatsApp & SMS randevu bildirim numarası "${state.adminPhone}" olarak başarıyla kaydedildi!`);
+      renderApp();
     }
 
     function submitBooking() {
