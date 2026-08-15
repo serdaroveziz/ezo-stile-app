@@ -811,7 +811,8 @@
       document.getElementById('footer-back-link').style.display = role !== 'customer' ? 'block' : 'none';
       const badge = document.getElementById('role-badge');
       if (role !== 'customer') {
-        badge.innerText = role === 'admin' ? '👑 Admin' : '🛠️ Yönetici';
+        const staffName = state.currentStaffName || localStorage.getItem('gc_staff_name') || 'Personel';
+        badge.innerText = role === 'admin' ? '👑 Patron' : '👤 ' + staffName;
         badge.style.display = 'inline-flex';
       } else {
         badge.style.display = 'none';
@@ -1269,8 +1270,8 @@
       const rejectedApts = state.appointments.filter(a => a.status === 'rejected' || a.status === 'cancelled');
 
       const isAdminRole = state.role === 'admin';
-      const staffName = state.currentStaffName || 'Yönetici';
-      const panelTitle = isAdminRole ? '👑 Patron / Ana Admin Paneli' : `🛠️ Personel Paneli — ${staffName}`;
+      const staffName = state.currentStaffName || localStorage.getItem('gc_staff_name') || 'Personel';
+      const panelTitle = isAdminRole ? '👑 Patron / Ana Admin Paneli' : `👤 ${staffName} Paneli`;
 
       // Security check: restrict manager role from sensitive tabs
       if (!isAdminRole && (state.adminTab === 'revenueDashboard' || state.adminTab === 'staffManagement' || state.adminTab === 'servicesAdmin')) {
@@ -2824,12 +2825,14 @@
       if (pwd === masterPwd) {
         closeModal();
         state.currentStaffName = 'Patron';
+        localStorage.setItem('gc_staff_name', 'Patron');
         switchRole('admin');
       } else {
         const matchedStaff = (state.staffList || []).find(s => s.pin === pwd);
         if (matchedStaff || pwd === '5555') {
           closeModal();
-          state.currentStaffName = matchedStaff ? matchedStaff.name : 'Personel';
+          state.currentStaffName = matchedStaff ? matchedStaff.name : 'Ahmet Berber';
+          localStorage.setItem('gc_staff_name', state.currentStaffName);
           switchRole('manager');
         } else {
           alert('❌ Hatalı yetkili şifresi!');
