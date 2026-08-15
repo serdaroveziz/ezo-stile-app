@@ -1617,7 +1617,15 @@
 
       // 3. MANUAL BOOKING TAB (ADMIN ÖZEL RANDEVU ALMA & CANLI TAKVİM)
       else if (state.adminTab === 'manualBooking') {
+        const now = new Date();
+        const todayStr = getLocalDateStr(now);
+        const currentHour = now.getHours();
+        const currentMin = now.getMinutes();
+
         const adminDate = state.adminSelectedDate || state.selectedDate || getInitialBookingDate();
+        const isToday = adminDate === todayStr;
+        const isPastDate = adminDate < todayStr;
+
         const parts = adminDate.split('-');
         const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
         const dayOfWeek = dObj.getDay();
@@ -1625,17 +1633,62 @@
 
         const startHour = parseInt((sched.start || '09:00').split(':')[0]);
         const endHour = parseInt((sched.end || '21:00').split(':')[0]);
-        const availableSlots = [];
+        const allDaySlots = [];
         if (sched.isOpen) {
           for (let h = startHour; h <= endHour; h++) {
             const hh = h.toString().padStart(2, '0');
-            availableSlots.push(`${hh}:00`);
-            if (h !== endHour) availableSlots.push(`${hh}:30`);
+            allDaySlots.push(`${hh}:00`);
+            if (h !== endHour) allDaySlots.push(`${hh}:30`);
           }
         }
-        availableSlots.sort();
+        allDaySlots.sort();
+
+        // 1. Günü geçmiş saatleri takvimden ve seçimden tamamen kaldır
+        let displaySlots = allDaySlots;
+        if (isToday) {
+          displaySlots = allDaySlots.filter(time => {
+            const [sHour, sMin] = time.split(':').map(Number);
+            return sHour > currentHour || (sHour === currentHour && sMin > currentMin);
+          });
+        }
 
         const occupiedSet = getOccupiedSlotsForDate(adminDate);
+
+        // 2. Seçili hizmete göre gerekli süre ve çakışma kontrolü
+        const activeSvcId = state.adminBookSelectedSvcId || (state.services[0] ? state.services[0].id : null);
+        const activeSvc = state.services.find(s => s.id === activeSvcId) || state.services[0];
+        const neededSlots = activeSvc ? getServiceSlotCount(activeSvc.duration) : 1;
+
+        // Calculate valid start times for selected service duration
+        const validStartTimes = [];
+        displaySlots.forEach(time => {
+          const isDirectlyBooked = occupiedSet.has(time);
+          const override = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === time);
+          const isDirectlyBlocked = override ? override.status === 'blocked' : false;
+
+          let hasEnoughTime = true;
+          const [startH, startM] = time.split(':').map(Number);
+          let checkMinTotal = startH * 60 + startM;
+
+          for (let i = 0; i < neededSlots; i++) {
+            const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
+            const mm = (checkMinTotal % 60).toString().padStart(2, '0');
+            const checkTimeStr = `${hh}:${mm}`;
+
+            const checkOverride = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === checkTimeStr);
+            const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSet.has(checkTimeStr);
+
+            if (isCheckBlocked || !allDaySlots.includes(checkTimeStr)) {
+              hasEnoughTime = false;
+              break;
+            }
+            checkMinTotal += 30;
+          }
+
+          if (!isDirectlyBooked && !isDirectlyBlocked && hasEnoughTime) {
+            validStartTimes.push(time);
+          }
+        });
 
         html += `
           <div class="card" style="padding: 16px;">
@@ -1645,52 +1698,89 @@
             <div style="background: #070c1a; padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: 800; color: #fff;">📅 Takvim Tarihi Seçin:</label>
-                <input type="date" value="${adminDate}" onchange="setAdminBookingDate(this.value)" class="input-field" style="width: auto; padding: 6px 12px; font-size: 12px; font-weight: 800;">
+                <input type="date" value="${adminDate}" onchange="setAdminBookingDate(this.value)" class="input-field" style="width: auto; padding: 6px 12px; font-size: 12px; font-weight: 800; color: var(--gold-primary);">
               </div>
 
               <!-- Legend -->
-              <div style="display: flex; gap: 10px; font-size: 10px; font-weight: 700; justify-content: center; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-                <span style="color: #34d399;">🟢 Serbest (Seçmek İçin Tıkla)</span>
+              <div style="display: flex; gap: 8px; font-size: 10px; font-weight: 700; justify-content: center; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                <span style="color: #34d399;">🟢 Serbest (${activeSvc ? activeSvc.duration : ''} Uygun)</span>
                 <span style="color: #fb7185;">🔴 Müşteri Randevusu</span>
-                <span style="color: #94a3b8;">⚪ Salon Kapalı / Engel</span>
+                <span style="color: #fbbf24;">⚠️ Süre Yetersiz</span>
+                <span style="color: #94a3b8;">⚪ Kapalı / Engelli</span>
               </div>
             </div>
 
             <!-- Live Slot Grid Overview -->
             <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-              <div style="font-size: 12px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">📊 ${adminDate} Tarihindeki Canlı Saat Durumu:</div>
-              <div class="slot-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                ${availableSlots.map(time => {
-                  const override = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === time);
-                  const isBooked = occupiedSet.has(time);
-                  const isBlocked = (override ? override.status === 'blocked' : false);
-                  
-                  const apt = isBooked ? state.appointments.find(a => a.date === adminDate && a.time === time && a.status !== 'cancelled' && a.status !== 'rejected') : null;
-
-                  if (isBooked) {
-                    return `
-                      <button onclick="alert('🔴 Müşteri Randevusu:\\n${apt ? apt.customerName + ' (' + apt.customerPhone + ')\\nHizmet: ' + apt.serviceName : 'Randevu Mevcut'}')" style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(244,63,94,0.2); border: 1px solid rgba(244,63,94,0.5); color: #fb7185; cursor: pointer;">
-                        ${time}
-                        <span style="display:block; font-size:7px;">🔴 Dolu</span>
-                      </button>
-                    `;
-                  } else if (isBlocked) {
-                    return `
-                      <button style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(148,163,184,0.15); border: 1px solid rgba(148,163,184,0.3); color: #94a3b8; opacity: 0.6;">
-                        ${time}
-                        <span style="display:block; font-size:7px;">⚪ Kapalı</span>
-                      </button>
-                    `;
-                  } else {
-                    return `
-                      <button onclick="selectTimeForAdminManualBook('${time}')" style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; cursor: pointer;">
-                        ${time}
-                        <span style="display:block; font-size:7px;">🟢 Serbest</span>
-                      </button>
-                    `;
-                  }
-                }).join('')}
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="font-size: 12px; font-weight: 800; color: var(--gold-primary);">📊 ${adminDate} Tarihindeki Canlı Saat Durumu:</div>
+                <span style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Hizmet: ${getServiceName(activeSvc)} (${activeSvc ? activeSvc.duration : ''})</span>
               </div>
+
+              ${displaySlots.length === 0 ? `
+                <div style="background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 14px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center;">
+                  ⚠️ ${adminDate} günü için salon saatleri tamamlanmıştır. Lütfen başka bir gün seçiniz.
+                </div>
+              ` : `
+                <div class="slot-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                  ${displaySlots.map(time => {
+                    const override = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === time);
+                    const isBooked = occupiedSet.has(time);
+                    const isBlocked = (override ? override.status === 'blocked' : false);
+
+                    let hasEnoughTime = true;
+                    const [startH, startM] = time.split(':').map(Number);
+                    let checkMinTotal = startH * 60 + startM;
+
+                    for (let i = 0; i < neededSlots; i++) {
+                      const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
+                      const mm = (checkMinTotal % 60).toString().padStart(2, '0');
+                      const checkTimeStr = `${hh}:${mm}`;
+
+                      const checkOverride = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === checkTimeStr);
+                      const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSet.has(checkTimeStr);
+
+                      if (isCheckBlocked || !allDaySlots.includes(checkTimeStr)) {
+                        hasEnoughTime = false;
+                        break;
+                      }
+                      checkMinTotal += 30;
+                    }
+                    
+                    const apt = isBooked ? state.appointments.find(a => a.date === adminDate && a.time === time && a.status !== 'cancelled' && a.status !== 'rejected') : null;
+
+                    if (isBooked) {
+                      return `
+                        <button onclick="alert('🔴 Müşteri Randevusu:\\n${apt ? apt.customerName + ' (' + apt.customerPhone + ')\\nHizmet: ' + apt.serviceName : 'Randevu Mevcut'}')" style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(244,63,94,0.2); border: 1px solid rgba(244,63,94,0.5); color: #fb7185; cursor: pointer;">
+                          ${time}
+                          <span style="display:block; font-size:7px;">🔴 Dolu</span>
+                        </button>
+                      `;
+                    } else if (isBlocked) {
+                      return `
+                        <button style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(148,163,184,0.15); border: 1px solid rgba(148,163,184,0.3); color: #94a3b8; opacity: 0.6;">
+                          ${time}
+                          <span style="display:block; font-size:7px;">⚪ Kapalı</span>
+                        </button>
+                      `;
+                    } else if (!hasEnoughTime) {
+                      return `
+                        <button style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(245,158,11,0.15); border: 1px dashed rgba(245,158,11,0.4); color: #fbbf24; opacity: 0.7;" title="${activeSvc ? activeSvc.duration : ''} için süre yetersiz">
+                          ${time}
+                          <span style="display:block; font-size:7px;">⚠️ Yetersiz</span>
+                        </button>
+                      `;
+                    } else {
+                      return `
+                        <button onclick="selectTimeForAdminManualBook('${time}')" style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; cursor: pointer;">
+                          ${time}
+                          <span style="display:block; font-size:7px;">🟢 Serbest</span>
+                        </button>
+                      `;
+                    }
+                  }).join('')}
+                </div>
+              `}
             </div>
 
             <!-- Quick Admin Booking Form -->
@@ -1707,15 +1797,17 @@
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <div>
-                    <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Hizmet Seçimi:</label>
-                    <select id="admin-book-service" class="input-field" style="padding: 10px; font-size: 11px; font-weight: 700;">
-                      ${state.services.map(s => `<option value="${s.id}">${getServiceName(s)} (${s.price} TL)</option>`).join('')}
+                    <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Hizmet Seçimi (Süreye Göre Filtreler):</label>
+                    <select id="admin-book-service" onchange="onAdminBookServiceChange(this.value)" class="input-field" style="padding: 10px; font-size: 11px; font-weight: 700;">
+                      ${state.services.map(s => `<option value="${s.id}" ${s.id === activeSvcId ? 'selected' : ''}>${getServiceName(s)} (${s.price} TL - ${s.duration})</option>`).join('')}
                     </select>
                   </div>
                   <div>
-                    <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Randevu Saati:</label>
+                    <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Uygun Randevu Saati:</label>
                     <select id="admin-book-time" class="input-field" style="padding: 10px; font-size: 12px; font-weight: 800; color: var(--gold-primary);">
-                      ${availableSlots.map(t => `<option value="${t}">${t}</option>`).join('')}
+                      ${validStartTimes.length === 0 ? `
+                        <option value="">⚠️ Bu hizmet (${activeSvc ? activeSvc.duration : ''}) için uygun saat yok</option>
+                      ` : validStartTimes.map(t => `<option value="${t}">⏰ ${t} (${activeSvc ? activeSvc.duration : ''} Uygun)</option>`).join('')}
                     </select>
                   </div>
                 </div>
@@ -1723,7 +1815,7 @@
                   <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Açıklama / Not (İsteğe Bağlı):</label>
                   <input id="admin-book-note" type="text" placeholder="Örn: Telefondan arayarak randevu aldı" class="input-field" style="padding: 8px 10px; font-size: 12px;">
                 </div>
-                <button type="submit" class="gold-btn" style="padding: 14px; font-size: 14px; font-weight: 900; margin-top: 4px;">
+                <button type="submit" ${validStartTimes.length === 0 ? 'disabled' : ''} class="gold-btn" style="padding: 14px; font-size: 14px; font-weight: 900; margin-top: 4px;">
                   ✅ Manuel Randevuyu Oluştur & Doğrudan Onayla
                 </button>
               </form>
@@ -2633,6 +2725,11 @@
       } else {
         alert('❌ Hatalı yetkili şifresi!');
       }
+    }
+
+    function onAdminBookServiceChange(svcId) {
+      state.adminBookSelectedSvcId = svcId;
+      renderApp();
     }
 
     function setRevenueSelectedDate(dStr) {
