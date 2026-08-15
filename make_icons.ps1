@@ -1,6 +1,6 @@
 Add-Type -AssemblyName System.Drawing
 
-function Create-CleanPwaIcon {
+function Create-PureEmblemPwaIcon {
     param(
         [string]$SourcePath,
         [string]$OutputPath,
@@ -13,16 +13,20 @@ function Create-CleanPwaIcon {
     $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
 
-    # 1. Fill entire canvas background with dark theme (#070c1a)
+    # 1. Fill entire canvas background with pure dark theme (#070c1a)
     $bgColor = [System.Drawing.ColorTranslator]::FromHtml("#070c1a")
     $bgBrush = New-Object System.Drawing.SolidBrush($bgColor)
     $g.FillRectangle($bgBrush, 0, 0, $Size, $Size)
 
-    # 2. Draw user logo image edge-to-edge cleanly with ZERO added borders or strokes
+    # 2. Draw clean transparent emblem PNG in the center with 8% padding and ZERO added lines/borders
     $srcImg = [System.Drawing.Image]::FromFile($SourcePath)
 
-    $ratioW = $Size / $srcImg.Width
-    $ratioH = $Size / $srcImg.Height
+    $padding = [int]($Size * 0.08)
+    $maxW = $Size - ($padding * 2)
+    $maxH = $Size - ($padding * 2)
+
+    $ratioW = $maxW / $srcImg.Width
+    $ratioH = $maxH / $srcImg.Height
     $ratio = [math]::Min($ratioW, $ratioH)
 
     $destW = [int]($srcImg.Width * $ratio)
@@ -39,13 +43,13 @@ function Create-CleanPwaIcon {
 
     $bmp.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
-    Write-Host "Generated clean borderless icon $OutputPath ($Size x $Size)"
+    Write-Host "Generated pure emblem icon with ZERO gold border lines $OutputPath ($Size x $Size)"
 }
 
-$iconBasePath = "C:\Users\kuvvat\.gemini\antigravity\scratch\ezo-stile-app\icon-base.jpg"
+$transparentLogoPath = "C:\Users\kuvvat\.gemini\antigravity\brain\1d9593f5-da30-416d-810b-9cbacb03de45\.user_uploaded\media_1786802954538.png"
 
-Create-CleanPwaIcon -SourcePath $iconBasePath -OutputPath "C:\Users\kuvvat\.gemini\antigravity\scratch\ezo-stile-app\icon-512.png" -Size 512
-Create-CleanPwaIcon -SourcePath $iconBasePath -OutputPath "C:\Users\kuvvat\.gemini\antigravity\scratch\ezo-stile-app\icon-192.png" -Size 192
+Create-PureEmblemPwaIcon -SourcePath $transparentLogoPath -OutputPath "C:\Users\kuvvat\.gemini\antigravity\scratch\ezo-stile-app\icon-512.png" -Size 512
+Create-PureEmblemPwaIcon -SourcePath $transparentLogoPath -OutputPath "C:\Users\kuvvat\.gemini\antigravity\scratch\ezo-stile-app\icon-192.png" -Size 192
 
 Copy-Item "icon-512.png" "docs/icon-512.png" -Force
 Copy-Item "icon-192.png" "docs/icon-192.png" -Force
