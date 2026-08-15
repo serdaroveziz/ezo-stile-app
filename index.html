@@ -752,7 +752,7 @@
       return langs.map(l => {
         const isSel = state.language === l.code;
         return `
-          <button onclick="setLanguage('${l.code}')" style="padding: 12px 6px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 2px solid ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.12)'}; background: ${isSel ? 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)' : '#070c1a'}; color: ${isSel ? '#000' : '#cbd5e1'}; cursor: pointer; transition: all 0.2s; box-shadow: ${isSel ? '0 4px 18px rgba(245,158,11,0.5)' : 'none'}; transform: ${isSel ? 'scale(1.02)' : 'scale(1)'}; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <button type="button" onclick="setLanguage('${l.code}')" style="padding: 12px 6px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 2px solid ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.12)'}; background: ${isSel ? 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)' : '#070c1a'}; color: ${isSel ? '#000' : '#cbd5e1'}; cursor: pointer; transition: all 0.2s; box-shadow: ${isSel ? '0 4px 18px rgba(245,158,11,0.5)' : 'none'}; transform: ${isSel ? 'scale(1.02)' : 'scale(1)'}; display: flex; align-items: center; justify-content: center; gap: 4px;">
             ${l.flag} ${l.name} ${isSel ? '<span style="background:#000; color:#fbbf24; padding:2px 5px; border-radius:6px; font-size:9px; font-weight:900;">✓ SEÇİLDİ</span>' : ''}
           </button>
         `;
@@ -941,13 +941,7 @@
               <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color);">
                 <div style="font-size: 11px; font-weight: 800; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 10px;">${t('appLangTitle')}</div>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                  </button>
-                  <button onclick="setLanguage('ru')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'ru' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'ru' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'ru' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; box-shadow: ${state.language === 'ru' ? '0 4px 18px rgba(245,158,11,0.4)' : 'none'}; scale: ${state.language === 'ru' ? '1.02' : '1'};">
-                    🇷🇺 Русский ${state.language === 'ru' ? '✓' : ''}
-                  </button>
-                  <button onclick="setLanguage('tk')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'tk' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tk' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'tk' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; box-shadow: ${state.language === 'tk' ? '0 4px 18px rgba(245,158,11,0.4)' : 'none'}; scale: ${state.language === 'tk' ? '1.02' : '1'};">
-                    🇹🇲 Türkmençe ${state.language === 'tk' ? '✓' : ''}
-                  </button>
+                  ${renderLangButtons()}
                 </div>
               </div>
 
