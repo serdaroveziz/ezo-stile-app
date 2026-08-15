@@ -231,6 +231,7 @@
         custLoginDesc: 'Online randevu alabilmek için lütfen adınızı ve telefon numaranızı bir defaya mahsus giriniz.',
         custLoginBtn: '📱 SMS Kodu Gönder & Kaydol',
         servicesTitle: '1. İŞLEM SEÇİMİ',
+        selectServicePrompt: '👆 Lütfen bir hizmet seçiniz (Tıklayın)',
         dateTitle: '2. TARİH SEÇİMİ',
         timeTitle: '3. SAAT SEÇİMİ',
         bookBtn: '📅 RANDEVUYU ONAYLA (ŞİMDİ TIKLAYIN)',
@@ -356,6 +357,7 @@
         custLoginDesc: 'Please enter your name and phone number once to book online appointments.',
         custLoginBtn: '📱 Send SMS Code & Sign Up',
         servicesTitle: '1. SELECT SERVICE',
+        selectServicePrompt: '👆 Please select a service (Tap to open)',
         dateTitle: '2. SELECT DATE',
         timeTitle: '3. SELECT TIME',
         bookBtn: '📅 CONFIRM APPOINTMENT (CLICK NOW)',
@@ -481,6 +483,7 @@
         custLoginDesc: 'Введите ваше имя и номер телефона один раз для записи.',
         custLoginBtn: '📱 Отправить СМС код и войти',
         servicesTitle: '1. ВЫБОР УСЛУГИ',
+        selectServicePrompt: '👆 Пожалуйста, выберите услугу (Нажмите)',
         dateTitle: '2. ВЫБОР ДАТЫ',
         timeTitle: '3. ВЫБОР ВРЕМЕНИ',
         bookBtn: '📅 ПОДТВЕРДИТЬ ЗАПИСЬ',
@@ -605,7 +608,8 @@
         custLoginTitle: '👤 EZO STİLE Kardar Girşi / Ýazylmagy',
         custLoginDesc: 'Bron almak üçin bir gezek adyňyzy we telefonyňyzy giriziň.',
         custLoginBtn: '📱 SMS Kod Ugratmak & Ýazylmak',
-        servicesTitle: '1. HYZMAT SAÝLAŇ',
+        servicesTitle: '1. HYZMAT SAÝLAMAK',
+        selectServicePrompt: '👆 Haýyş edýäris, bir hyzmaty saýlaň (Basgylaň)',
         dateTitle: '2. SENE SAÝLAŇ',
         timeTitle: '3. SAGAT SAÝLAŇ',
         bookBtn: '📅 BRONY TASSYKLA (ŞI MAMLAT)',
@@ -756,12 +760,12 @@
       currentUser: JSON.parse(localStorage.getItem('gc_user') || 'null'),
       smsCode: null,
       adminPhone: localStorage.getItem('gc_admin_phone') || '05338000000',
-      accordionStep: 1,
+      accordionStep: 0,
       adminTab: 'requests',
       requestsSubTab: 'pending',
       services: JSON.parse(localStorage.getItem('gc_services') || JSON.stringify(DEFAULT_SERVICES)),
       customerTab: 'booking', // 'booking' | 'myAppointments'
-      selectedServiceId: '1',
+      selectedServiceId: null,
       selectedDate: getInitialBookingDate(),
       selectedTime: '',
       weeklySchedule: JSON.parse(localStorage.getItem('gc_weekly_schedule') || JSON.stringify({
@@ -978,15 +982,17 @@
       if (state.customerTab === 'booking') {
         html += `<div class="card" style="padding: 16px 14px;">`;
 
-        // STEP 1: HİZMET SEÇİMİ (KATLANABİLİR LİSTE)
-        const isStep1Open = !state.accordionStep || state.accordionStep === 1;
+        // STEP 1: HİZMET SEÇİMİ (KAPALI BAŞLAR - TIKLAYINCA AÇILIR)
+        const isStep1Open = state.accordionStep === 1;
+        const activeSelectedService = state.selectedServiceId ? state.services.find(s => s.id === state.selectedServiceId) : null;
+
         html += `
           <div style="background: #070c1a; border-radius: 14px; border: 1px solid ${isStep1Open ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 12px; margin-bottom: 12px; transition: all 0.2s;">
             <div onclick="setAccordionStep(${isStep1Open ? 0 : 1})" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
               <div>
                 <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary);">${t('servicesTitle')}</span>
                 <div style="font-size: 13px; font-weight: 800; color: #fff; margin-top: 2px;">
-                  ✓ ${getServiceName(activeSelectedService)} (${activeSelectedService.price} TL)
+                  ${activeSelectedService ? `✓ ${getServiceName(activeSelectedService)} (${activeSelectedService.price} TL)` : `<span style="color: var(--gold-light); font-weight: 800;" class="animate-pulse">${t('selectServicePrompt')}</span>`}
                 </div>
               </div>
               <button style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; pointer-events: none;">
@@ -995,10 +1001,10 @@
             </div>
 
             ${isStep1Open ? `
-              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-color); max-height: 280px; overflow-y: auto; padding-right: 2px;">
                 ${state.services.map(s => {
                   const displayName = getServiceName(s);
-                  const isSel = activeSelectedService.id === s.id;
+                  const isSel = activeSelectedService && activeSelectedService.id === s.id;
                   return `
                     <div onclick="selectServiceAccordion('${s.id}')" style="padding: 12px 14px; border-radius: 12px; border: 1px solid ${isSel ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${isSel ? 'rgba(245,158,11,0.18)' : '#0f172a'}; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s ease;">
                       <div>
@@ -1708,6 +1714,12 @@
         alert('Lütfen önce adınızı ve telefon numaranızı girerek kaydolunuz.');
         return;
       }
+      if (!state.selectedServiceId) {
+        alert('Lütfen önce bir hizmet seçiniz.');
+        state.accordionStep = 1;
+        renderApp();
+        return;
+      }
       if (!state.selectedTime) {
         alert('Lütfen bir randevu saati seçiniz.');
         return;
@@ -1731,6 +1743,10 @@
       pruneAppointmentsLimit();
       syncToCloud();
       window.dispatchEvent(new Event('storage'));
+
+      state.selectedServiceId = null;
+      state.selectedTime = '';
+      state.accordionStep = 0;
 
       // Trigger Lock Screen System Notification
       triggerLockScreenNotification('EZO STİLE 💇‍♂️', `🎉 Randevunuz oluşturuldu! Randevu onayı bekliyor (${newApt.date} ${newApt.time})`);
