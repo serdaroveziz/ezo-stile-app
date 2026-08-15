@@ -1092,17 +1092,31 @@
                 <div style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center; margin-top: 10px;">
                   ${t('salonClosedToday')}
                 </div>
-              ` : allPastForToday ? `
-                <div style="background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center; margin-top: 10px;">
-                  ${t('workHoursFinishedToday')}
-                  <button onclick="selectDateAccordion('${tomorrowStr}')" class="gold-btn" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 900;">${t('showTomorrowHours')}</button>
-                </div>
               ` : `
+                <div class="slot-grid" style="margin-top: 10px;">
                   ${(() => {
                     const occupiedSlotsSet = getOccupiedSlotsForDate(state.selectedDate);
                     const neededSlotsForActiveSvc = activeSelectedService ? getServiceSlotCount(activeSelectedService.duration) : 1;
 
-                    return availableSlots.map(time => {
+                    // Günü geçmiş saatleri tamamen kaldır / gizle
+                    let displaySlotsCustomer = availableSlots;
+                    if (isToday) {
+                      displaySlotsCustomer = availableSlots.filter(time => {
+                        const [sHour, sMin] = time.split(':').map(Number);
+                        return sHour > currentHour || (sHour === currentHour && sMin > currentMin);
+                      });
+                    }
+
+                    if (displaySlotsCustomer.length === 0) {
+                      return `
+                        <div style="grid-column: span 3; background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center;">
+                          ${t('workHoursFinishedToday')}
+                          <button onclick="selectDateAccordion('${tomorrowStr}')" class="gold-btn" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 900;">${t('showTomorrowHours')}</button>
+                        </div>
+                      `;
+                    }
+
+                    return displaySlotsCustomer.map(time => {
                       const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
                       const isDirectlyBooked = occupiedSlotsSet.has(time);
 
@@ -1129,22 +1143,10 @@
                       const isBlocked = isDirectlyBooked || (override ? override.status === 'blocked' : false) || !hasEnoughConsecutiveTime;
                       const isSelected = state.selectedTime === time;
 
-                      let isPast = false;
-                      if (isToday) {
-                        const [sHour, sMin] = time.split(':').map(Number);
-                        if (sHour < currentHour || (sHour === currentHour && sMin <= currentMin)) {
-                          isPast = true;
-                        }
-                      } else if (isPastDate) {
-                        isPast = true;
-                      }
-
-                      const isDisabled = isBlocked || isPast;
-
                       return `
-                        <button onclick="selectTimeAccordion('${time}')" ${isDisabled ? 'disabled' : ''} class="slot-btn ${isPast ? 'past' : ''} ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                        <button onclick="selectTimeAccordion('${time}')" ${isBlocked ? 'disabled' : ''} class="slot-btn ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
                           ${time}
-                          ${isPast ? '<span style="display:block; font-size:7px; opacity:0.6;">' + t('slotPast') + '</span>' : isDirectlyBooked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotBooked') + '</span>' : isBlocked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotClosed') + '</span>' : ''}
+                          ${isDirectlyBooked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotBooked') + '</span>' : isBlocked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotClosed') + '</span>' : ''}
                         </button>
                       `;
                     }).join('');
@@ -1384,11 +1386,24 @@
 
       // 3. SLOT LOCKING TAB
       else if (state.adminTab === 'slotLocking') {
-        const timeSlots = [];
+        let timeSlots = [];
         for (let h = 0; h < 24; h++) {
           const hh = h.toString().padStart(2, '0');
           timeSlots.push(`${hh}:00`);
           timeSlots.push(`${hh}:30`);
+        }
+        
+        const now = new Date();
+        const todayStr = getLocalDateStr(now);
+        const currentHour = now.getHours();
+        const currentMin = now.getMinutes();
+        const isToday = state.selectedDate === todayStr;
+
+        if (isToday) {
+          timeSlots = timeSlots.filter(time => {
+            const [sHour, sMin] = time.split(':').map(Number);
+            return sHour > currentHour || (sHour === currentHour && sMin > currentMin);
+          });
         }
 
         html += `
