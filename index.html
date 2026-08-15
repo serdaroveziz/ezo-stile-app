@@ -1065,11 +1065,23 @@
       container.innerHTML = html;
     }
 
-    // --- AUTOMATIC 5-APPOINTMENT CLEANUP ENGINE ---
+    // --- AUTOMATIC CLEANUP ENGINE (7 GÜNDEN ESKİ RANDEVULARI SİL + MÜŞTERİ BAŞINA MAKSİMUM 5 RANDEVU KORU) ---
     function pruneAppointmentsLimit() {
       if (!Array.isArray(state.appointments)) return;
+      
+      // 1. 7 günden daha eski randevuları otomatik olarak veritabanından temizle
+      const now = new Date();
+      const sevenDaysAgoObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+      const cutoff7DaysAgo = getLocalDateStr(sevenDaysAgoObj);
+
+      let validApts = state.appointments.filter(a => {
+        if (!a || !a.date) return false;
+        return a.date >= cutoff7DaysAgo; // Son 7 gün, bugün veya gelecek randevular kalsın
+      });
+
+      // 2. Müşteri başına en fazla en güncel 5 randevuyu koru
       const byPhone = {};
-      state.appointments.forEach(a => {
+      validApts.forEach(a => {
         if (!a || !a.customerPhone) return;
         if (!byPhone[a.customerPhone]) byPhone[a.customerPhone] = [];
         byPhone[a.customerPhone].push(a);
@@ -1083,11 +1095,10 @@
           const dtB = (b.date || '') + ' ' + (b.time || '');
           return dtB.localeCompare(dtA);
         });
-        // Her müşteri için sadece en güncel 5 randevuyu koru
         list.slice(0, 5).forEach(a => keptIds.add(a.id));
       });
 
-      state.appointments = state.appointments.filter(a => !a || !a.customerPhone || keptIds.has(a.id));
+      state.appointments = validApts.filter(a => !a || !a.customerPhone || keptIds.has(a.id));
       localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
     }
 
