@@ -176,9 +176,6 @@
           <option value="ru">🇷🇺 RU</option>
           <option value="tk">🇹🇲 TK</option>
         </select>
-        <button id="header-admin-btn" onclick="handleHeaderAdminClick()" style="background: rgba(245,158,11,0.18); border: 1.5px solid var(--gold-primary); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(245,158,11,0.25); transition: all 0.2s;">
-          ⚙️ Admin
-        </button>
         <span id="role-badge" class="badge badge-approved" style="display: none;"></span>
       </div>
     </div>
@@ -526,35 +523,7 @@
       } else {
         badge.style.display = 'none';
       }
-      updateHeaderAdminButton();
       renderApp();
-    }
-
-    function updateHeaderAdminButton() {
-      const btn = document.getElementById('header-admin-btn');
-      if (!btn) return;
-
-      if (state.role === 'admin') {
-        btn.innerHTML = '👑 ADMIN';
-        btn.style.background = 'linear-gradient(135deg, #fbbf24, #f59e0b)';
-        btn.style.color = '#000';
-      } else if (state.role === 'manager') {
-        btn.innerHTML = '👔 YÖNETİCİ';
-        btn.style.background = 'linear-gradient(135deg, #fbbf24, #f59e0b)';
-        btn.style.color = '#000';
-      } else {
-        btn.innerHTML = '⚙️ Admin';
-        btn.style.background = 'rgba(245,158,11,0.18)';
-        btn.style.color = 'var(--gold-primary)';
-      }
-    }
-
-    function handleHeaderAdminClick() {
-      if (state.role === 'customer') {
-        openStaffModal();
-      } else {
-        openAdminMenuModal();
-      }
     }
 
     // --- 1 HOUR REMINDER CHECK ---
@@ -578,7 +547,6 @@
       document.getElementById('header-subtitle').innerText = t('subtitle');
       document.getElementById('btn-staff-login').innerText = t('staffLogin');
       document.getElementById('btn-back-customer').innerText = t('backToCustomer');
-      updateHeaderAdminButton();
       
       if (state.role === 'customer') {
         renderCustomerView(main);
@@ -902,13 +870,9 @@
                       </div>
 
                       ${canModify ? `
-                        <div style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 4px;">
-                          <button onclick="requestAppointmentCancellationWa('${a.id}')" style="width: 100%; background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: var(--gold-primary); padding: 10px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            💬 İptal / Değişiklik Talebi Gönder (WhatsApp)
-                          </button>
-                          <div style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 4px;">
-                            🔒 Randevu onaylandıktan sonra iptal/değişiklik doğrudan Berberiniz tarafından yapılmaktadır.
-                          </div>
+                        <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 2px;">
+                          <button onclick="openRescheduleModal('${a.id}')" class="gold-btn" style="padding: 6px 12px; font-size: 11px; background: rgba(245,158,11,0.15); color: var(--gold-primary); border: 1px solid rgba(245,158,11,0.3);">✏️ Saati / Tarihi Değiştir</button>
+                          <button onclick="cancelMyAppointment('${a.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">❌ Randevuyu İptal Et</button>
                         </div>
                       ` : ''}
                     </div>
@@ -919,6 +883,8 @@
           </div>
         `;
       }
+
+      container.innerHTML = html;
 
       container.innerHTML = html;
     }
@@ -939,8 +905,12 @@
               <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin: 0;">${panelTitle}</h2>
               <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Berber</span>
             </div>
-            <div>
-              <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary); background: rgba(245,158,11,0.15); padding: 5px 12px; border-radius: 10px; border: 1px solid rgba(245,158,11,0.3);">⚡ CANLI PANEL</span>
+            <div style="display: flex; gap: 6px;">
+              ${isAdminRole ? `
+                <button onclick="openAdminPhoneModal()" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">📱 Tel No</button>
+              ` : ''}
+              <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 Yenile</button>
+              <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer;">← Müşteri</button>
             </div>
           </div>
 
@@ -1398,48 +1368,6 @@
       }, 50);
     }
 
-    function openAdminMenuModal() {
-      const root = document.getElementById('modal-root');
-      if (!root) return;
-
-      const isAdminRole = state.role === 'admin';
-
-      root.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 400px; text-align: center; border-color: var(--gold-primary);">
-            <div style="width: 50px; height: 50px; margin: 0 auto 10px; border-radius: 16px; background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); display: flex; align-items: center; justify-content: center; font-size: 24px;">
-              ⚙️
-            </div>
-            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 4px;">Yönetici Menüsü</h3>
-            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">Hızlı yönetim ve ayar işlemleri:</p>
-
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              ${isAdminRole ? `
-                <button onclick="closeModal(); openAdminPhoneModal();" style="width: 100%; padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid var(--gold-primary); color: var(--gold-primary); font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
-                  <span>📱 Bildirim Numarası Ayarla</span>
-                  <span style="font-size: 10px; opacity: 0.8;">(${state.adminPhone || '05338000000'})</span>
-                </button>
-              ` : ''}
-
-              <button onclick="closeModal(); fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="width: 100%; padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid rgba(16,185,129,0.4); color: #34d399; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
-                <span>🔄 Canlı Verileri Yenile</span>
-                <span style="font-size: 10px; opacity: 0.8;">(Senkronize Et)</span>
-              </button>
-
-              <button onclick="closeModal(); switchRole('customer');" style="width: 100%; padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid var(--border-color); color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
-                <span>👤 Müşteri Ekranına Dön</span>
-                <span style="font-size: 10px; opacity: 0.8;">(Randevu Ekranı)</span>
-              </button>
-
-              <button onclick="closeModal()" style="width: 100%; margin-top: 4px; padding: 10px; border-radius: 10px; background: transparent; border: none; color: #94a3b8; font-size: 11px; font-weight: 700; cursor: pointer;">
-                Kapat
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
     function openAdminPhoneModal() {
       const root = document.getElementById('modal-root');
       if (!root) return;
@@ -1557,18 +1485,19 @@
       `;
     }
 
-    // --- CUSTOMER WHATSAPP CANCELLATION REQUEST ---
-    function requestAppointmentCancellationWa(aptId) {
-      const apt = state.appointments.find(a => a.id === aptId);
-      if (!apt) return;
-
-      const adminPhone = state.adminPhone || '05338000000';
-      const waPhone = formatPhoneForWa(adminPhone);
-
-      const text = `Merhaba EZO STİLE VIP Berber, ${apt.date} günü saat ${apt.time} tarihindeki (${apt.serviceName}) randevumun İPTAL EDİLMESİNİ / DEĞİŞTİRİLMESİNİ rica ediyorum.\n\nMüşteri: ${apt.customerName} (${apt.customerPhone})`;
-
-      const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`;
-      window.open(url, '_blank');
+    // --- CUSTOMER CANCEL & RESCHEDULE ---
+    function cancelMyAppointment(aptId) {
+      if (confirm('Bu randevunuzu iptal etmek istediğinize emin misiniz?')) {
+        const apt = state.appointments.find(a => a.id === aptId);
+        if (apt) {
+          apt.status = 'cancelled';
+          localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+          syncToCloud();
+          window.dispatchEvent(new Event('storage'));
+          alert('🚫 Randevunuz iptal edildi.');
+          renderApp();
+        }
+      }
     }
 
     function openRescheduleModal(aptId) {
