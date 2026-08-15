@@ -20,6 +20,8 @@ const appScript = scriptMatches[scriptMatches.length - 1].replace(/<script[^>]*>
 try {
   eval(appScript);
   console.log('App script syntax OK!');
+  process.exit(0);
 } catch (e) {
   console.error('SYNTAX ERROR:', e);
+  process.exit(1);
 }

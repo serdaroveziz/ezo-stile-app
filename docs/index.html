@@ -1732,8 +1732,8 @@
         const occupiedSet = getOccupiedSlotsForDate(adminDate);
 
         // 2. Seçili hizmete göre gerekli süre ve çakışma kontrolü
-        const activeSvcId = state.adminBookSelectedSvcId || (state.services[0] ? state.services[0].id : null);
-        const activeSvc = state.services.find(s => s.id === activeSvcId) || state.services[0];
+        const activeSvcId = state.adminBookSelectedSvcId || null;
+        const activeSvc = activeSvcId ? state.services.find(s => s.id === activeSvcId) : null;
         const neededSlots = activeSvc ? getServiceSlotCount(activeSvc.duration) : 1;
 
         // Calculate valid start times for selected service duration
@@ -1780,7 +1780,8 @@
 
               <!-- Legend -->
               <div style="display: flex; gap: 8px; font-size: 10px; font-weight: 700; justify-content: center; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-                <span style="color: #34d399;">🟢 Serbest (${activeSvc ? activeSvc.duration : ''} Uygun)</span>
+                <span style="color: #64748b; font-weight: 900;">🔘 Seçilmiş Saat (Gri)</span>
+                <span style="color: #34d399;">🟢 Serbest ${activeSvc ? '(' + activeSvc.duration + ' Uygun)' : ''}</span>
                 <span style="color: #fb7185;">🔴 Müşteri Randevusu</span>
                 <span style="color: #fbbf24;">⚠️ Süre Yetersiz</span>
                 <span style="color: #94a3b8;">⚪ Kapalı / Engelli</span>
@@ -1791,8 +1792,14 @@
             <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 20px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <div style="font-size: 12px; font-weight: 800; color: var(--gold-primary);">📊 ${adminDate} Tarihindeki Canlı Saat Durumu:</div>
-                <span style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Hizmet: ${getServiceName(activeSvc)} (${activeSvc ? activeSvc.duration : ''})</span>
+                <span style="font-size: 10px; color: ${activeSvc ? 'var(--gold-primary)' : 'var(--rose)'}; font-weight: 800;">${activeSvc ? 'Hizmet: ' + getServiceName(activeSvc) + ' (' + activeSvc.duration + ')' : '⚠️ Hizmet Seçilmedi'}</span>
               </div>
+
+              ${!activeSvc ? `
+                <div style="background: rgba(245,158,11,0.12); border: 1px dashed var(--gold-primary); color: #fbbf24; padding: 12px; border-radius: 12px; font-size: 11px; font-weight: 800; text-align: center; margin-bottom: 12px;">
+                  ⚠️ Lütfen önce aşağıdaki formdan bir HİZMET seçiniz. (Saatler seçeceğiniz hizmetin süresine göre filtrelenecektir)
+                </div>
+              ` : ''}
 
               ${displaySlots.length === 0 ? `
                 <div style="background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 14px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center;">
@@ -1804,6 +1811,7 @@
                     const override = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === time);
                     const isBooked = occupiedSet.has(time);
                     const isBlocked = (override ? override.status === 'blocked' : false);
+                    const isSelected = time === state.adminBookSelectedTime;
 
                     let hasEnoughTime = true;
                     const [startH, startM] = time.split(':').map(Number);
@@ -1838,6 +1846,13 @@
                         <button style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(148,163,184,0.15); border: 1px solid rgba(148,163,184,0.3); color: #94a3b8; opacity: 0.6;">
                           ${time}
                           <span style="display:block; font-size:7px;">⚪ Kapalı</span>
+                        </button>
+                      `;
+                    } else if (isSelected) {
+                      return `
+                        <button onclick="selectTimeForAdminManualBook('${time}')" style="padding: 8px 2px; font-size: 11px; font-weight: 900; border-radius: 10px; background: #64748b; border: 2px solid #cbd5e1; color: #ffffff; cursor: pointer; transform: scale(1.04); box-shadow: 0 0 10px rgba(148, 163, 184, 0.4);">
+                          ${time}
+                          <span style="display:block; font-size:7px; font-weight:900; color:#e2e8f0;">🔘 SEÇİLDİ (GRİ)</span>
                         </button>
                       `;
                     } else if (!hasEnoughTime) {
@@ -1876,18 +1891,33 @@
                   <div>
                     <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Hizmet Seçimi (Süreye Göre Filtreler):</label>
                     <select id="admin-book-service" onchange="onAdminBookServiceChange(this.value)" class="input-field" style="padding: 10px; font-size: 11px; font-weight: 700;">
+                      <option value="" ${!activeSvcId ? 'selected' : ''} disabled>-- ✂️ Lütfen Hizmet Seçiniz --</option>
                       ${state.services.map(s => `<option value="${s.id}" ${s.id === activeSvcId ? 'selected' : ''}>${getServiceName(s)} (${s.price} TL - ${s.duration})</option>`).join('')}
                     </select>
                   </div>
                   <div>
                     <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Uygun Randevu Saati:</label>
-                    <select id="admin-book-time" class="input-field" style="padding: 10px; font-size: 12px; font-weight: 800; color: var(--gold-primary);">
-                      ${validStartTimes.length === 0 ? `
-                        <option value="">⚠️ Bu hizmet (${activeSvc ? activeSvc.duration : ''}) için uygun saat yok</option>
-                      ` : validStartTimes.map(t => `<option value="${t}">⏰ ${t} (${activeSvc ? activeSvc.duration : ''} Uygun)</option>`).join('')}
+                    <select id="admin-book-time" onchange="selectTimeForAdminManualBook(this.value)" class="input-field" style="padding: 10px; font-size: 12px; font-weight: 800; color: var(--gold-primary);">
+                      ${!activeSvcId ? `
+                        <option value="" selected disabled>⚠️ Önce Hizmet Seçiniz</option>
+                      ` : (validStartTimes.length === 0 ? `
+                        <option value="" selected disabled>⚠️ Bu hizmet (${activeSvc ? activeSvc.duration : ''}) için uygun saat yok</option>
+                      ` : `
+                        <option value="" ${!state.adminBookSelectedTime ? 'selected' : ''} disabled>-- ⏰ Saat Seçiniz --</option>
+                        ${validStartTimes.map(t => `<option value="${t}" ${t === state.adminBookSelectedTime ? 'selected' : ''}>⏰ ${t} (${activeSvc ? activeSvc.duration : ''} Uygun)</option>`).join('')}
+                      `)}
                     </select>
                   </div>
                 </div>
+                <div>
+                  <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Açıklama / Not (İsteğe Bağlı):</label>
+                  <input id="admin-book-note" type="text" placeholder="Örn: Telefondan arayarak randevu aldı" class="input-field" style="padding: 8px 10px; font-size: 12px;">
+                </div>
+                <button type="submit" ${(!activeSvcId || validStartTimes.length === 0) ? 'disabled' : ''} class="gold-btn" style="padding: 14px; font-size: 14px; font-weight: 900; margin-top: 4px;">
+                  ✅ Manuel Randevuyu Oluştur & Doğrudan Onayla
+                </button>
+              </form>
+            </div>
                 <div>
                   <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Açıklama / Not (İsteğe Bağlı):</label>
                   <input id="admin-book-note" type="text" placeholder="Örn: Telefondan arayarak randevu aldı" class="input-field" style="padding: 8px 10px; font-size: 12px;">
