@@ -835,6 +835,10 @@
     }
 
     function sanitizeState() {
+      if (!state.adminPassword) state.adminPassword = localStorage.getItem('gc_admin_pwd') || '1405';
+      if (!Array.isArray(state.managerPasswords) || state.managerPasswords.length === 0) {
+        state.managerPasswords = JSON.parse(localStorage.getItem('gc_manager_pwds') || '["5555"]');
+      }
       if (!Array.isArray(state.services) || state.services.length === 0) state.services = DEFAULT_SERVICES;
       if (!Array.isArray(state.appointments)) state.appointments = [];
       if (!Array.isArray(state.notifications)) state.notifications = [];
@@ -1245,19 +1249,25 @@
             </div>
           </div>
 
-          <!-- MAIN 4 NAVIGATION TABS -->
+          <!-- MAIN 6 NAVIGATION TABS GRID -->
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
-            <button onclick="setAdminTab('requests')" style="padding: 12px 6px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'requests' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'requests' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'requests' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${t('requests')} (${pendingApts.length})
+            <button onclick="setAdminTab('requests')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'requests' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'requests' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'requests' ? '#000' : '#fff'}; cursor: pointer;">
+              📋 ${t('requests')} (${pendingApts.length})
             </button>
-            <button onclick="setAdminTab('weeklySchedule')" style="padding: 12px 6px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'weeklySchedule' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'weeklySchedule' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'weeklySchedule' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${t('weeklySchedule')}
+            <button onclick="setAdminTab('manualBooking')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'manualBooking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'manualBooking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'manualBooking' ? '#000' : '#fff'}; cursor: pointer;">
+              📅 Manuel Randevu & Takvim
             </button>
-            <button onclick="setAdminTab('slotLocking')" style="padding: 12px 6px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'slotLocking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'slotLocking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'slotLocking' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${t('slotLocking')}
+            <button onclick="setAdminTab('staffManagement')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'staffManagement' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'staffManagement' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'staffManagement' ? '#000' : '#fff'}; cursor: pointer;">
+              👥 Yetkili & Şifreler
             </button>
-            <button onclick="setAdminTab('servicesAdmin')" style="padding: 12px 6px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'servicesAdmin' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${t('servicesAdmin')}
+            <button onclick="setAdminTab('weeklySchedule')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'weeklySchedule' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'weeklySchedule' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'weeklySchedule' ? '#000' : '#fff'}; cursor: pointer;">
+              ⏰ ${t('weeklySchedule')}
+            </button>
+            <button onclick="setAdminTab('slotLocking')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'slotLocking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'slotLocking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'slotLocking' ? '#000' : '#fff'}; cursor: pointer;">
+              🔒 ${t('slotLocking')}
+            </button>
+            <button onclick="setAdminTab('servicesAdmin')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'servicesAdmin' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; cursor: pointer;">
+              ✂️ ${t('servicesAdmin')}
             </button>
           </div>
       `;
@@ -1468,6 +1478,168 @@
         `;
       }
 
+      // 2. MANUAL BOOKING TAB (ADMIN ÖZEL RANDEVU ALMA & CANLI TAKVİM)
+      else if (state.adminTab === 'manualBooking') {
+        const adminDate = state.adminSelectedDate || state.selectedDate || getInitialBookingDate();
+        const parts = adminDate.split('-');
+        const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        const dayOfWeek = dObj.getDay();
+        const sched = state.weeklySchedule[dayOfWeek] || { isOpen: true, start: '09:00', end: '21:00' };
+
+        const startHour = parseInt((sched.start || '09:00').split(':')[0]);
+        const endHour = parseInt((sched.end || '21:00').split(':')[0]);
+        const availableSlots = [];
+        if (sched.isOpen) {
+          for (let h = startHour; h <= endHour; h++) {
+            const hh = h.toString().padStart(2, '0');
+            availableSlots.push(`${hh}:00`);
+            if (h !== endHour) availableSlots.push(`${hh}:30`);
+          }
+        }
+        availableSlots.sort();
+
+        const occupiedSet = getOccupiedSlotsForDate(adminDate);
+
+        html += `
+          <div class="card" style="padding: 16px;">
+            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 12px;">📅 Manuel Randevu Ekle & Canlı Takvim</h3>
+            
+            <!-- Date Selector & Color Legend -->
+            <div style="background: #070c1a; padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                <label style="font-size: 12px; font-weight: 800; color: #fff;">📅 Takvim Tarihi Seçin:</label>
+                <input type="date" value="${adminDate}" onchange="setAdminBookingDate(this.value)" class="input-field" style="width: auto; padding: 6px 12px; font-size: 12px; font-weight: 800;">
+              </div>
+
+              <!-- Legend -->
+              <div style="display: flex; gap: 10px; font-size: 10px; font-weight: 700; justify-content: center; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                <span style="color: #34d399;">🟢 Serbest (Seçmek İçin Tıkla)</span>
+                <span style="color: #fb7185;">🔴 Müşteri Randevusu</span>
+                <span style="color: #94a3b8;">⚪ Salon Kapalı / Engel</span>
+              </div>
+            </div>
+
+            <!-- Live Slot Grid Overview -->
+            <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">📊 ${adminDate} Tarihindeki Canlı Saat Durumu:</div>
+              <div class="slot-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                ${availableSlots.map(time => {
+                  const override = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === time);
+                  const isBooked = occupiedSet.has(time);
+                  const isBlocked = (override ? override.status === 'blocked' : false);
+                  
+                  const apt = isBooked ? state.appointments.find(a => a.date === adminDate && a.time === time && a.status !== 'cancelled' && a.status !== 'rejected') : null;
+
+                  if (isBooked) {
+                    return `
+                      <button onclick="alert('🔴 Müşteri Randevusu:\\n${apt ? apt.customerName + ' (' + apt.customerPhone + ')\\nHizmet: ' + apt.serviceName : 'Randevu Mevcut'}')" style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(244,63,94,0.2); border: 1px solid rgba(244,63,94,0.5); color: #fb7185; cursor: pointer;">
+                        ${time}
+                        <span style="display:block; font-size:7px;">🔴 Dolu</span>
+                      </button>
+                    `;
+                  } else if (isBlocked) {
+                    return `
+                      <button style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(148,163,184,0.15); border: 1px solid rgba(148,163,184,0.3); color: #94a3b8; opacity: 0.6;">
+                        ${time}
+                        <span style="display:block; font-size:7px;">⚪ Kapalı</span>
+                      </button>
+                    `;
+                  } else {
+                    return `
+                      <button onclick="selectTimeForAdminManualBook('${time}')" style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; cursor: pointer;">
+                        ${time}
+                        <span style="display:block; font-size:7px;">🟢 Serbest</span>
+                      </button>
+                    `;
+                  }
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Quick Admin Booking Form -->
+            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px dashed var(--gold-primary);">
+              <h4 style="font-size: 13px; font-weight: 900; color: var(--gold-primary); margin-bottom: 12px;">➕ Hızlı Manuel Randevu Oluştur</h4>
+              <form onsubmit="submitAdminManualBooking(event)" style="display: flex; flex-direction: column; gap: 10px;">
+                <div>
+                  <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Müşteri Adı Soyadı:</label>
+                  <input id="admin-book-name" required type="text" placeholder="Örn: Ahmet Yılmaz" class="input-field" style="padding: 10px; font-size: 13px;">
+                </div>
+                <div>
+                  <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Müşteri Telefon Numarası:</label>
+                  <input id="admin-book-phone" required type="tel" placeholder="0533XXXXXXX" class="input-field" style="padding: 10px; font-size: 13px;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div>
+                    <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Hizmet Seçimi:</label>
+                    <select id="admin-book-service" class="input-field" style="padding: 10px; font-size: 11px; font-weight: 700;">
+                      ${state.services.map(s => `<option value="${s.id}">${getServiceName(s)} (${s.price} TL)</option>`).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Randevu Saati:</label>
+                    <select id="admin-book-time" class="input-field" style="padding: 10px; font-size: 12px; font-weight: 800; color: var(--gold-primary);">
+                      ${availableSlots.map(t => `<option value="${t}">${t}</option>`).join('')}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Açıklama / Not (İsteğe Bağlı):</label>
+                  <input id="admin-book-note" type="text" placeholder="Örn: Telefondan arayarak randevu aldı" class="input-field" style="padding: 8px 10px; font-size: 12px;">
+                </div>
+                <button type="submit" class="gold-btn" style="padding: 14px; font-size: 14px; font-weight: 900; margin-top: 4px;">
+                  ✅ Manuel Randevuyu Oluştur & Doğrudan Onayla
+                </button>
+              </form>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3. STAFF & PASSWORD MANAGEMENT TAB (ADMIN KENDİSİ YÖNETİCİ ATAYABİLECEK)
+      else if (state.adminTab === 'staffManagement') {
+        html += `
+          <div class="card" style="padding: 16px;">
+            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 14px;">👥 Yetkili & Şifre Yönetimi</h3>
+            
+            <!-- 1. CROWN ADMIN MASTER PASSWORD -->
+            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--gold-primary); margin-bottom: 18px;">
+              <h4 style="font-size: 13px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">👑 Patron / Ana Admin Şifresi</h4>
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Bu şifre ile girildiğinde tüm salon yönetimi ve şifre değiştirme yetkileri açılır.</p>
+
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input id="master-admin-pwd-input" type="text" value="${state.adminPassword || '1405'}" class="input-field" style="flex: 1; padding: 10px; font-size: 14px; font-weight: 900; color: var(--gold-primary); letter-spacing: 2px;">
+                <button onclick="saveAdminPassword()" class="gold-btn" style="padding: 10px 16px; font-size: 12px; font-weight: 900;">💾 Kaydet</button>
+              </div>
+            </div>
+
+            <!-- 2. MANAGERS / STAFF PASSWORDS LIST -->
+            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--border-color);">
+              <h4 style="font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 6px;">🛠️ Personel / Yönetici Giriş Şifreleri</h4>
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px;">Atadığınız personel şifreleri ile sisteme giren yetkililer sadece randevu onaylayabilir ve çalışma saatlerini görebilir.</p>
+
+              <!-- LIST OF MANAGER PINS -->
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                ${(state.managerPasswords || ['5555']).map((pin, idx) => `
+                  <div style="background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <span style="font-size: 12px; font-weight: 800; color: #fff;">🔑 Personel Şifresi #${idx + 1}:</span>
+                      <span style="font-size: 14px; font-weight: 900; color: var(--gold-primary); margin-left: 8px; letter-spacing: 2px;">${pin}</span>
+                    </div>
+                    <button onclick="deleteManagerPin('${pin}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">🗑️ Sil</button>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- ADD NEW MANAGER PIN FORM -->
+              <div style="display: flex; gap: 8px;">
+                <input id="new-manager-pin-input" type="text" placeholder="Örn: 1234 veya 5555" class="input-field" style="flex: 1; padding: 10px; font-size: 13px; font-weight: 700;">
+                <button onclick="addManagerPin()" class="gold-btn" style="padding: 10px 16px; font-size: 12px; font-weight: 900;">➕ Şifre Ekle</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       html += `</div>`;
       container.innerHTML = html;
     }
@@ -1572,6 +1744,8 @@
       localStorage.setItem('gc_last_local_ts', now.toString());
 
       const payload = overridePayload || {
+        adminPassword: state.adminPassword,
+        managerPasswords: state.managerPasswords,
         appointments: state.appointments,
         dateSlotOverrides: state.dateSlotOverrides,
         weeklySchedule: state.weeklySchedule,
@@ -1707,6 +1881,14 @@
             lastCloudUpdateTimestamp = latestData.updatedAt;
             localStorage.setItem('gc_last_cloud_ts', latestData.updatedAt.toString());
 
+            if (latestData.adminPassword) {
+              state.adminPassword = latestData.adminPassword;
+              localStorage.setItem('gc_admin_pwd', latestData.adminPassword);
+            }
+            if (latestData.managerPasswords) {
+              state.managerPasswords = Array.isArray(latestData.managerPasswords) ? latestData.managerPasswords : ['5555'];
+              localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
+            }
             if (latestData.appointments) {
               state.appointments = Array.isArray(latestData.appointments) ? latestData.appointments : [];
               pruneAppointmentsLimit();
@@ -2301,16 +2483,112 @@
     }
 
     function verifyStaffPassword() {
-      const pwd = document.getElementById('staff-pwd').value;
-      if (pwd === '1405') {
+      const pwd = (document.getElementById('staff-pwd')?.value || '').trim();
+      const masterPwd = state.adminPassword || '1405';
+      const managerList = state.managerPasswords || ['5555'];
+
+      if (pwd === masterPwd) {
         closeModal();
         switchRole('admin');
-      } else if (pwd === '5555') {
+      } else if (managerList.includes(pwd) || pwd === '5555') {
         closeModal();
         switchRole('manager');
       } else {
         alert('❌ Hatalı yetkili şifresi!');
       }
+    }
+
+    function setAdminBookingDate(dStr) {
+      state.adminSelectedDate = dStr;
+      renderApp();
+    }
+
+    function selectTimeForAdminManualBook(tStr) {
+      const timeSelect = document.getElementById('admin-book-time');
+      if (timeSelect) timeSelect.value = tStr;
+      const nameInput = document.getElementById('admin-book-name');
+      if (nameInput) nameInput.focus();
+    }
+
+    function submitAdminManualBooking(e) {
+      if (e) e.preventDefault();
+      const name = document.getElementById('admin-book-name').value.trim();
+      const phone = document.getElementById('admin-book-phone').value.trim();
+      const svcId = document.getElementById('admin-book-service').value;
+      const time = document.getElementById('admin-book-time').value;
+      const note = (document.getElementById('admin-book-note')?.value || '').trim();
+
+      if (!name || !phone || !time || !svcId) {
+        alert('Lütfen tüm zorunlu alanları doldurunuz.');
+        return;
+      }
+
+      const svc = state.services.find(s => s.id === svcId) || state.services[0];
+      const date = state.adminSelectedDate || state.selectedDate || getInitialBookingDate();
+
+      const newApt = {
+        id: Date.now().toString(),
+        customerName: name,
+        customerPhone: phone,
+        serviceName: getServiceName(svc),
+        serviceDuration: svc.duration,
+        date: date,
+        time: time,
+        price: svc.price,
+        status: 'approved',
+        note: note || 'Admin Manuel Kayıt'
+      };
+
+      state.appointments.unshift(newApt);
+      localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+      syncToCloud();
+      window.dispatchEvent(new Event('storage'));
+      if (typeof playNotificationSound === 'function') playNotificationSound(true);
+      alert(`✅ ${name} için ${date} ${time} saatine manuel randevu başarıyla eklendi ve onaylandı!`);
+      renderApp();
+    }
+
+    function saveAdminPassword() {
+      const val = (document.getElementById('master-admin-pwd-input')?.value || '').trim();
+      if (!val || val.length < 3) {
+        alert('Lütfen geçerli bir Patron şifresi giriniz (en az 3 karakter).');
+        return;
+      }
+      state.adminPassword = val;
+      localStorage.setItem('gc_admin_pwd', val);
+      syncToCloud();
+      alert('✅ Patron ana admin şifresi başarıyla güncellendi!');
+      renderApp();
+    }
+
+    function addManagerPin() {
+      const val = (document.getElementById('new-manager-pin-input')?.value || '').trim();
+      if (!val || val.length < 3) {
+        alert('Lütfen geçerli bir personel şifresi giriniz (en az 3 karakter).');
+        return;
+      }
+      state.managerPasswords = state.managerPasswords || ['5555'];
+      if (state.managerPasswords.includes(val)) {
+        alert('Bu şifre zaten mevcut.');
+        return;
+      }
+      state.managerPasswords.push(val);
+      localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
+      syncToCloud();
+      alert(`✅ Personel şifresi "${val}" başarıyla eklendi!`);
+      renderApp();
+    }
+
+    function deleteManagerPin(pin) {
+      if ((state.managerPasswords || []).length <= 1) {
+        alert('En az bir personel şifresi kalmalıdır.');
+        return;
+      }
+      state.managerPasswords = state.managerPasswords.filter(p => p !== pin);
+      localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
+      syncToCloud();
+      alert(`✅ Personel şifresi "${pin}" silindi.`);
+      renderApp();
     }
 
     function closeModal() {
