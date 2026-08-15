@@ -2076,13 +2076,18 @@
 
       const bodyStr = JSON.stringify(payload);
 
-      await Promise.allSettled(CLOUD_ENDPOINTS.map(url =>
-        fetch(url, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: bodyStr
-        }).catch(() => {})
-      ));
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch(CLOUD_ENDPOINTS[0], {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: bodyStr
+          });
+          if (res.ok) break;
+        } catch(e) {
+          await new Promise(r => setTimeout(r, 400 * (attempt + 1)));
+        }
+      }
     }
 
     let sharedAudioCtx = null;
