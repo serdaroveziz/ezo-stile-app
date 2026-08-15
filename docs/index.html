@@ -2182,6 +2182,10 @@
               state.managerPasswords = Array.isArray(latestData.managerPasswords) ? latestData.managerPasswords : ['5555'];
               localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
             }
+            if (latestData.staffList) {
+              state.staffList = Array.isArray(latestData.staffList) ? latestData.staffList : [];
+              localStorage.setItem('gc_staff_list', JSON.stringify(state.staffList));
+            }
             if (latestData.appointments) {
               state.appointments = Array.isArray(latestData.appointments) ? latestData.appointments : [];
               pruneAppointmentsLimit();
@@ -2913,34 +2917,55 @@
       renderApp();
     }
 
-    function addManagerPin() {
-      const val = (document.getElementById('new-manager-pin-input')?.value || '').trim();
-      if (!val || val.length < 3) {
-        alert('Lütfen geçerli bir personel şifresi giriniz (en az 3 karakter).');
+    function addStaffMember() {
+      const nameVal = (document.getElementById('new-staff-name-input')?.value || '').trim();
+      const pinVal = (document.getElementById('new-staff-pin-input')?.value || '').trim();
+
+      if (!nameVal || nameVal.length < 2) {
+        alert('Lütfen personelin adını ve soyadını giriniz.');
         return;
       }
-      state.managerPasswords = state.managerPasswords || ['5555'];
-      if (state.managerPasswords.includes(val)) {
-        alert('Bu şifre zaten mevcut.');
+      if (!pinVal || pinVal.length < 3) {
+        alert('Lütfen en az 3 karakterli bir giriş şifresi / PIN giriniz.');
         return;
       }
-      state.managerPasswords.push(val);
+
+      state.staffList = state.staffList || [];
+      const existingPin = state.staffList.find(s => s.pin === pinVal);
+      if (existingPin) {
+        alert(`❌ Bu şifre (${pinVal}) zaten "${existingPin.name}" personeline atanmıştır. Lütfen farklı bir şifre giriniz.`);
+        return;
+      }
+
+      const newStaff = {
+        id: 'stf_' + Date.now(),
+        name: nameVal,
+        pin: pinVal
+      };
+
+      state.staffList.push(newStaff);
+      state.managerPasswords = state.staffList.map(s => s.pin);
+      localStorage.setItem('gc_staff_list', JSON.stringify(state.staffList));
       localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
       syncToCloud();
-      alert(`✅ Personel şifresi "${val}" başarıyla eklendi!`);
+      alert(`✅ "${nameVal}" personeli için "${pinVal}" şifresi başarıyla atandı!`);
       renderApp();
     }
 
-    function deleteManagerPin(pin) {
-      if ((state.managerPasswords || []).length <= 1) {
-        alert('En az bir personel şifresi kalmalıdır.');
-        return;
+    function deleteStaffMember(id) {
+      state.staffList = state.staffList || [];
+      const staff = state.staffList.find(s => s.id === id);
+      if (!staff) return;
+
+      if (confirm(`"${staff.name}" personelini ve şifresini silmek istediğinize emin misiniz?`)) {
+        state.staffList = state.staffList.filter(s => s.id !== id);
+        state.managerPasswords = state.staffList.map(s => s.pin);
+        localStorage.setItem('gc_staff_list', JSON.stringify(state.staffList));
+        localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
+        syncToCloud();
+        alert(`✅ "${staff.name}" personelinin kaydı silindi.`);
+        renderApp();
       }
-      state.managerPasswords = state.managerPasswords.filter(p => p !== pin);
-      localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
-      syncToCloud();
-      alert(`✅ Personel şifresi "${pin}" silindi.`);
-      renderApp();
     }
 
     function closeModal() {
