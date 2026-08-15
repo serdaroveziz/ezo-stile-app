@@ -921,7 +921,7 @@
         });
       }
 
-      const activeSelectedService = state.services.find(s => s.id === state.selectedServiceId) || state.services[0] || DEFAULT_SERVICES[0];
+      const activeSelectedService = state.selectedServiceId ? state.services.find(s => s.id === state.selectedServiceId) : null;
 
       let html = '';
 
@@ -983,8 +983,6 @@
         html += `<div class="card" style="padding: 16px 14px;">`;
 
         // STEP 1: HİZMET SEÇİMİ (KAPALI BAŞLAR - TIKLAYINCA PENCERE AÇILIR)
-        const activeSelectedService = state.selectedServiceId ? state.services.find(s => s.id === state.selectedServiceId) : null;
-
         html += `
           <div onclick="openServiceSelectionModal()" style="background: #070c1a; border-radius: 14px; border: 1px solid ${activeSelectedService ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 14px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -1097,16 +1095,16 @@
 
         // STEP 4: BIG DEV CONFIRMATION BUTTON
         html += `
-          <div id="booking-confirm-bar" style="background: ${state.selectedTime ? 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(251,191,36,0.15))' : '#070c1a'}; border: 2px solid ${state.selectedTime ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 16px; padding: 16px; text-align: center; transition: all 0.3s ease; box-shadow: ${state.selectedTime ? '0 0 25px rgba(245,158,11,0.35)' : 'none'};">
+          <div id="booking-confirm-bar" style="background: ${state.selectedTime && activeSelectedService ? 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(251,191,36,0.15))' : '#070c1a'}; border: 2px solid ${state.selectedTime && activeSelectedService ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 16px; padding: 16px; text-align: center; transition: all 0.3s ease; box-shadow: ${state.selectedTime && activeSelectedService ? '0 0 25px rgba(245,158,11,0.35)' : 'none'};">
             <div style="font-size: 14px; font-weight: 900; color: #fff;">
-              📋 ${getServiceName(activeSelectedService)} — <span style="color: var(--gold-primary); font-size: 16px;">${activeSelectedService.price} TL</span>
+              📋 ${activeSelectedService ? getServiceName(activeSelectedService) : `<span style="color: var(--gold-light);">${t('selectServicePrompt')}</span>`} ${activeSelectedService ? '— <span style="color: var(--gold-primary); font-size: 16px;">' + activeSelectedService.price + ' TL</span>' : ''}
             </div>
             <div style="font-size: 13px; font-weight: 800; color: ${state.selectedTime ? 'var(--gold-primary)' : 'var(--text-muted)'}; margin-top: 4px;">
               📅 ${state.selectedDate} — ⏰ ${state.selectedTime ? state.selectedTime : t('selectTimeFirst')}
             </div>
 
-            <button onclick="submitBooking()" class="gold-btn ${state.selectedTime ? 'animate-pulse' : ''}" style="width: 100%; margin-top: 12px; padding: 16px; font-size: 16px; font-weight: 900; background: ${state.selectedTime ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#1e293b'}; color: ${state.selectedTime ? '#000' : 'var(--text-muted)'}; border: 1px solid ${state.selectedTime ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 12px;">
-              ${state.selectedTime ? t('bookBtn') : '⏰ ' + t('selectTimeFirst')}
+            <button onclick="submitBooking()" class="gold-btn ${state.selectedTime && activeSelectedService ? 'animate-pulse' : ''}" style="width: 100%; margin-top: 12px; padding: 16px; font-size: 16px; font-weight: 900; background: ${state.selectedTime && activeSelectedService ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#1e293b'}; color: ${state.selectedTime && activeSelectedService ? '#000' : 'var(--text-muted)'}; border: 1px solid ${state.selectedTime && activeSelectedService ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 12px;">
+              ${state.selectedTime && activeSelectedService ? t('bookBtn') : '⏰ ' + (activeSelectedService ? t('selectTimeFirst') : t('selectServicePrompt'))}
             </button>
           </div>
         `;
