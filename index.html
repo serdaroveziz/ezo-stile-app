@@ -892,15 +892,20 @@
       const approvedApts = state.appointments.filter(a => a.status === 'approved');
       const rejectedApts = state.appointments.filter(a => a.status === 'rejected' || a.status === 'cancelled');
 
+      const isAdminRole = state.role === 'admin';
+      const panelTitle = isAdminRole ? '👑 Patron Paneli (Tam Yetkili)' : '👔 Çalışan Paneli (Personel)';
+
       let html = `
         <div class="card" style="border-color: var(--gold-primary);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
             <div>
-              <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin: 0;">👑 Yönetici Paneli</h2>
+              <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin: 0;">${panelTitle}</h2>
               <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Berber</span>
             </div>
             <div style="display: flex; gap: 6px;">
-              <button onclick="openAdminPhoneModal()" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">📱 Tel No</button>
+              ${isAdminRole ? `
+                <button onclick="openAdminPhoneModal()" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">📱 Tel No</button>
+              ` : ''}
               <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 Yenile</button>
               <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer;">← Müşteri</button>
             </div>
