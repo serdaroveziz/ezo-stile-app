@@ -994,16 +994,22 @@
         </div>
       `;
 
-      // LOCK SCREEN NOTIFICATION PERMISSION BANNER
-      const notifPermission = ('Notification' in window) ? Notification.permission : 'denied';
-      if (notifPermission !== 'granted' && 'Notification' in window) {
+      // LOCK SCREEN NOTIFICATION PERMISSION BANNER FOR MOBILE & DESKTOP
+      let isPermissionGranted = false;
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          isPermissionGranted = true;
+        }
+      } catch(e) {}
+
+      if (!isPermissionGranted) {
         html += `
-          <div style="background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08)); border: 1px solid var(--gold-primary); padding: 12px 14px; border-radius: 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <div style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1)); border: 1.5px solid var(--gold-primary); padding: 14px 16px; border-radius: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(245,158,11,0.25);">
             <div>
-              <div style="font-weight: 900; font-size: 12px; color: var(--gold-primary);">🔔 Kilit Ekranı Bildirimleri</div>
-              <div style="font-size: 11px; color: #fff; margin-top: 2px;">Randevu onayınızı telefon kilit ekranında ve sesli almak için bildirim izni verin.</div>
+              <div style="font-weight: 900; font-size: 13px; color: var(--gold-primary); text-transform: uppercase;">🔔 Kilit Ekranı Bildirimleri</div>
+              <div style="font-size: 11px; color: #fff; margin-top: 3px; line-height: 1.4;">Randevu onayınızı telefonunuzun kilit ekranında sesli ve titreşimli almak için tıklayın.</div>
             </div>
-            <button onclick="requestNotificationPermission()" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900; white-space: nowrap;">🔔 İzin Ver</button>
+            <button onclick="requestNotificationPermission()" class="gold-btn animate-pulse" style="padding: 10px 14px; font-size: 12px; font-weight: 900; white-space: nowrap; flex-shrink: 0;">🔔 İzin Ver</button>
           </div>
         `;
       }
@@ -2136,23 +2142,37 @@
     }
 
     function requestNotificationPermission() {
-      if (!('Notification' in window)) {
-        alert('Tarayıcınız sistem bildirimlerini desteklememektedir.');
+      if (typeof Notification === 'undefined') {
+        alert('⚠️ iPhone (iOS) kullanıyorsanız:\n\nKilit ekranı bildirimlerini alabilmek için Safari alt menüsünden "Paylaş" -> "Ana Ekrana Ekle" (Add to Home Screen) yapıp uygulamayı Ana Ekranınızdan açınız.\n\nAndroid kullanıyorsanız lütfen tarayıcı ayarlarından EZO STİLE için bildirim iznini veriniz.');
         return;
       }
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          alert('✅ Kilit ekranı bildirimleri etkinleştirildi!');
-          triggerLockScreenNotification('EZO STİLE 💇‍♂️', '🎉 Kilit ekranı bildirimleri başarıyla aktif edildi!');
-          renderApp();
-        } else {
-          alert('⚠️ Kilit ekranı bildirim izni verilmedi. Bildirimler sadece uygulama açıkken sesli verilecek.');
-        }
-      });
+
+      try {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            alert('✅ Telefonunuz için kilit ekranı bildirimleri etkinleştirildi!');
+            triggerLockScreenNotification('EZO STİLE 💇‍♂️', '🎉 Kilit ekranı bildirimleri başarıyla aktif edildi!');
+            renderApp();
+          } else if (permission === 'denied') {
+            alert('⚠️ Telefon bildirim izni engellenmiş görünüyor. Lütfen telefonunuzun Ayarlar -> Bildirimler / Tarayıcı ayarlarından EZO STİLE için bildirim iznini açınız.');
+          } else {
+            alert('⚠️ Bildirim izni henüz verilemedi. Lütfen tekrar "İzin Ver" butonuna basınız.');
+          }
+        }).catch(() => {
+          alert('⚠️ Bildirim izni için lütfen uygulamayı Ana Ekrana Ekleyip (PWA) açınız.');
+        });
+      } catch(e) {
+        alert('⚠️ Bildirim izni için lütfen uygulamayı telefonunuzun Ana Ekranına Ekleyip (PWA) açınız.');
+      }
     }
 
     function triggerLockScreenNotification(title, body) {
-      if (!('Notification' in window)) return;
+      // Vibrate mobile device if Web Vibration API is supported
+      if ('vibrate' in navigator) {
+        try { navigator.vibrate([300, 100, 300, 100, 300]); } catch(e) {}
+      }
+
+      if (typeof Notification === 'undefined') return;
 
       const options = {
         body: body,
@@ -2165,27 +2185,29 @@
         data: { url: window.location.origin + window.location.pathname }
       };
 
-      if (Notification.permission === 'granted') {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification(title, options).catch(() => {
+      try {
+        if (Notification.permission === 'granted') {
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification(title, options).catch(() => {
+                try { new Notification(title, options); } catch(e) {}
+              });
+            }).catch(() => {
               try { new Notification(title, options); } catch(e) {}
             });
-          }).catch(() => {
-            try { new Notification(title, options); } catch(e) {}
-          });
-        } else {
-          try {
-            new Notification(title, options);
-          } catch(e) {}
-        }
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            triggerLockScreenNotification(title, body);
+          } else {
+            try {
+              new Notification(title, options);
+            } catch(e) {}
           }
-        });
-      }
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              triggerLockScreenNotification(title, body);
+            }
+          });
+        }
+      } catch(e) {}
     }
 
     async function fetchFromCloud() {
