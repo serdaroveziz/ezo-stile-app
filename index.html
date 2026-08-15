@@ -38,7 +38,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW Load:', e));
+        navigator.serviceWorker.register('./sw.js?v=1.0.2').catch(e => console.log('SW Load:', e));
       });
     }
 
