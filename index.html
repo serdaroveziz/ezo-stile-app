@@ -187,7 +187,13 @@
 
   <!-- MAIN CONTAINER -->
   <main class="container" id="main-app">
-    <!-- Content injected via JS -->
+    <div style="text-align: center; padding: 60px 20px;">
+      <div style="width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 20px; background: #000; border: 2px solid var(--gold-primary); overflow: hidden;">
+        <img src="./insta.png" style="width: 100%; height: 100%; object-fit: cover; transform: scale(1.02);" alt="EZO STİLE Logo">
+      </div>
+      <h2 style="font-size: 22px; font-weight: 900; color: var(--gold-primary);">EZO STİLE VIP</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">VIP Randevu Sistemi Yükleniyor...</p>
+    </div>
   </main>
 
   <!-- FOOTER -->
@@ -1849,9 +1855,10 @@
     }
 
     // --- INITIALIZATION ---
-    document.addEventListener('DOMContentLoaded', () => {
-      renderApp();
-    });
+    renderApp();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderApp);
+    }
 
     // Storage live sync listener
     window.addEventListener('storage', () => {
