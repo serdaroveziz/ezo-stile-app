@@ -27,7 +27,7 @@ function Create-PwaIcon {
     $srcImg = [System.Drawing.Image]::FromFile($SourcePath)
 
     # Compute scaling preserving aspect ratio
-    $padding = [int]($Size * 0.12)
+    $padding = [int]($Size * 0.04)
     $maxW = $Size - ($padding * 2)
     $maxH = $Size - ($padding * 2)
 
