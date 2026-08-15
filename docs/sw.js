@@ -25,8 +25,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || 'Randevu onayı bekliyor',
-    icon: '/insta.png',
-    badge: '/insta.png',
+    icon: './insta.png',
+    badge: './insta.png',
     vibrate: [300, 100, 300, 100, 300],
     tag: 'randevu-onayi-' + Date.now(),
     renotify: true,

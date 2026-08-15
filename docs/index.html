@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>EZO STİLE - VIP Berber & Kuaför Randevu Sistemi</title>
-  <link rel="icon" href="/insta.png" type="image/png">
-  <link rel="apple-touch-icon" href="/insta.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./insta.png" type="image/png">
+  <link rel="apple-touch-icon" href="./insta.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./insta.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="EZO STİLE">
@@ -36,7 +38,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW Load:', e));
+        navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW Load:', e));
       });
     }
 
@@ -44,8 +46,8 @@
       if ('Notification' in window && Notification.permission === 'granted') {
         const options = {
           body: message,
-          icon: '/insta.png',
-          badge: '/insta.png',
+          icon: './insta.png',
+          badge: './insta.png',
           vibrate: [300, 100, 300, 100, 300],
           tag: 'randevu-onayi-' + Date.now(),
           renotify: true,
@@ -156,7 +158,7 @@
     <div class="header-content">
       <div style="display: flex; align-items: center; gap: 12px;">
         <div class="logo-box">
-          <img id="app-logo" src="/insta.png" onerror="this.onerror=null; this.src='insta.png';" alt="EZO STİLE Logo">
+          <img id="app-logo" src="./insta.png" onerror="this.onerror=null; this.src='insta.png';" alt="EZO STİLE Logo">
         </div>
         <div>
           <h1 class="gold-gradient-text" style="font-size: 20px; font-weight: 900; letter-spacing: 0.5px;">EZO STİLE</h1>
@@ -548,7 +550,7 @@
         container.innerHTML = `
           <div class="card" style="border-color: var(--gold-primary); max-width: 480px; margin: 40px auto; text-align: center; padding: 30px;">
             <div style="width: 70px; height: 70px; margin: 0 auto 16px; border-radius: 20px; background: #000; border: 2px solid var(--gold-primary); overflow: hidden;">
-              <img src="/insta.png" onerror="this.onerror=null; this.src='insta.png';" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo">
+              <img src="./insta.png" onerror="this.onerror=null; this.src='insta.png';" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo">
             </div>
             <h2 style="font-size: 20px; font-weight: 900; color: var(--gold-primary); margin-bottom: 8px;">${t('custLoginTitle')}</h2>
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">${t('custLoginDesc')}</p>

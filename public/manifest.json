@@ -1,0 +1,25 @@
+{
+  "name": "EZO STİLE VIP",
+  "short_name": "EZO STİLE",
+  "description": "VIP Berber & Kuaför Randevu Sistemi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#070c1a",
+  "theme_color": "#070c1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./insta.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./insta.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
