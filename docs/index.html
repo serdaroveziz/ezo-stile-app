@@ -1620,6 +1620,12 @@
 
       state.smsCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+      // TRIGGER NATIVE SMS COMPOSER TO SEND CODE VIA SMS
+      const smsBody = `EZO STİLE SMS Doğrulama Şifreniz: ${state.smsCode}`;
+      try {
+        window.open(`sms:${cleanDigits}?body=${encodeURIComponent(smsBody)}`, '_self');
+      } catch(err) {}
+
       // INITIATE FIREBASE REAL AUTOMATED SMS OTP
       if (window.firebase && firebase.auth) {
         try {
@@ -1652,26 +1658,25 @@
         <div class="modal-overlay">
           <div class="modal-content" style="max-width: 420px; text-align: center; border: 1px solid var(--gold-primary); box-shadow: 0 15px 40px rgba(0,0,0,0.8);">
             <div style="font-size: 42px; margin-bottom: 6px;">📲</div>
-            <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">SMS Doğrulama Şifresi</h3>
+            <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">SMS Doğrulama Şifresi Gönderildi</h3>
             <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 14px; line-height: 1.4;">
-              <strong>${phone}</strong> numaralı hattınız için 6 haneli doğrulama şifresi oluşturuldu.
+              <strong>${phone}</strong> numaralı hattınıza SMS ile 6 haneli doğrulama şifreniz gönderilmiştir. Lütfen gelen SMS mesajındaki şifreyi giriniz.
             </p>
 
-            <!-- INSTANT AUTOFILL BADGE -->
-            <div onclick="autoFillSms('${code}')" style="background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); padding: 12px; border-radius: 14px; margin-bottom: 14px; cursor: pointer; transition: all 0.2s;">
-              <span style="font-size: 11px; color: #cbd5e1; display: block; font-weight: 700;">⚡ Hızlı Onay Kodu (Otomatik Doldurmak İçin Tıklayın):</span>
-              <strong style="font-size: 24px; color: var(--gold-primary); letter-spacing: 6px; display: block; margin-top: 4px;">${code}</strong>
+            <div style="background: rgba(245,158,11,0.1); border: 1px dashed var(--gold-primary); padding: 12px; border-radius: 14px; margin-bottom: 16px; text-align: left;">
+              <div style="font-size: 11px; color: #fbbf24; font-weight: 800;">🔒 Güvenli SMS Doğrulaması</div>
+              <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Şifreniz güvenlik amacıyla ekranda gösterilmez, telefonunuza SMS olarak iletilir.</div>
             </div>
 
-            <input id="sms-input" type="text" maxlength="6" value="${code}" placeholder="6 Haneli SMS Şifresi" class="input-field" style="text-align: center; font-size: 24px; font-weight: 900; letter-spacing: 8px; margin-bottom: 14px; background: #040711; border-color: var(--gold-primary);">
+            <input id="sms-input" type="text" maxlength="6" value="" placeholder="6 Haneli SMS Şifresi" class="input-field" style="text-align: center; font-size: 24px; font-weight: 900; letter-spacing: 8px; margin-bottom: 16px; background: #040711; border-color: var(--gold-primary);">
 
-            <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
               <button onclick="verifySmsCode('${name}', '${phone}', '${code}')" class="gold-btn" style="width: 100%; padding: 14px; font-size: 14px; font-weight: 900;">
                 ✅ Şifreyi Doğrula ve Giriş Yap
               </button>
 
               <button onclick="window.open('sms:${phone.replace(/\D/g, '')}?body=EZO%20STİLE%20SMS%20Doğrulama%20Şifreniz:%20${code}', '_self')" style="background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); color: #60a5fa; padding: 10px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
-                💬 SMS Mesaj Ekranını Aç
+                💬 SMS Mesaj Ekranını Yeniden Aç
               </button>
               
               <button onclick="closeModal()" style="padding: 8px; font-size: 11px; background: transparent; border: none; color: #94a3b8; cursor: pointer;">
