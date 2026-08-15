@@ -13,23 +13,25 @@ function Create-PwaIcon {
     $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
 
-    # Dark background #070c1a
+    # 1. Fill entire canvas with solid Gold background first (#f59e0b) to cover all 4 corners completely
+    $goldColor = [System.Drawing.ColorTranslator]::FromHtml("#f59e0b")
+    $goldBrush = New-Object System.Drawing.SolidBrush($goldColor)
+    $g.FillRectangle($goldBrush, 0, 0, $Size, $Size)
+
+    # 2. Draw inner dark background rectangle leaving a solid Gold Frame (border thickness: 3.5% of icon size)
+    $borderThick = [int]($Size * 0.035)
+    $innerSize = $Size - ($borderThick * 2)
+
     $bgColor = [System.Drawing.ColorTranslator]::FromHtml("#070c1a")
     $bgBrush = New-Object System.Drawing.SolidBrush($bgColor)
-    $g.FillRectangle($bgBrush, 0, 0, $Size, $Size)
+    $g.FillRectangle($bgBrush, $borderThick, $borderThick, $innerSize, $innerSize)
 
-    # Subtle gold border #f59e0b
-    $goldColor = [System.Drawing.ColorTranslator]::FromHtml("#f59e0b")
-    $goldPen = New-Object System.Drawing.Pen($goldColor, [math]::Max(4, [int]($Size * 0.02)))
-    $g.DrawRectangle($goldPen, 4, 4, $Size - 8, $Size - 8)
-
-    # Load logo.png
+    # 3. Load logo.png and scale it up BIGGER inside the dark inner area
     $srcImg = [System.Drawing.Image]::FromFile($SourcePath)
 
-    # Compute scaling preserving aspect ratio
-    $padding = [int]($Size * 0.04)
-    $maxW = $Size - ($padding * 2)
-    $maxH = $Size - ($padding * 2)
+    $innerPadding = [int]($Size * 0.02)
+    $maxW = $innerSize - ($innerPadding * 2)
+    $maxH = $innerSize - ($innerPadding * 2)
 
     $ratioW = $maxW / $srcImg.Width
     $ratioH = $maxH / $srcImg.Height
@@ -38,17 +40,19 @@ function Create-PwaIcon {
     $destW = [int]($srcImg.Width * $ratio)
     $destH = [int]($srcImg.Height * $ratio)
 
-    $destX = [int](($Size - $destW) / 2)
-    $destY = [int](($Size - $destH) / 2)
+    $destX = [int]($borderThick + ($innerSize - $destW) / 2)
+    $destY = [int]($borderThick + ($innerSize - $destH) / 2)
 
     $g.DrawImage($srcImg, $destX, $destY, $destW, $destH)
 
     $srcImg.Dispose()
+    $goldBrush.Dispose()
+    $bgBrush.Dispose()
     $g.Dispose()
 
     $bmp.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
-    Write-Host "Successfully generated $OutputPath ($Size x $Size)"
+    Write-Host "Generated premium gold border icon $OutputPath ($Size x $Size)"
 }
 
 $logoPath = "C:\Users\kuvvat\.gemini\antigravity\scratch\ezo-stile-app\logo.png"
@@ -58,5 +62,7 @@ Create-PwaIcon -SourcePath $logoPath -OutputPath "C:\Users\kuvvat\.gemini\antigr
 
 Copy-Item "icon-512.png" "docs/icon-512.png" -Force
 Copy-Item "icon-192.png" "docs/icon-192.png" -Force
+Copy-Item "icon-512.png" "apple-touch-icon.png" -Force
+Copy-Item "icon-512.png" "docs/apple-touch-icon.png" -Force
 Copy-Item "icon-512.png" "icon.png" -Force
 Copy-Item "icon-512.png" "docs/icon.png" -Force
