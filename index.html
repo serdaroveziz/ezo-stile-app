@@ -839,6 +839,17 @@
       if (!Array.isArray(state.managerPasswords) || state.managerPasswords.length === 0) {
         state.managerPasswords = JSON.parse(localStorage.getItem('gc_manager_pwds') || '["5555"]');
       }
+      if (!Array.isArray(state.staffList) || state.staffList.length === 0) {
+        const savedStaff = localStorage.getItem('gc_staff_list');
+        if (savedStaff) {
+          try { state.staffList = JSON.parse(savedStaff); } catch { state.staffList = null; }
+        }
+        if (!Array.isArray(state.staffList) || state.staffList.length === 0) {
+          state.staffList = [
+            { id: 'stf_1', name: 'Ahmet (Kıdemli Berber)', pin: '5555' }
+          ];
+        }
+      }
       if (!Array.isArray(state.services) || state.services.length === 0) state.services = DEFAULT_SERVICES;
       if (!Array.isArray(state.appointments)) state.appointments = [];
       if (!Array.isArray(state.notifications)) state.notifications = [];
@@ -1258,7 +1269,8 @@
       const rejectedApts = state.appointments.filter(a => a.status === 'rejected' || a.status === 'cancelled');
 
       const isAdminRole = state.role === 'admin';
-      const panelTitle = isAdminRole ? '👑 Patron / Ana Admin Paneli' : '🛠️ Personel / Yönetici Paneli';
+      const staffName = state.currentStaffName || 'Yönetici';
+      const panelTitle = isAdminRole ? '👑 Patron / Ana Admin Paneli' : `🛠️ Personel Paneli — ${staffName}`;
 
       // Security check: restrict manager role from sensitive tabs
       if (!isAdminRole && (state.adminTab === 'revenueDashboard' || state.adminTab === 'staffManagement' || state.adminTab === 'servicesAdmin')) {
@@ -1883,26 +1895,37 @@
 
             <!-- 2. MANAGERS / STAFF PASSWORDS LIST -->
             <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--border-color);">
-              <h4 style="font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 6px;">🛠️ Personel / Yönetici Giriş Şifreleri</h4>
-              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px;">Atadığınız personel şifreleri ile sisteme giren yetkililer sadece randevu onaylayabilir ve çalışma saatlerini görebilir.</p>
+              <h4 style="font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 6px;">🛠️ Personel Giriş Şifreleri (Kişiye Özel)</h4>
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px;">Her çalışana özel isim ve şifre atayabilirsiniz. Personel kendi şifresi ile girdiğinde sadece randevuları yönetebilir, kasa ve fiyat bilgilerini göremez.</p>
 
-              <!-- LIST OF MANAGER PINS -->
-              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
-                ${(state.managerPasswords || ['5555']).map((pin, idx) => `
-                  <div style="background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                      <span style="font-size: 12px; font-weight: 800; color: #fff;">🔑 Personel Şifresi #${idx + 1}:</span>
-                      <span style="font-size: 14px; font-weight: 900; color: var(--gold-primary); margin-left: 8px; letter-spacing: 2px;">${pin}</span>
-                    </div>
-                    <button onclick="deleteManagerPin('${pin}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">🗑️ Sil</button>
+              <!-- ADD NEW STAFF FORM -->
+              <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 16px;">
+                <div style="font-size: 11px; font-weight: 800; color: var(--gold-primary); margin-bottom: 8px;">➕ Yeni Personel & Şifre Ekle</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                  <div>
+                    <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Personel Adı Soyadı:</label>
+                    <input id="new-staff-name-input" type="text" placeholder="Örn: Ahmet Yılmaz" class="input-field" style="padding: 9px; font-size: 12px; font-weight: 700;">
                   </div>
-                `).join('')}
+                  <div>
+                    <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Özel Şifre / PIN:</label>
+                    <input id="new-staff-pin-input" type="text" placeholder="Örn: 5555 veya 1234" class="input-field" style="padding: 9px; font-size: 12px; font-weight: 800; color: var(--gold-primary); letter-spacing: 2px;">
+                  </div>
+                </div>
+                <button onclick="addStaffMember()" class="gold-btn" style="width: 100%; padding: 10px; font-size: 12px; font-weight: 900;">➕ Personeli Kaydet & Şifre Ata</button>
               </div>
 
-              <!-- ADD NEW MANAGER PIN FORM -->
-              <div style="display: flex; gap: 8px;">
-                <input id="new-manager-pin-input" type="text" placeholder="Örn: 1234 veya 5555" class="input-field" style="flex: 1; padding: 10px; font-size: 13px; font-weight: 700;">
-                <button onclick="addManagerPin()" class="gold-btn" style="padding: 10px 16px; font-size: 12px; font-weight: 900;">➕ Şifre Ekle</button>
+              <!-- LIST OF STAFF MEMBERS -->
+              <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 8px;">📋 Kayıtlı Personeller & Şifreleri:</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${(state.staffList || []).map((staff, idx) => `
+                  <div style="background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <span style="font-size: 13px; font-weight: 900; color: #fff;">👤 ${staff.name}</span>
+                      <div style="font-size: 11px; color: var(--gold-primary); font-weight: 800; margin-top: 2px;">🔑 Giriş Şifresi: <span style="letter-spacing: 2px; font-size: 13px;">${staff.pin}</span></div>
+                    </div>
+                    <button onclick="deleteStaffMember('${staff.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">🗑️ Sil</button>
+                  </div>
+                `).join('')}
               </div>
             </div>
           </div>
@@ -2797,16 +2820,20 @@
     function verifyStaffPassword() {
       const pwd = (document.getElementById('staff-pwd')?.value || '').trim();
       const masterPwd = state.adminPassword || '1405';
-      const managerList = state.managerPasswords || ['5555'];
 
       if (pwd === masterPwd) {
         closeModal();
+        state.currentStaffName = 'Patron';
         switchRole('admin');
-      } else if (managerList.includes(pwd) || pwd === '5555') {
-        closeModal();
-        switchRole('manager');
       } else {
-        alert('❌ Hatalı yetkili şifresi!');
+        const matchedStaff = (state.staffList || []).find(s => s.pin === pwd);
+        if (matchedStaff || pwd === '5555') {
+          closeModal();
+          state.currentStaffName = matchedStaff ? matchedStaff.name : 'Personel';
+          switchRole('manager');
+        } else {
+          alert('❌ Hatalı yetkili şifresi!');
+        }
       }
     }
 
