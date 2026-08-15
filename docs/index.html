@@ -1961,6 +1961,92 @@
       container.innerHTML = html;
     }
 
+    // --- SERVICE DURATION & MULTI-SLOT CALCULATION ENGINE ---
+    function getServiceSlotCount(durationStr) {
+      if (!durationStr) return 1;
+      const str = durationStr.toString().toLowerCase();
+
+      const minMatch = str.match(/(\d+)\s*(dk|min)/);
+      if (minMatch) {
+        const mins = parseInt(minMatch[1], 10);
+        return Math.max(1, Math.ceil(mins / 30));
+      }
+
+      const hourMatch = str.match(/(\d+(?:\.\d+)?)\s*(saat|hr)/);
+      if (hourMatch) {
+        const hours = parseFloat(hourMatch[1]);
+        return Math.max(1, Math.ceil((hours * 60) / 30));
+      }
+
+      return 1;
+    }
+
+    function getOccupiedSlotsForDate(dateStr) {
+      const occupied = new Set();
+      const dateApts = (state.appointments || []).filter(a => a && a.date === dateStr && a.status !== 'cancelled' && a.status !== 'rejected');
+
+      dateApts.forEach(apt => {
+        if (!apt.time) return;
+        let slotsNeeded = 1;
+        const svc = (state.services || []).find(s => s.name === apt.serviceName);
+        if (svc && svc.duration) {
+          slotsNeeded = getServiceSlotCount(svc.duration);
+        } else if (apt.serviceDuration) {
+          slotsNeeded = getServiceSlotCount(apt.serviceDuration);
+        }
+
+        const [startH, startM] = apt.time.split(':').map(Number);
+        if (isNaN(startH) || isNaN(startM)) return;
+
+        let curMinTotal = startH * 60 + startM;
+        for (let i = 0; i < slotsNeeded; i++) {
+          const hh = Math.floor(curMinTotal / 60).toString().padStart(2, '0');
+          const mm = (curMinTotal % 60).toString().padStart(2, '0');
+          occupied.add(`${hh}:${mm}`);
+          curMinTotal += 30;
+        }
+      });
+
+      return occupied;
+    }
+
+    // --- AUTOMATIC CLEANUP ENGINE (7 GÜNDEN ESKİ RANDEVULARI SİL + MÜŞTERİ BAŞINA MAKSİMUM 5 RANDEVU KORU) ---
+    function pruneAppointmentsLimit() {
+      if (!Array.isArray(state.appointments)) return;
+      
+      // 1. 7 günden daha eski randevuları otomatik olarak veritabanından temizle
+      const now = new Date();
+      const sevenDaysAgoObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+      const cutoff7DaysAgo = getLocalDateStr(sevenDaysAgoObj);
+
+      let validApts = state.appointments.filter(a => {
+        if (!a || !a.date) return false;
+        return a.date >= cutoff7DaysAgo; // Son 7 gün, bugün veya gelecek randevular kalsın
+      });
+
+      // 2. Müşteri başına en fazla en güncel 5 randevuyu koru
+      const byPhone = {};
+      validApts.forEach(a => {
+        if (!a || !a.customerPhone) return;
+        if (!byPhone[a.customerPhone]) byPhone[a.customerPhone] = [];
+        byPhone[a.customerPhone].push(a);
+      });
+
+      const keptIds = new Set();
+      Object.keys(byPhone).forEach(phone => {
+        const list = byPhone[phone];
+        list.sort((a, b) => {
+          const dtA = (a.date || '') + ' ' + (a.time || '');
+          const dtB = (b.date || '') + ' ' + (b.time || '');
+          return dtB.localeCompare(dtA);
+        });
+        list.slice(0, 5).forEach(a => keptIds.add(a.id));
+      });
+
+      state.appointments = validApts.filter(a => !a || !a.customerPhone || keptIds.has(a.id));
+      localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+    }
+
     // --- FIREBASE REALTIME WEBSOCKET & REST HYBRID SYNC ENGINE ---
     const firebaseConfig = {
       databaseURL: "https://ezostile-barber-default-rtdb.europe-west1.firebasedatabase.app"
