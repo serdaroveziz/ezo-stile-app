@@ -176,6 +176,9 @@
           <option value="ru">🇷🇺 RU</option>
           <option value="tk">🇹🇲 TK</option>
         </select>
+        <button id="header-admin-btn" onclick="handleHeaderAdminClick()" style="background: rgba(245,158,11,0.18); border: 1.5px solid var(--gold-primary); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(245,158,11,0.25); transition: all 0.2s;">
+          ⚙️ Admin
+        </button>
         <span id="role-badge" class="badge badge-approved" style="display: none;"></span>
       </div>
     </div>
@@ -523,7 +526,35 @@
       } else {
         badge.style.display = 'none';
       }
+      updateHeaderAdminButton();
       renderApp();
+    }
+
+    function updateHeaderAdminButton() {
+      const btn = document.getElementById('header-admin-btn');
+      if (!btn) return;
+
+      if (state.role === 'admin') {
+        btn.innerHTML = '👑 ADMIN';
+        btn.style.background = 'linear-gradient(135deg, #fbbf24, #f59e0b)';
+        btn.style.color = '#000';
+      } else if (state.role === 'manager') {
+        btn.innerHTML = '👔 YÖNETİCİ';
+        btn.style.background = 'linear-gradient(135deg, #fbbf24, #f59e0b)';
+        btn.style.color = '#000';
+      } else {
+        btn.innerHTML = '⚙️ Admin';
+        btn.style.background = 'rgba(245,158,11,0.18)';
+        btn.style.color = 'var(--gold-primary)';
+      }
+    }
+
+    function handleHeaderAdminClick() {
+      if (state.role === 'customer') {
+        openStaffModal();
+      } else {
+        openAdminMenuModal();
+      }
     }
 
     // --- 1 HOUR REMINDER CHECK ---
@@ -547,6 +578,7 @@
       document.getElementById('header-subtitle').innerText = t('subtitle');
       document.getElementById('btn-staff-login').innerText = t('staffLogin');
       document.getElementById('btn-back-customer').innerText = t('backToCustomer');
+      updateHeaderAdminButton();
       
       if (state.role === 'customer') {
         renderCustomerView(main);
@@ -908,9 +940,7 @@
               <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Berber</span>
             </div>
             <div>
-              <button onclick="openAdminMenuModal()" style="background: rgba(245,158,11,0.18); border: 1.5px solid var(--gold-primary); color: var(--gold-primary); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(245,158,11,0.25);">
-                ⚙️ ADMIN
-              </button>
+              <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary); background: rgba(245,158,11,0.15); padding: 5px 12px; border-radius: 10px; border: 1px solid rgba(245,158,11,0.3);">⚡ CANLI PANEL</span>
             </div>
           </div>
 
