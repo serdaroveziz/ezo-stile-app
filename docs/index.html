@@ -731,6 +731,131 @@
       { id: '6', name: 'Saç Boyama / Beyaz Kapatma', duration: '45 dk', price: 350 }
     ];
 
+    function setLanguage(lang) {
+      state.language = lang;
+      localStorage.setItem('gc_lang', lang);
+      renderApp();
+      if (document.getElementById('modal-root')?.innerHTML !== '') {
+        if (state.role === 'customer') {
+          openCustomerProfileModal();
+        } else if (typeof openAdminProfileModal === 'function') {
+          openAdminProfileModal();
+        }
+      }
+    }
+
+    function testSoundWithFeedback() {
+      playNotificationSound(true);
+      const btn = document.getElementById('btn-test-sound-modal');
+      if (btn) {
+        btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        btn.style.color = '#fff';
+        btn.innerHTML = '<div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 18px;">🔊</span><span>Ses & Titreşim Çalıyor!</span></div><span style="font-size: 11px;">✅ Çalıyor</span>';
+        setTimeout(() => {
+          if (document.getElementById('modal-root')?.innerHTML !== '') {
+            if (state.role === 'customer') openCustomerProfileModal();
+          }
+        }, 1800);
+      }
+    }
+
+    function requestNotifPermissionFromModal() {
+      requestNotificationPermission();
+      setTimeout(() => {
+        if (document.getElementById('modal-root')?.innerHTML !== '') {
+          if (state.role === 'customer') openCustomerProfileModal();
+        }
+      }, 1000);
+    }
+
+    function openCustomerProfileModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      const user = state.currentUser || { name: 'Müşteri', phone: '' };
+      let isNotifPermissionGranted = false;
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          isNotifPermissionGranted = true;
+        }
+      } catch(e) {}
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
+            
+            <!-- HEADER -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1.5px solid var(--border-color);">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 46px; height: 46px; border-radius: 16px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
+                  👤
+                </div>
+                <div>
+                  <h3 style="font-size: 16px; font-weight: 900; color: #fff; margin: 0;">${user.name}</h3>
+                  <span style="font-size: 12px; color: var(--gold-primary); font-weight: 800;">📞 ${user.phone}</span>
+                </div>
+              </div>
+              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: 34px; height: 34px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              
+              <!-- 1. DİL SEÇENEKLERİ (LANGUAGES) -->
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color);">
+                <div style="font-size: 11px; font-weight: 800; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 10px;">🌐 Uygulama Dili / Language:</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                  <button onclick="setLanguage('tr')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'tr' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tr' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'tr' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; box-shadow: ${state.language === 'tr' ? '0 4px 15px rgba(245,158,11,0.35)' : 'none'};">
+                    🇹🇷 Türkçe ${state.language === 'tr' ? '✓' : ''}
+                  </button>
+                  <button onclick="setLanguage('en')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'en' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'en' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'en' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; box-shadow: ${state.language === 'en' ? '0 4px 15px rgba(245,158,11,0.35)' : 'none'};">
+                    🇬🇧 English ${state.language === 'en' ? '✓' : ''}
+                  </button>
+                  <button onclick="setLanguage('ru')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'ru' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'ru' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'ru' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; box-shadow: ${state.language === 'ru' ? '0 4px 15px rgba(245,158,11,0.35)' : 'none'};">
+                    🇷🇺 Русский ${state.language === 'ru' ? '✓' : ''}
+                  </button>
+                  <button onclick="setLanguage('tk')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'tk' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tk' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'tk' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; box-shadow: ${state.language === 'tk' ? '0 4px 15px rgba(245,158,11,0.35)' : 'none'};">
+                    🇹🇲 Türkmençe ${state.language === 'tk' ? '✓' : ''}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. KİLİT EKRANI BİLDİRİM İZNİ -->
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 900; color: #fff;">🔔 Kilit Ekranı Bildirim İzni</div>
+                  <div style="font-size: 10px; color: ${isNotifPermissionGranted ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">${isNotifPermissionGranted ? '🟢 İzin Verildi (Aktif)' : '🔴 İzin Verilmedi'}</div>
+                </div>
+                ${!isNotifPermissionGranted ? `
+                  <button onclick="requestNotifPermissionFromModal()" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900;">🔔 İzin Ver</button>
+                ` : `
+                  <span style="font-size: 11px; color: #34d399; font-weight: 900;">✅ İzinli</span>
+                `}
+              </div>
+
+              <!-- 3. BİLDİRİM SESİ VE TİTREŞİM TESTİ -->
+              <button id="btn-test-sound-modal" onclick="testSoundWithFeedback()" style="background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(217,119,6,0.1)); border: 1.5px solid rgba(245,158,11,0.5); padding: 14px; border-radius: 16px; color: var(--gold-primary); font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(245,158,11,0.15); transition: all 0.3s;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 18px;">🔊</span>
+                  <span>Bildirim Sesi & Titreşimi Test Et</span>
+                </div>
+                <span style="font-size: 11px;">▶️ Çal</span>
+              </button>
+
+              <!-- 4. HESAPTAN ÇIKIŞ YAP -->
+              <button onclick="closeModal(); logoutCustomer();" style="background: rgba(244,63,94,0.15); border: 1.5px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 18px;">🚪</span>
+                  <span>Hesabımdan Çıkış Yap</span>
+                </div>
+                <span style="font-size: 14px;">←</span>
+              </button>
+
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function getLocalDateStr(d = new Date()) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
