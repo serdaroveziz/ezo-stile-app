@@ -870,9 +870,13 @@
                       </div>
 
                       ${canModify ? `
-                        <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 2px;">
-                          <button onclick="openRescheduleModal('${a.id}')" class="gold-btn" style="padding: 6px 12px; font-size: 11px; background: rgba(245,158,11,0.15); color: var(--gold-primary); border: 1px solid rgba(245,158,11,0.3);">✏️ Saati / Tarihi Değiştir</button>
-                          <button onclick="cancelMyAppointment('${a.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">❌ Randevuyu İptal Et</button>
+                        <div style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 4px;">
+                          <button onclick="requestAppointmentCancellationWa('${a.id}')" style="width: 100%; background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: var(--gold-primary); padding: 10px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            💬 İptal / Değişiklik Talebi Gönder (WhatsApp)
+                          </button>
+                          <div style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 4px;">
+                            🔒 Randevu onaylandıktan sonra iptal/değişiklik doğrudan Berberiniz tarafından yapılmaktadır.
+                          </div>
                         </div>
                       ` : ''}
                     </div>
@@ -1485,19 +1489,18 @@
       `;
     }
 
-    // --- CUSTOMER CANCEL & RESCHEDULE ---
-    function cancelMyAppointment(aptId) {
-      if (confirm('Bu randevunuzu iptal etmek istediğinize emin misiniz?')) {
-        const apt = state.appointments.find(a => a.id === aptId);
-        if (apt) {
-          apt.status = 'cancelled';
-          localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
-          syncToCloud();
-          window.dispatchEvent(new Event('storage'));
-          alert('🚫 Randevunuz iptal edildi.');
-          renderApp();
-        }
-      }
+    // --- CUSTOMER WHATSAPP CANCELLATION REQUEST ---
+    function requestAppointmentCancellationWa(aptId) {
+      const apt = state.appointments.find(a => a.id === aptId);
+      if (!apt) return;
+
+      const adminPhone = state.adminPhone || '05338000000';
+      const waPhone = formatPhoneForWa(adminPhone);
+
+      const text = `Merhaba EZO STİLE VIP Berber, ${apt.date} günü saat ${apt.time} tarihindeki (${apt.serviceName}) randevumun İPTAL EDİLMESİNİ / DEĞİŞTİRİLMESİNİ rica ediyorum.\n\nMüşteri: ${apt.customerName} (${apt.customerPhone})`;
+
+      const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
     }
 
     function openRescheduleModal(aptId) {
