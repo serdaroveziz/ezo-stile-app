@@ -1180,8 +1180,8 @@
 
                       ${canModify ? `
                         <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 2px;">
-                          <button onclick="openRescheduleModal('${a.id}')" class="gold-btn" style="padding: 6px 12px; font-size: 11px; background: rgba(245,158,11,0.15); color: var(--gold-primary); border: 1px solid rgba(245,158,11,0.3);">✏️ Saati / Tarihi Değiştir</button>
-                          <button onclick="cancelMyAppointment('${a.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">❌ Randevuyu İptal Et</button>
+                          <button onclick="requestCancelOrChange('${a.id}', 'reschedule')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: rgba(245,158,11,0.15); color: var(--gold-primary); border: 1px solid rgba(245,158,11,0.3); flex: 1;">✏️ Saati / Tarihi Değiştir</button>
+                          <button onclick="requestCancelOrChange('${a.id}', 'cancel')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer; flex: 1;">❌ Randevuyu İptal Et</button>
                         </div>
                       ` : ''}
                     </div>
@@ -1728,6 +1728,78 @@
         const step2 = document.getElementById('step-2-container');
         if (step2) step2.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 50);
+    }
+
+    function requestCancelOrChange(aptId, type) {
+      const apt = state.appointments.find(a => a.id === aptId);
+      if (!apt) return;
+
+      const isCancel = type === 'cancel';
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      let msgText = '';
+      let modalTitle = '';
+      let modalDesc = '';
+      let btnLabel = '';
+
+      if (state.language === 'en') {
+        modalTitle = isCancel ? '📲 Request Appointment Cancellation' : '✏️ Request Appointment Change';
+        modalDesc = 'You cannot directly cancel or reschedule an approved appointment. Your request will be sent directly to the salon owner via WhatsApp.';
+        btnLabel = isCancel ? '📲 Send Cancellation Request via WhatsApp' : '📲 Send Reschedule Request via WhatsApp';
+        msgText = isCancel 
+          ? `Hello Ezo Stile! 💇‍♂️ I am ${apt.customerName} (${apt.customerPhone}). I request to CANCEL my appointment for ${apt.serviceName} on ${apt.date} at ${apt.time}. Please cancel it so I can book again!`
+          : `Hello Ezo Stile! 💇‍♂️ I am ${apt.customerName} (${apt.customerPhone}). I request to RESCHEDULE my appointment for ${apt.serviceName} on ${apt.date} at ${apt.time}. Can you please assist?`;
+      } else if (state.language === 'ru') {
+        modalTitle = isCancel ? '📲 Запрос на отмену записи' : '✏️ Запрос на изменение времени';
+        modalDesc = 'Вы не можете отменить или изменить подтвержденную запись напрямую. Ваш запрос будет отправлен администратору в WhatsApp.';
+        btnLabel = isCancel ? '📲 Отправить запрос на отмену в WhatsApp' : '📲 Отправить запрос на изменение в WhatsApp';
+        msgText = isCancel 
+          ? `Здравствуйте Ezo Stile! 💇‍♂️ Я ${apt.customerName} (${apt.customerPhone}). Я хочу ОТМЕНИТЬ запись на ${apt.serviceName} на ${apt.date} в ${apt.time}. Пожалуйста, отмените ее!`
+          : `Здравствуйте Ezo Stile! 💇‍♂️ Я ${apt.customerName} (${apt.customerPhone}). Я хочу ИЗМЕНИТЬ запись на ${apt.serviceName} на ${apt.date} в ${apt.time}. Помогите, пожалуйста!`;
+      } else if (state.language === 'tk') {
+        modalTitle = isCancel ? '📲 Brony Ýatyrmak Haýyşy' : '✏️ Bron Wagtyny Üýtgetmek Haýyşy';
+        modalDesc = 'Tassyklanan brony gönüden-göni ýatyryp bilmezsiňiz. Ýatyrmak haýyşyňyz salonyň WhatsApp belgisine ugradylar.';
+        btnLabel = isCancel ? '📲 WhatsApp Bilen Ýatyrmak Haýyşy Ugrat' : '📲 WhatsApp Bilen Üýtgetmek Haýyşy Ugrat';
+        msgText = isCancel 
+          ? `Salam Ezo Stile! 💇‍♂️ Men ${apt.customerName} (${apt.customerPhone}). ${apt.date} sagat ${apt.time} tarihindäki ${apt.serviceName} bronymy ÝATYRMAK İSTEYÄRİN. Haýyş edýäris bronymy ýatyryň!`
+          : `Salam Ezo Stile! 💇‍♂️ Men ${apt.customerName} (${apt.customerPhone}). ${apt.date} sagat ${apt.time} tarihindäki ${apt.serviceName} bronymyň SAGADYNY ÜÝTGETMEK İSTEYÄRİN. Kömək edip bilersiňizmi?`;
+      } else {
+        modalTitle = isCancel ? '📲 Randevu İptal Talebi' : '✏️ Randevu Tarih / Saat Değiştirme Talebi';
+        modalDesc = 'Tarih seçip onayladığınız randevuyu doğrudan değiştiremez veya iptal edemezsiniz. İptal / Değişiklik talebiniz Admin WhatsApp hattına yönlendirilecektir.';
+        btnLabel = isCancel ? '📲 WhatsApp İle İptal Talebi Gönder' : '📲 WhatsApp İle Değişiklik Talebi Gönder';
+        msgText = isCancel 
+          ? `Merhaba Ezo Stile! 💇‍♂️ BEN ${apt.customerName} (${apt.customerPhone}). ${apt.date} saat ${apt.time} tarihindeki ${apt.serviceName} randevumu İPTAL EDİP YENİDEN SEÇMEK İSTİYORUM. Lütfen randevumu iptal ediniz!`
+          : `Merhaba Ezo Stile! 💇‍♂️ BEN ${apt.customerName} (${apt.customerPhone}). ${apt.date} saat ${apt.time} tarihindeki ${apt.serviceName} randevumun SAATİNİ / TARİHİNİ DEĞİŞTİRMEK İSTİYORUM. Yardımcı olur musunuz?`;
+      }
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; text-align: center; border-color: ${isCancel ? 'var(--rose)' : 'var(--gold-primary)'}; padding: 22px;">
+            <div style="width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 18px; background: ${isCancel ? 'rgba(244,63,94,0.15)' : 'rgba(245,158,11,0.15)'}; border: 1px solid ${isCancel ? 'rgba(244,63,94,0.4)' : 'rgba(245,158,11,0.4)'}; display: flex; align-items: center; justify-content: center; font-size: 26px;">
+              ${isCancel ? '🚫' : '✏️'}
+            </div>
+            <h3 style="font-size: 16px; font-weight: 900; color: ${isCancel ? '#fb7185' : 'var(--gold-primary)'}; margin-bottom: 8px;">${modalTitle}</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+              ${modalDesc}
+            </p>
+
+            <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; font-size: 11px; color: #fff; margin-bottom: 18px; text-align: left; border: 1px solid var(--border-color);">
+              <strong style="color: var(--gold-primary);">📌 ${t('sampleMessage')}:</strong><br/>
+              <em style="display: block; margin-top: 4px; line-height: 1.4;">"${msgText}"</em>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button onclick="sendCustomerWhatsApp('${state.adminPhone || '05338000000'}', '${msgText.replace(/'/g, "\\'")}'); closeModal();" class="gold-btn" style="background: #25D366; color: #fff; border: none; padding: 14px; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                ${btnLabel}
+              </button>
+              <button onclick="closeModal()" style="padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer;">
+                ${t('closeBtn')}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     function openAdminPhoneModal() {
