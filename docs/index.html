@@ -537,17 +537,41 @@
       }
     }
 
-    // --- MAIN RENDERER ---
+    // --- MAIN RENDERER WITH DEFENSIVE ERROR BOUNDARY ---
     function renderApp() {
-      const main = document.getElementById('main-app');
-      document.getElementById('header-subtitle').innerText = t('subtitle');
-      document.getElementById('btn-staff-login').innerText = t('staffLogin');
-      document.getElementById('btn-back-customer').innerText = t('backToCustomer');
-      
-      if (state.role === 'customer') {
-        renderCustomerView(main);
-      } else {
-        renderAdminView(main);
+      try {
+        const main = document.getElementById('main-app');
+        if (!main) return;
+        
+        const subTitleEl = document.getElementById('header-subtitle');
+        if (subTitleEl) subTitleEl.innerText = t('subtitle');
+        const staffLoginEl = document.getElementById('btn-staff-login');
+        if (staffLoginEl) staffLoginEl.innerText = t('staffLogin');
+        const backCustEl = document.getElementById('btn-back-customer');
+        if (backCustEl) backCustEl.innerText = t('backToCustomer');
+        
+        if (state.role === 'customer') {
+          renderCustomerView(main);
+        } else {
+          renderAdminView(main);
+        }
+      } catch (err) {
+        console.error('EZO STILE RenderApp Error:', err);
+        const main = document.getElementById('main-app');
+        if (main) {
+          main.innerHTML = `
+            <div class="card" style="text-align: center; padding: 32px 20px; max-width: 480px; margin: 40px auto; border-color: var(--gold-primary);">
+              <div style="width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 18px; background: #000; border: 2px solid var(--gold-primary); overflow: hidden;">
+                <img src="./insta.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo">
+              </div>
+              <h2 style="font-size: 20px; font-weight: 900; color: var(--gold-primary); margin-bottom: 10px;">EZO STİLE VIP</h2>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Uygulama görüntüsü yenileniyor. Tüm randevularınız ve verileriniz güvendedir.</p>
+              <button onclick="localStorage.clear(); location.reload();" class="gold-btn" style="width: 100%; padding: 16px; font-size: 14px; font-weight: 900;">
+                🔄 Önbelleği Temizle & Başlat
+              </button>
+            </div>
+          `;
+        }
       }
     }
 
@@ -576,17 +600,24 @@
       }
 
       // REGISTERED CUSTOMER VIEW: SHOW 3-STEP WIZARD & MY APPOINTMENTS
-      state.bookingStep = state.bookingStep || 1;
+      state.bookingStep = (state.bookingStep === 1 || state.bookingStep === 2 || state.bookingStep === 3) ? state.bookingStep : 1;
+      if (!state.selectedDate) state.selectedDate = getInitialBookingDate();
 
-      const myApts = state.appointments.filter(a => a.customerPhone === state.currentUser.phone);
-      const myNotifs = state.notifications.filter(n => n.phone === state.currentUser.phone);
+      const currentServices = (Array.isArray(state.services) && state.services.length > 0) ? state.services : DEFAULT_SERVICES;
+      const currentAppointments = Array.isArray(state.appointments) ? state.appointments : [];
+      const currentNotifications = Array.isArray(state.notifications) ? state.notifications : [];
+      const currentOverrides = Array.isArray(state.dateSlotOverrides) ? state.dateSlotOverrides : [];
+
+      const phone = state.currentUser ? state.currentUser.phone : '';
+      const myApts = currentAppointments.filter(a => a && a.customerPhone === phone);
+      const myNotifs = currentNotifications.filter(n => n && n.phone === phone);
       const upcoming1h = myApts.find(check1HourReminder);
 
       // Check weekly schedule for selected date
-      const parts = state.selectedDate.split('-');
-      const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-      const dayOfWeek = dObj.getDay();
-      const sched = state.weeklySchedule[dayOfWeek] || { isOpen: true, start: '09:00', end: '21:00' };
+      const parts = (state.selectedDate || getLocalDateStr()).split('-');
+      const dObj = new Date(parseInt(parts[0] || '2026'), parseInt(parts[1] || '8') - 1, parseInt(parts[2] || '15'));
+      const dayOfWeek = isNaN(dObj.getDay()) ? 1 : dObj.getDay();
+      const sched = (state.weeklySchedule && state.weeklySchedule[dayOfWeek]) ? state.weeklySchedule[dayOfWeek] : { isOpen: true, start: '09:00', end: '21:00' };
 
       // Generate time slots
       const startHour = parseInt((sched.start || '09:00').split(':')[0]);
@@ -600,7 +631,7 @@
         }
       }
 
-      state.dateSlotOverrides.filter(o => o.date === state.selectedDate && o.status === 'opened').forEach(o => {
+      currentOverrides.filter(o => o && o.date === state.selectedDate && o.status === 'opened').forEach(o => {
         if (!availableSlots.includes(o.time)) availableSlots.push(o.time);
       });
       availableSlots.sort();
@@ -622,7 +653,7 @@
         });
       }
 
-      const activeSelectedService = state.services.find(s => s.id === state.selectedServiceId) || state.services[0] || DEFAULT_SERVICES[0];
+      const activeSelectedService = currentServices.find(s => s && s.id === state.selectedServiceId) || currentServices[0] || DEFAULT_SERVICES[0];
 
       let html = '';
 
@@ -702,7 +733,7 @@
             </div>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px;">
-              ${state.services.map(s => {
+              ${currentServices.map(s => {
                 const displayName = getServiceName(s);
                 const isSel = activeSelectedService.id === s.id;
                 return `
@@ -769,8 +800,9 @@
             ` : `
               <div class="slot-grid" style="margin-bottom: 24px;">
                 ${availableSlots.map(time => {
-                  const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
-                  const alreadyBooked = state.appointments.some(apt => 
+                  const override = currentOverrides.find(b => b && b.date === state.selectedDate && b.time === time);
+                  const alreadyBooked = currentAppointments.some(apt => 
+                    apt &&
                     apt.date === state.selectedDate && 
                     apt.time === time && 
                     apt.status !== 'rejected' && 
