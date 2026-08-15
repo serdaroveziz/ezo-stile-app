@@ -906,6 +906,8 @@
 
     // --- CUSTOMER VIEW ---
     function renderCustomerView(container) {
+      pruneNotifications30Min();
+
       // IF CUSTOMER IS NOT REGISTERED YET: SHOW ONLY REGISTRATION CARD
       if (!state.currentUser) {
         container.innerHTML = `
@@ -980,51 +982,36 @@
 
       let html = '';
 
-      // 1. CLEAN LOGGED IN USER BAR
+      // 1. CLEAN LOGGED IN USER PROFILE BAR (TOP RIGHT SETTINGS BUTTON)
       html += `
-        <div class="card" style="padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <div>
-            <div style="font-size: 13px; font-weight: 800; color: #fff;">👤 ${state.currentUser.name}</div>
-            <div style="font-size: 11px; color: var(--text-muted);">${state.currentUser.phone}</div>
+        <div class="card" style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; background: #070c1a;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #fbbf24, #d97706); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(245,158,11,0.25);">
+              👤
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 900; color: #fff;">${state.currentUser.name}</div>
+              <div style="font-size: 11px; color: var(--gold-primary); font-weight: 700;">📞 ${state.currentUser.phone}</div>
+            </div>
           </div>
-          <div style="display: flex; gap: 6px; align-items: center;">
-            <button onclick="playNotificationSound(true)" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">🔊 Sesi Test Et</button>
-            <button onclick="logoutCustomer()" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">🚪 ${t('logout')}</button>
-          </div>
+          <button onclick="openCustomerProfileModal()" class="gold-btn" style="padding: 8px 14px; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(245,158,11,0.25);">
+            ⚙️ Profil & Ayarlar
+          </button>
         </div>
       `;
 
-      // LOCK SCREEN NOTIFICATION PERMISSION BANNER FOR MOBILE & DESKTOP
-      let isPermissionGranted = false;
-      try {
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          isPermissionGranted = true;
-        }
-      } catch(e) {}
-
-      if (!isPermissionGranted) {
-        html += `
-          <div style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1)); border: 1.5px solid var(--gold-primary); padding: 14px 16px; border-radius: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(245,158,11,0.25);">
-            <div>
-              <div style="font-weight: 900; font-size: 13px; color: var(--gold-primary); text-transform: uppercase;">🔔 Kilit Ekranı Bildirimleri</div>
-              <div style="font-size: 11px; color: #fff; margin-top: 3px; line-height: 1.4;">Randevu onayınızı telefonunuzun kilit ekranında sesli ve titreşimli almak için tıklayın.</div>
-            </div>
-            <button onclick="requestNotificationPermission()" class="gold-btn animate-pulse" style="padding: 10px 14px; font-size: 12px; font-weight: 900; white-space: nowrap; flex-shrink: 0;">🔔 İzin Ver</button>
-          </div>
-        `;
-      }
-
-      // NOTIFICATIONS TOASTS
+      // NOTIFICATIONS TOASTS (TAP TO DISMISS IMMEDIATELY & AUTO DELETE > 30 MINS)
       if (myNotifs.length > 0) {
-        html += `<div style="margin-bottom: 12px;">`;
+        html += `<div style="margin-bottom: 14px;">`;
         myNotifs.forEach(n => {
           html += `
-            <div class="notif-box">
+            <div onclick="dismissNotif('${n.id}')" style="cursor: pointer; background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(251,191,36,0.1)); border: 1.5px solid var(--gold-primary); padding: 12px 14px; border-radius: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(245,158,11,0.2); transition: all 0.2s;">
               <div>
-                <strong style="color: var(--gold-primary);">${n.title}</strong>
-                <div style="color: #fff; margin-top: 2px;">${n.message}</div>
+                <strong style="color: var(--gold-primary); font-size: 13px; font-weight: 900; display: block;">${n.title}</strong>
+                <div style="color: #fff; font-size: 12px; margin-top: 2px; font-weight: 700; line-height: 1.3;">${n.message}</div>
+                <span style="font-size: 9px; color: var(--text-muted); display: block; margin-top: 4px;">🕒 ${n.date} (Gizlemek için dokunun)</span>
               </div>
-              <button onclick="dismissNotif('${n.id}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 800;">✕</button>
+              <button onclick="event.stopPropagation(); dismissNotif('${n.id}')" style="background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 8px; font-weight: 900; cursor: pointer; flex-shrink: 0;">✕</button>
             </div>
           `;
         });
@@ -3008,86 +2995,91 @@
       renderApp();
     }
 
-    function openAdminProfileModal() {
+    function pruneNotifications30Min() {
+      if (!state.notifications || state.notifications.length === 0) return;
+      const thirtyMinsAgo = Date.now() - (30 * 60 * 1000);
+      const initialCount = state.notifications.length;
+
+      state.notifications = state.notifications.filter(n => {
+        const notifTime = n.timestamp || Number(n.id) || Date.now();
+        return notifTime > thirtyMinsAgo;
+      });
+
+      if (state.notifications.length !== initialCount) {
+        localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
+      }
+    }
+
+    function openCustomerProfileModal() {
       const root = document.getElementById('modal-root');
       if (!root) return;
 
-      const isAdminRole = state.role === 'admin';
-      const staffName = state.currentStaffName || (isAdminRole ? 'Patron (Ana Admin)' : 'Salon Görevlisi');
-      const adminPhone = state.adminPhone || '05338000000';
-      const todayStr = getLocalDateStr(new Date());
-      const todayApproved = (state.appointments || []).filter(a => a.status === 'approved' && a.date === todayStr);
-      const todayRevenue = todayApproved.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-      const staffCount = (state.staffList || []).length;
+      const user = state.currentUser || { name: 'Müşteri', phone: '' };
+      let isNotifPermissionGranted = false;
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          isNotifPermissionGranted = true;
+        }
+      } catch(e) {}
 
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
             
-            <!-- EXECUTIVE HEADER -->
+            <!-- HEADER -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1.5px solid var(--border-color);">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; font-weight: 900; box-shadow: 0 6px 20px rgba(245,158,11,0.4);">
-                  👑
+                <div style="width: 46px; height: 46px; border-radius: 16px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
+                  👤
                 </div>
                 <div>
-                  <h3 style="font-size: 17px; font-weight: 900; color: #fff; margin: 0; letter-spacing: 0.5px;">${staffName}</h3>
-                  <span style="font-size: 11px; color: var(--gold-primary); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">${isAdminRole ? '👑 VIP Admin Suite' : '🛠️ Salon Görevlisi'}</span>
+                  <h3 style="font-size: 16px; font-weight: 900; color: #fff; margin: 0;">${user.name}</h3>
+                  <span style="font-size: 12px; color: var(--gold-primary); font-weight: 800;">📞 ${user.phone}</span>
                 </div>
               </div>
               <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: 34px; height: 34px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
             </div>
 
-            <!-- EXECUTIVE CONTROL MENU -->
-            <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
               
-              <!-- 1. TELEFON NO (WHATSAPP & SMS BILDIRIM HATTI) -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📱 Salon İletişim / WhatsApp Bildirim Hattı:</div>
-                  <div style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-top: 2px; letter-spacing: 1px;">${adminPhone}</div>
+              <!-- 1. DİL SEÇENEKLERİ (LANGUAGES) -->
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color);">
+                <div style="font-size: 11px; font-weight: 800; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 10px;">🌐 Uygulama Dili / Language:</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                  <button onclick="setLanguage('tr')" style="padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; border: 1px solid ${state.language === 'tr' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tr' ? 'rgba(245,158,11,0.2)' : '#070c1a'}; color: ${state.language === 'tr' ? 'var(--gold-primary)' : '#fff'}; cursor: pointer;">🇹🇷 Türkçe</button>
+                  <button onclick="setLanguage('en')" style="padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; border: 1px solid ${state.language === 'en' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'en' ? 'rgba(245,158,11,0.2)' : '#070c1a'}; color: ${state.language === 'en' ? 'var(--gold-primary)' : '#fff'}; cursor: pointer;">🇬🇧 English</button>
+                  <button onclick="setLanguage('ru')" style="padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; border: 1px solid ${state.language === 'ru' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'ru' ? 'rgba(245,158,11,0.2)' : '#070c1a'}; color: ${state.language === 'ru' ? 'var(--gold-primary)' : '#fff'}; cursor: pointer;">🇷🇺 Русский</button>
+                  <button onclick="setLanguage('tk')" style="padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; border: 1px solid ${state.language === 'tk' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tk' ? 'rgba(245,158,11,0.2)' : '#070c1a'}; color: ${state.language === 'tk' ? 'var(--gold-primary)' : '#fff'}; cursor: pointer;">🇹🇲 Türkmençe</button>
                 </div>
-                ${isAdminRole ? `
-                  <button onclick="closeModal(); openAdminPhoneModal();" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); color: var(--gold-primary); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 900; cursor: pointer;">✏️ Değiştir</button>
-                ` : ''}
               </div>
 
-              <!-- 2. CANLI BULUT SENKRONİZASYON TEŞHİSİ -->
-              <button onclick="closeModal(); runExecutiveCloudSync();" style="background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08)); border: 1.5px solid rgba(16,185,129,0.4); padding: 14px; border-radius: 16px; color: #34d399; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.15);">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 18px;">⚡</span>
-                  <span>Canlı Bulut Senkronizasyon Teşhisi</span>
+              <!-- 2. KİLİT EKRANI BİLDİRİM İZNİ -->
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 900; color: #fff;">🔔 Kilit Ekranı Bildirim İzni</div>
+                  <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">${isNotifPermissionGranted ? '🟢 İzin Verildi (Aktif)' : '🔴 İzin Verilmedi'}</div>
                 </div>
-                <span style="background: rgba(16,185,129,0.2); color: #34d399; padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 900;">Sub-50ms</span>
+                ${!isNotifPermissionGranted ? `
+                  <button onclick="requestNotificationPermission(); closeModal();" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900;">🔔 İzin Ver</button>
+                ` : `
+                  <span style="font-size: 11px; color: #34d399; font-weight: 900;">✅ İzinli</span>
+                `}
+              </div>
+
+              <!-- 3. BİLDİRİM SESİ VE TİTREŞİM TESTİ -->
+              <button onclick="playNotificationSound(true)" style="background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(217,119,6,0.1)); border: 1.5px solid rgba(245,158,11,0.5); padding: 14px; border-radius: 16px; color: var(--gold-primary); font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(245,158,11,0.15);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 18px;">🔊</span>
+                  <span>Bildirim Sesi & Titreşimi Test Et</span>
+                </div>
+                <span style="font-size: 11px;">▶️ Çal</span>
               </button>
 
-              <!-- 3. CİRO & KASA RAPORU (ONLY ADMIN) -->
-              ${isAdminRole ? `
-                <button onclick="closeModal(); setAdminTab('revenueDashboard');" style="background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(217,119,6,0.1)); border: 1.5px solid rgba(245,158,11,0.5); padding: 14px; border-radius: 16px; color: var(--gold-primary); font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(245,158,11,0.2);">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 18px;">💰</span>
-                    <span>Admin Ciro & Kasa Analiz Raporu</span>
-                  </div>
-                  <span style="background: rgba(245,158,11,0.25); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900;">Bugün: ${todayRevenue} TL</span>
-                </button>
-              ` : ''}
-
-              <!-- 4. YETKİLİ & ŞİFRE YÖNETİMİ (ONLY ADMIN) -->
-              ${isAdminRole ? `
-                <button onclick="closeModal(); setAdminTab('staffManagement');" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; color: #fff; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 18px;">👥</span>
-                    <span>Personel & Güvenlik Şifreleri</span>
-                  </div>
-                  <span style="background: rgba(255,255,255,0.08); color: var(--gold-primary); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900;">${staffCount} Personel</span>
-                </button>
-              ` : ''}
-
-              <!-- 5. ÇIKIŞ YAP -->
-              <button onclick="closeModal(); logoutAdmin();" style="background: rgba(244,63,94,0.15); border: 1.5px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px;">
+              <!-- 4. HESAPTAN ÇIKIŞ YAP -->
+              <button onclick="closeModal(); logoutCustomer();" style="background: rgba(244,63,94,0.15); border: 1.5px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 18px;">🚪</span>
-                  <span>Admin Oturumunu Kapat</span>
+                  <span>Hesabımdan Çıkış Yap</span>
                 </div>
                 <span style="font-size: 14px;">←</span>
               </button>
