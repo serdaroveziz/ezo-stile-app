@@ -1094,37 +1094,57 @@
                   <button onclick="selectDateAccordion('${tomorrowStr}')" class="gold-btn" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 900;">${t('showTomorrowHours')}</button>
                 </div>
               ` : `
-                <div class="slot-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px;">
-                  ${availableSlots.map(time => {
-                    const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
-                    const alreadyBooked = state.appointments.some(apt => 
-                      apt.date === state.selectedDate && 
-                      apt.time === time && 
-                      apt.status !== 'rejected' && 
-                      apt.status !== 'cancelled'
-                    );
-                    const isBlocked = (override ? override.status === 'blocked' : false) || alreadyBooked;
-                    const isSelected = state.selectedTime === time;
+                  ${(() => {
+                    const occupiedSlotsSet = getOccupiedSlotsForDate(state.selectedDate);
+                    const neededSlotsForActiveSvc = activeSelectedService ? getServiceSlotCount(activeSelectedService.duration) : 1;
 
-                    let isPast = false;
-                    if (isToday) {
-                      const [sHour, sMin] = time.split(':').map(Number);
-                      if (sHour < currentHour || (sHour === currentHour && sMin <= currentMin)) {
+                    return availableSlots.map(time => {
+                      const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
+                      const isDirectlyBooked = occupiedSlotsSet.has(time);
+
+                      // Check if there are enough consecutive free slots for the selected service duration
+                      let hasEnoughConsecutiveTime = true;
+                      const [startH, startM] = time.split(':').map(Number);
+                      let checkMinTotal = startH * 60 + startM;
+
+                      for (let i = 0; i < neededSlotsForActiveSvc; i++) {
+                        const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
+                        const mm = (checkMinTotal % 60).toString().padStart(2, '0');
+                        const checkTimeStr = `${hh}:${mm}`;
+
+                        const checkOverride = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === checkTimeStr);
+                        const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSlotsSet.has(checkTimeStr);
+
+                        if (isCheckBlocked || !availableSlots.includes(checkTimeStr)) {
+                          hasEnoughConsecutiveTime = false;
+                          break;
+                        }
+                        checkMinTotal += 30;
+                      }
+
+                      const isBlocked = isDirectlyBooked || (override ? override.status === 'blocked' : false) || !hasEnoughConsecutiveTime;
+                      const isSelected = state.selectedTime === time;
+
+                      let isPast = false;
+                      if (isToday) {
+                        const [sHour, sMin] = time.split(':').map(Number);
+                        if (sHour < currentHour || (sHour === currentHour && sMin <= currentMin)) {
+                          isPast = true;
+                        }
+                      } else if (isPastDate) {
                         isPast = true;
                       }
-                    } else if (isPastDate) {
-                      isPast = true;
-                    }
 
-                    const isDisabled = isBlocked || isPast;
+                      const isDisabled = isBlocked || isPast;
 
-                    return `
-                      <button onclick="selectTimeAccordion('${time}')" ${isDisabled ? 'disabled' : ''} class="slot-btn ${isPast ? 'past' : ''} ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
-                        ${time}
-                        ${isPast ? '<span style="display:block; font-size:7px; opacity:0.6;">' + t('slotPast') + '</span>' : alreadyBooked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotBooked') + '</span>' : isBlocked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotClosed') + '</span>' : ''}
-                      </button>
-                    `;
-                  }).join('')}
+                      return `
+                        <button onclick="selectTimeAccordion('${time}')" ${isDisabled ? 'disabled' : ''} class="slot-btn ${isPast ? 'past' : ''} ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                          ${time}
+                          ${isPast ? '<span style="display:block; font-size:7px; opacity:0.6;">' + t('slotPast') + '</span>' : isDirectlyBooked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotBooked') + '</span>' : isBlocked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotClosed') + '</span>' : ''}
+                        </button>
+                      `;
+                    }).join('');
+                  })()}
                 </div>
               `}
             ` : ''}
@@ -1401,7 +1421,15 @@
                       </div>
                       <div>
                         <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">${t('durationLabel')}:</label>
-                        <input type="text" value="${s.duration}" oninput="updateServiceField('${s.id}', 'duration', this.value)" class="input-field" style="padding: 8px 10px; font-size: 13px; font-weight: 700;">
+                        <select onchange="updateServiceField('${s.id}', 'duration', this.value)" class="input-field" style="padding: 8px 6px; font-size: 11px; font-weight: 700;">
+                          <option value="30 dk" ${s.duration === '30 dk' ? 'selected' : ''}>30 dk (0.5 Saat)</option>
+                          <option value="45 dk" ${s.duration === '45 dk' ? 'selected' : ''}>45 dk</option>
+                          <option value="60 dk" ${s.duration === '60 dk' || s.duration === '1 saat' ? 'selected' : ''}>60 dk (1 Saat)</option>
+                          <option value="90 dk" ${s.duration === '90 dk' || s.duration === '1.5 saat' ? 'selected' : ''}>90 dk (1.5 Saat)</option>
+                          <option value="120 dk" ${s.duration === '120 dk' || s.duration === '2 saat' ? 'selected' : ''}>120 dk (2 Saat)</option>
+                          <option value="150 dk" ${s.duration === '150 dk' || s.duration === '2.5 saat' ? 'selected' : ''}>150 dk (2.5 Saat)</option>
+                          <option value="180 dk" ${s.duration === '180 dk' || s.duration === '3 saat' ? 'selected' : ''}>180 dk (3 Saat)</option>
+                        </select>
                       </div>
                       <div>
                         <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">${t('priceLabel')}:</label>
@@ -1418,7 +1446,15 @@
               <h4 style="font-size: 13px; font-weight: 900; color: var(--gold-primary); margin-bottom: 10px;">➕ ${t('newServiceTitle')}</h4>
               <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
                 <input id="new-svc-name" type="text" placeholder="${t('serviceNameLabel')}" class="input-field" style="padding: 8px 10px; font-size: 12px;">
-                <input id="new-svc-dur" type="text" placeholder="${t('durationLabel')} (30 dk)" class="input-field" style="padding: 8px 10px; font-size: 12px;">
+                <select id="new-svc-dur" class="input-field" style="padding: 8px 6px; font-size: 11px; font-weight: 700;">
+                  <option value="30 dk">30 dk (0.5 Saat)</option>
+                  <option value="45 dk">45 dk</option>
+                  <option value="60 dk">60 dk (1 Saat)</option>
+                  <option value="90 dk" selected>90 dk (1.5 Saat)</option>
+                  <option value="120 dk">120 dk (2 Saat)</option>
+                  <option value="150 dk">150 dk (2.5 Saat)</option>
+                  <option value="180 dk">180 dk (3 Saat)</option>
+                </select>
                 <input id="new-svc-price" type="number" placeholder="${t('priceLabel')}" class="input-field" style="padding: 8px 10px; font-size: 12px;">
               </div>
               <button onclick="addNewService()" class="gold-btn" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 900;">➕ ${t('addServiceBtn')}</button>
@@ -1434,6 +1470,55 @@
 
       html += `</div>`;
       container.innerHTML = html;
+    }
+
+    // --- SERVICE DURATION & MULTI-SLOT CALCULATION ENGINE ---
+    function getServiceSlotCount(durationStr) {
+      if (!durationStr) return 1;
+      const str = durationStr.toString().toLowerCase();
+
+      const minMatch = str.match(/(\d+)\s*(dk|min)/);
+      if (minMatch) {
+        const mins = parseInt(minMatch[1], 10);
+        return Math.max(1, Math.ceil(mins / 30));
+      }
+
+      const hourMatch = str.match(/(\d+(?:\.\d+)?)\s*(saat|hr)/);
+      if (hourMatch) {
+        const hours = parseFloat(hourMatch[1]);
+        return Math.max(1, Math.ceil((hours * 60) / 30));
+      }
+
+      return 1;
+    }
+
+    function getOccupiedSlotsForDate(dateStr) {
+      const occupied = new Set();
+      const dateApts = (state.appointments || []).filter(a => a && a.date === dateStr && a.status !== 'cancelled' && a.status !== 'rejected');
+
+      dateApts.forEach(apt => {
+        if (!apt.time) return;
+        let slotsNeeded = 1;
+        const svc = (state.services || []).find(s => s.name === apt.serviceName);
+        if (svc && svc.duration) {
+          slotsNeeded = getServiceSlotCount(svc.duration);
+        } else if (apt.serviceDuration) {
+          slotsNeeded = getServiceSlotCount(apt.serviceDuration);
+        }
+
+        const [startH, startM] = apt.time.split(':').map(Number);
+        if (isNaN(startH) || isNaN(startM)) return;
+
+        let curMinTotal = startH * 60 + startM;
+        for (let i = 0; i < slotsNeeded; i++) {
+          const hh = Math.floor(curMinTotal / 60).toString().padStart(2, '0');
+          const mm = (curMinTotal % 60).toString().padStart(2, '0');
+          occupied.add(`${hh}:${mm}`);
+          curMinTotal += 30;
+        }
+      });
+
+      return occupied;
     }
 
     // --- AUTOMATIC CLEANUP ENGINE (7 GÜNDEN ESKİ RANDEVULARI SİL + MÜŞTERİ BAŞINA MAKSİMUM 5 RANDEVU KORU) ---
