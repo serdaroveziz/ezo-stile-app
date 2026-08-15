@@ -978,33 +978,35 @@
       if (state.customerTab === 'booking') {
         html += `<div class="card" style="padding: 16px 14px;">`;
 
-        // STEP 1: HİZMET SEÇİMİ (KATLANABİLİR)
+        // STEP 1: HİZMET SEÇİMİ (KATLANABİLİR LİSTE)
         const isStep1Open = !state.accordionStep || state.accordionStep === 1;
         html += `
           <div style="background: #070c1a; border-radius: 14px; border: 1px solid ${isStep1Open ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 12px; margin-bottom: 12px; transition: all 0.2s;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div onclick="setAccordionStep(${isStep1Open ? 0 : 1})" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
               <div>
                 <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary);">${t('servicesTitle')}</span>
                 <div style="font-size: 13px; font-weight: 800; color: #fff; margin-top: 2px;">
                   ✓ ${getServiceName(activeSelectedService)} (${activeSelectedService.price} TL)
                 </div>
               </div>
-              <button onclick="setAccordionStep(${isStep1Open ? 0 : 1})" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
+              <button style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; pointer-events: none;">
                 ${isStep1Open ? '▲ ' + t('closeStep') : '✏️ ' + t('changeStep')}
               </button>
             </div>
 
             ${isStep1Open ? `
-              <div style="display: flex; gap: 8px; overflow-x: auto; padding-top: 12px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;">
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-color);">
                 ${state.services.map(s => {
                   const displayName = getServiceName(s);
                   const isSel = activeSelectedService.id === s.id;
                   return `
-                    <div onclick="selectServiceAccordion('${s.id}')" style="flex: 0 0 160px; scroll-snap-align: start; padding: 10px 12px; border-radius: 12px; border: 2px solid ${isSel ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${isSel ? 'rgba(245,158,11,0.16)' : '#0f172a'}; cursor: pointer; transition: all 0.2s ease;">
-                      <div style="font-weight: 800; font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayName}</div>
-                      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span style="font-size: 11px; color: var(--text-muted);">⏱️ ${s.duration}</span>
-                        <span style="font-size: 13px; font-weight: 900; color: var(--gold-primary);">${s.price} TL</span>
+                    <div onclick="selectServiceAccordion('${s.id}')" style="padding: 12px 14px; border-radius: 12px; border: 1px solid ${isSel ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${isSel ? 'rgba(245,158,11,0.18)' : '#0f172a'}; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s ease;">
+                      <div>
+                        <div style="font-weight: 800; font-size: 13px; color: ${isSel ? 'var(--gold-light)' : '#fff'};">${isSel ? '✓ ' : ''}${displayName}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">⏱️ ${s.duration}</div>
+                      </div>
+                      <div style="font-size: 13px; font-weight: 900; color: var(--gold-primary); background: rgba(245,158,11,0.1); padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(245,158,11,0.2); flex-shrink: 0;">
+                        ${s.price} TL
                       </div>
                     </div>
                   `;
