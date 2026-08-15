@@ -2058,7 +2058,9 @@
     async function syncToCloud(overridePayload = null) {
       const now = Date.now();
       lastLocalUpdateTimestamp = now;
+      lastCloudUpdateTimestamp = now;
       localStorage.setItem('gc_last_local_ts', now.toString());
+      localStorage.setItem('gc_last_cloud_ts', now.toString());
 
       const payload = overridePayload || {
         adminPassword: state.adminPassword,
@@ -2234,8 +2236,8 @@
         }
 
         if (latestData && latestData.updatedAt) {
-          // Sadece başka bir cihazdan gelen yeni veriyi kabul et
-          if (latestData.updatedAt > lastCloudUpdateTimestamp && Math.abs(latestData.updatedAt - lastLocalUpdateTimestamp) > 1000) {
+          // Sadece bu cihazın son bildiği bulut sürümünden daha yeni bir veri geldiyse güncelle
+          if (latestData.updatedAt > lastCloudUpdateTimestamp) {
             
             // Check for new pending appointments for Admin audio chime & lock screen notification
             if (state.role !== 'customer' && latestData.appointments) {
