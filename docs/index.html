@@ -467,10 +467,10 @@
       role: 'customer', // 'customer' | 'admin' | 'manager'
       currentUser: JSON.parse(localStorage.getItem('gc_user') || 'null'),
       smsCode: null,
-      adminTab: 'requests', // 'weeklySchedule' | 'slotLocking' | 'servicesAdmin' | 'requests'
-      requestsSubTab: 'pending', // 'pending' | 'approved' | 'rejected'
       adminPhone: localStorage.getItem('gc_admin_phone') || '05338000000',
-      accordionStep: 1, // 1: Service open, 2: Date open, 3: Time open, 4: All collapsed & Confirm open
+      accordionStep: 1,
+      adminTab: 'requests',
+      requestsSubTab: 'pending',
       services: JSON.parse(localStorage.getItem('gc_services') || JSON.stringify(DEFAULT_SERVICES)),
       customerTab: 'booking', // 'booking' | 'myAppointments'
       selectedServiceId: '1',
@@ -1563,7 +1563,7 @@
       if (apt) {
         apt.date = newDate;
         apt.time = newTime;
-        apt.status = 'pending'; // Requires new admin approval
+        apt.status = 'pending';
         localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
         syncToCloud();
         window.dispatchEvent(new Event('storage'));
@@ -1579,13 +1579,10 @@
       if (clean.startsWith('0')) clean = clean.substring(1);
       
       if (clean.length !== 10 || !clean.startsWith('5')) return false;
-      
-      // Reject repetitive or obvious fake numbers
       if (/^(\d)\1{9}$/.test(clean)) return false;
       if (clean === '1234567890' || clean === '5454646352' || clean === '5000000000') return false;
 
       const prefix = parseInt(clean.substring(0, 3));
-      // Valid TR & KKTC GSM prefixes: 501-509, 530-539, 540-549, 551-559, 561
       if ((prefix >= 501 && prefix <= 509) || 
           (prefix >= 530 && prefix <= 539) || 
           (prefix >= 540 && prefix <= 549) || 
@@ -1607,11 +1604,10 @@
       }
 
       if (!isValidTurkishGsm(phone)) {
-        alert('❌ Geçersiz GSM Numarası!\n\nKayıt olabilmek için lütfen gerçek cep telefonu numaranızı (Örn: 05XX XXX XX XX) giriniz. Uydurma veya sahte numaralar kabul edilmez.');
+        alert('❌ Geçersiz GSM Numarası!\n\nKayıt olabilmek için lütfen gerçek cep telefonu numaranızı (Örn: 05XX XXX XX XX) giriniz.');
         return;
       }
 
-      // FORMAT PHONE FOR E.164 (REAL AUTOMATED SMS OTP)
       let cleanDigits = phone.replace(/\D/g, '');
       if (cleanDigits.startsWith('0')) {
         cleanDigits = cleanDigits.substring(1);
@@ -1620,13 +1616,6 @@
 
       state.smsCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-      // TRIGGER NATIVE SMS COMPOSER TO SEND CODE VIA SMS
-      const smsBody = `EZO STİLE SMS Doğrulama Şifreniz: ${state.smsCode}`;
-      try {
-        window.open(`sms:${cleanDigits}?body=${encodeURIComponent(smsBody)}`, '_self');
-      } catch(err) {}
-
-      // INITIATE FIREBASE REAL AUTOMATED SMS OTP
       if (window.firebase && firebase.auth) {
         try {
           if (!window.recaptchaVerifier) {
@@ -1639,10 +1628,10 @@
           firebase.auth().signInWithPhoneNumber(e164Phone, window.recaptchaVerifier)
             .then((confirmationResult) => {
               window.confirmationResult = confirmationResult;
-              console.log('✅ Real Automated SMS OTP sent to:', e164Phone);
+              console.log('✅ Automated SMS sent to customer:', e164Phone);
             })
             .catch((err) => {
-              console.warn('Firebase Real SMS OTP notice:', err);
+              console.warn('Firebase SMS OTP notice:', err);
             });
         } catch(err) {
           console.warn('Firebase recaptcha init notice:', err);
@@ -1658,14 +1647,14 @@
         <div class="modal-overlay">
           <div class="modal-content" style="max-width: 420px; text-align: center; border: 1px solid var(--gold-primary); box-shadow: 0 15px 40px rgba(0,0,0,0.8);">
             <div style="font-size: 42px; margin-bottom: 6px;">📲</div>
-            <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">SMS Doğrulama Şifresi Gönderildi</h3>
+            <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">SMS Şifresi Gönderildi</h3>
             <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 14px; line-height: 1.4;">
-              <strong>${phone}</strong> numaralı hattınıza SMS ile 6 haneli doğrulama şifreniz gönderilmiştir. Lütfen gelen SMS mesajındaki şifreyi giriniz.
+              <strong>${phone}</strong> numaralı cep telefonunuza doğrulama SMS şifreniz gönderilmiştir. Lütfen gelen SMS şifresini giriniz.
             </p>
 
             <div style="background: rgba(245,158,11,0.1); border: 1px dashed var(--gold-primary); padding: 12px; border-radius: 14px; margin-bottom: 16px; text-align: left;">
-              <div style="font-size: 11px; color: #fbbf24; font-weight: 800;">🔒 Güvenli SMS Doğrulaması</div>
-              <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Şifreniz güvenlik amacıyla ekranda gösterilmez, telefonunuza SMS olarak iletilir.</div>
+              <div style="font-size: 11px; color: #fbbf24; font-weight: 800;">🔒 Güvenli Numara Doğrulaması</div>
+              <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Cebinize gelen SMS mesajındaki 6 haneli şifreyi giriniz.</div>
             </div>
 
             <input id="sms-input" type="text" maxlength="6" value="" placeholder="6 Haneli SMS Şifresi" class="input-field" style="text-align: center; font-size: 24px; font-weight: 900; letter-spacing: 8px; margin-bottom: 16px; background: #040711; border-color: var(--gold-primary);">
@@ -1675,8 +1664,8 @@
                 ✅ Şifreyi Doğrula ve Giriş Yap
               </button>
 
-              <button onclick="window.open('sms:${phone.replace(/\D/g, '')}?body=EZO%20STİLE%20SMS%20Doğrulama%20Şifreniz:%20${code}', '_self')" style="background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); color: #60a5fa; padding: 10px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
-                💬 SMS Mesaj Ekranını Yeniden Aç
+              <button onclick="handleCustomerRegister(new Event('submit'))" class="gold-btn" style="width: 100%; padding: 10px; font-size: 12px; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);">
+                🔄 SMS Kodunu Tekrar Gönder
               </button>
               
               <button onclick="closeModal()" style="padding: 8px; font-size: 11px; background: transparent; border: none; color: #94a3b8; cursor: pointer;">
