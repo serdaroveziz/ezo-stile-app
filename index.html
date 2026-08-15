@@ -899,9 +899,10 @@
               <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin: 0;">👑 Yönetici Paneli</h2>
               <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Berber</span>
             </div>
-            <div style="display: flex; gap: 8px;">
-              <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 Yenile</button>
-              <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">← Müşteri Ekranı</button>
+            <div style="display: flex; gap: 6px;">
+              <button onclick="openAdminPhoneModal()" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">📱 Tel No</button>
+              <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 Yenile</button>
+              <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer;">← Müşteri</button>
             </div>
           </div>
 
@@ -919,16 +920,6 @@
             <button onclick="setAdminTab('servicesAdmin')" style="padding: 12px 8px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'servicesAdmin' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
               ✂️ Hizmet & Fiyat
             </button>
-          </div>
-
-          <!-- ADMIN PHONE CONFIGURATION BOX -->
-          <div style="background: #070c1a; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--gold-primary); margin-bottom: 20px;">
-            <div style="font-weight: 800; font-size: 12px; color: var(--gold-primary); margin-bottom: 4px;">📱 WhatsApp & SMS Randevu Bildirim Numarası</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Müşterilerin randevu onay mesajı göndereceği telefon numarası:</div>
-            <div style="display: flex; gap: 8px;">
-              <input id="admin-phone-input" type="text" value="${state.adminPhone || '05338000000'}" class="input-field" style="flex: 1; padding: 8px 12px; font-weight: 800; font-size: 13px; color: var(--gold-primary);">
-              <button onclick="saveAdminPhone(document.getElementById('admin-phone-input').value)" class="gold-btn" style="padding: 8px 14px; font-size: 11px; font-weight: 900; white-space: nowrap;">💾 Numarayı Kaydet</button>
-            </div>
           </div>
       `;
 
@@ -1367,6 +1358,35 @@
         const bar = document.getElementById('booking-confirm-bar');
         if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 50);
+    }
+
+    function openAdminPhoneModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 400px; text-align: center; border-color: var(--gold-primary);">
+            <div style="width: 54px; height: 54px; margin: 0 auto 12px; border-radius: 16px; background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); display: flex; align-items: center; justify-content: center; font-size: 26px;">
+              📱
+            </div>
+            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">WhatsApp & SMS Bildirim Numarası</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+              Müşterilerin randevu onay mesajı göndereceği dükkan telefon numaranız:
+            </p>
+
+            <input id="admin-phone-input-modal" type="text" value="${state.adminPhone || '05338000000'}" class="input-field" style="padding: 12px; font-size: 15px; font-weight: 800; color: var(--gold-primary); text-align: center; margin-bottom: 16px;">
+
+            <div style="display: flex; gap: 8px;">
+              <button onclick="closeModal()" style="flex: 1; padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid var(--border-color); color: #fff; font-weight: 700; cursor: pointer;">
+                Vazgeç
+              </button>
+              <button onclick="saveAdminPhone(document.getElementById('admin-phone-input-modal').value); closeModal();" class="gold-btn" style="flex: 1.5; padding: 12px; font-size: 13px; font-weight: 900;">
+                💾 Numarayı Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     function saveAdminPhone(phone) {
