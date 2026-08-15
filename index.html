@@ -1231,14 +1231,19 @@
       const rejectedApts = state.appointments.filter(a => a.status === 'rejected' || a.status === 'cancelled');
 
       const isAdminRole = state.role === 'admin';
-      const panelTitle = isAdminRole ? t('patronPanel') : t('staffPanel');
+      const panelTitle = isAdminRole ? '👑 Patron / Ana Admin Paneli' : '🛠️ Personel / Yönetici Paneli';
+
+      // Security check: restrict manager role from sensitive tabs
+      if (!isAdminRole && (state.adminTab === 'revenueDashboard' || state.adminTab === 'staffManagement' || state.adminTab === 'servicesAdmin')) {
+        state.adminTab = 'requests';
+      }
 
       let html = `
         <div class="card" style="border-color: var(--gold-primary);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
             <div>
-              <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin: 0;">${panelTitle}</h2>
-              <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Berber</span>
+              <h2 style="font-size: 17px; font-weight: 900; color: var(--gold-primary); margin: 0;">${panelTitle}</h2>
+              <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Barber</span>
             </div>
             <div style="display: flex; gap: 6px;">
               ${isAdminRole ? `
@@ -1254,24 +1259,31 @@
             <button onclick="setAdminTab('requests')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'requests' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'requests' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'requests' ? '#000' : '#fff'}; cursor: pointer;">
               📋 ${t('requests')} (${pendingApts.length})
             </button>
-            <button onclick="setAdminTab('revenueDashboard')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'revenueDashboard' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'revenueDashboard' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'revenueDashboard' ? '#000' : '#fff'}; cursor: pointer;">
-              💰 Ciro & Kasa Raporu
-            </button>
             <button onclick="setAdminTab('manualBooking')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'manualBooking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'manualBooking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'manualBooking' ? '#000' : '#fff'}; cursor: pointer;">
               📅 Manuel Randevu & Takvim
             </button>
-            <button onclick="setAdminTab('staffManagement')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'staffManagement' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'staffManagement' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'staffManagement' ? '#000' : '#fff'}; cursor: pointer;">
-              👥 Yetkili & Şifreler
+            
+            ${isAdminRole ? `
+              <button onclick="setAdminTab('revenueDashboard')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'revenueDashboard' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'revenueDashboard' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'revenueDashboard' ? '#000' : '#fff'}; cursor: pointer;">
+                💰 Ciro & Kasa Raporu
+              </button>
+              <button onclick="setAdminTab('staffManagement')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'staffManagement' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'staffManagement' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'staffManagement' ? '#000' : '#fff'}; cursor: pointer;">
+                👥 Yetkili & Şifreler
+              </button>
+            ` : ''}
+
+            <button onclick="setAdminTab('slotLocking')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'slotLocking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'slotLocking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'slotLocking' ? '#000' : '#fff'}; cursor: pointer;">
+              🔒 ${t('slotLocking')}
             </button>
             <button onclick="setAdminTab('weeklySchedule')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'weeklySchedule' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'weeklySchedule' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'weeklySchedule' ? '#000' : '#fff'}; cursor: pointer;">
               ⏰ ${t('weeklySchedule')}
             </button>
-            <button onclick="setAdminTab('slotLocking')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'slotLocking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'slotLocking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'slotLocking' ? '#000' : '#fff'}; cursor: pointer;">
-              🔒 ${t('slotLocking')}
-            </button>
-            <button onclick="setAdminTab('servicesAdmin')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'servicesAdmin' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; cursor: pointer; grid-column: span 2;">
-              ✂️ ${t('servicesAdmin')}
-            </button>
+            
+            ${isAdminRole ? `
+              <button onclick="setAdminTab('servicesAdmin')" style="padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'servicesAdmin' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; cursor: pointer; grid-column: span 2;">
+                ✂️ ${t('servicesAdmin')}
+              </button>
+            ` : ''}
           </div>
       `;
 
