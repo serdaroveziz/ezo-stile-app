@@ -1309,12 +1309,11 @@
               <h2 style="font-size: 17px; font-weight: 900; color: var(--gold-primary); margin: 0;">${panelTitle}</h2>
               <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Barber</span>
             </div>
-            <div style="display: flex; gap: 6px;">
-              ${isAdminRole ? `
-                <button onclick="openAdminPhoneModal()" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">📱 ${t('adminPhoneBtn')}</button>
-              ` : ''}
-              <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 ${t('refreshBtn')}</button>
-              <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer;">← ${t('backToCustomerShort')}</button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button onclick="openAdminProfileModal()" class="gold-btn" style="padding: 8px 14px; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(245,158,11,0.25);">
+                👤 ${state.currentStaffName || 'Patron / Admin Profil'}
+              </button>
+              <button onclick="switchRole('customer')" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #aaa; padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer;">← ${t('backToCustomerShort')}</button>
             </div>
           </div>
 
@@ -3009,6 +3008,134 @@
 
     function closeModal() {
       document.getElementById('modal-root').innerHTML = '';
+    }
+
+    function logoutAdmin() {
+      state.role = 'customer';
+      state.currentStaffName = null;
+      localStorage.removeItem('gc_staff_name');
+      renderApp();
+    }
+
+    function openAdminProfileModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      const isAdminRole = state.role === 'admin';
+      const staffName = state.currentStaffName || (isAdminRole ? 'Patron (Ana Admin)' : 'Yönetici / Personel');
+      const adminPhone = state.adminPhone || '05338000000';
+      const pendingCount = (state.appointments || []).filter(a => a.status === 'pending').length;
+      const todayStr = getLocalDateStr(new Date());
+      const todayApproved = (state.appointments || []).filter(a => a.status === 'approved' && a.date === todayStr);
+      const todayRevenue = todayApproved.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+      const staffCount = (state.staffList || []).length;
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; border-color: var(--gold-primary); padding: 20px;">
+            
+            <!-- HEADER -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, #fbbf24, #d97706); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
+                  👤
+                </div>
+                <div>
+                  <h3 style="font-size: 16px; font-weight: 900; color: #fff; margin: 0;">${staffName}</h3>
+                  <span style="font-size: 11px; color: var(--gold-primary); font-weight: 800;">${isAdminRole ? '👑 Ana Salon Yöneticisi (Patron)' : '🛠️ Salon Görevlisi'}</span>
+                </div>
+              </div>
+              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: 32px; height: 32px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+
+            <!-- PROFILE CONTENT MENU -->
+            <div style="display: flex; flex-direction: column; gap: 10px; max-height: 440px; overflow-y: auto; padding-right: 2px;">
+              
+              <!-- 1. TELEFON NO (WHATSAPP & SMS BILDIRIM HATTI) -->
+              <div style="background: #070c1a; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">📱 Salon İletişim / Bildirim Hattı:</div>
+                  <div style="font-size: 14px; font-weight: 900; color: var(--gold-primary); margin-top: 2px;">${adminPhone}</div>
+                </div>
+                ${isAdminRole ? `
+                  <button onclick="openAdminPhoneModal()" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">✏️ Değiştir</button>
+                ` : ''}
+              </div>
+
+              <!-- 2. CANLI YENİLE / SENKRONİZE ET -->
+              <button onclick="fetchFromCloud(); alert('✅ Bulut verileri başarıyla yenilendi!');" style="background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.1)); border: 1px solid rgba(16,185,129,0.4); padding: 12px 14px; border-radius: 14px; color: #34d399; font-size: 12px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <span>🔄 Canlı Bulut Verilerini Güncelle</span>
+                <span style="font-size: 10px; opacity: 0.8;">⚡ Sub-50ms</span>
+              </button>
+
+              <!-- 3. CİRO & KASA RAPORU (ONLY ADMIN) -->
+              ${isAdminRole ? `
+                <button onclick="setAdminTab('revenueDashboard'); closeModal();" style="background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1)); border: 1px solid rgba(245,158,11,0.4); padding: 12px 14px; border-radius: 14px; color: var(--gold-primary); font-size: 12px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                  <span>💰 Ciro & Kasa Analiz Raporu</span>
+                  <span style="background: rgba(245,158,11,0.2); padding: 4px 8px; border-radius: 8px; font-size: 11px;">Bugün: ${todayRevenue} TL</span>
+                </button>
+              ` : ''}
+
+              <!-- 4. MÜŞTERİLER & RANDEVU TALEPLERİ -->
+              <button onclick="setAdminTab('requests'); closeModal();" style="background: #070c1a; border: 1px solid var(--border-color); padding: 12px 14px; border-radius: 14px; color: #fff; font-size: 12px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <span>📋 Randevular & Müşteri Talepleri</span>
+                <span style="background: rgba(245,158,11,0.2); color: var(--gold-primary); padding: 4px 8px; border-radius: 8px; font-size: 11px;">${pendingCount} Bekleyen</span>
+              </button>
+
+              <!-- 5. YETKİLİ & ŞİFRE YÖNETİMİ (ONLY ADMIN) -->
+              ${isAdminRole ? `
+                <button onclick="setAdminTab('staffManagement'); closeModal();" style="background: #070c1a; border: 1px solid var(--border-color); padding: 12px 14px; border-radius: 14px; color: #fff; font-size: 12px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                  <span>👥 Yetkili & Şifre Yönetimi</span>
+                  <span style="background: rgba(255,255,255,0.08); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 11px;">${staffCount} Personel</span>
+                </button>
+              ` : ''}
+
+              <!-- 6. ÇIKIŞ YAP -->
+              <button onclick="closeModal(); logoutAdmin();" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.4); padding: 12px 14px; border-radius: 14px; color: #fb7185; font-size: 12px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 6px;">
+                <span>🚪 Admin Panelinden Çıkış Yap</span>
+                <span>←</span>
+              </button>
+
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openAdminPhoneModal() {
+      const currentPhone = state.adminPhone || '05338000000';
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      root.innerHTML = `
+        <div class="modal-overlay">
+          <div class="modal-content" style="max-width: 400px; padding: 20px;">
+            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 8px;">📱 Salon Telefon Numarasını Güncelle</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Müşterilerin randevu onay mesajlarını yönlendireceği WhatsApp / İletişim numarasını giriniz.</p>
+            
+            <input id="admin-phone-input" type="tel" value="${currentPhone}" placeholder="Örn: 0533XXXXXXX" class="input-field" style="padding: 12px; font-size: 14px; font-weight: 800; color: var(--gold-primary); margin-bottom: 16px;">
+
+            <div style="display: flex; gap: 8px;">
+              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #fff; flex: 1; padding: 10px;">İptal</button>
+              <button onclick="saveAdminPhone()" class="gold-btn" style="flex: 2; padding: 10px;">💾 Kaydet</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function saveAdminPhone() {
+      const val = (document.getElementById('admin-phone-input')?.value || '').trim();
+      if (!val || val.length < 10) {
+        alert('Lütfen geçerli bir telefon numarası giriniz (Örn: 0533XXXXXXX).');
+        return;
+      }
+      state.adminPhone = val;
+      localStorage.setItem('gc_admin_phone', val);
+      syncToCloud();
+      closeModal();
+      alert(`✅ Salon iletişim numarası "${val}" olarak kaydedildi!`);
+      renderApp();
     }
 
     function setAdminTab(tab) {
