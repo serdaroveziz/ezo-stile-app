@@ -889,8 +889,6 @@
       }
 
       container.innerHTML = html;
-
-      container.innerHTML = html;
     }
 
     // --- ADMIN VIEW (SADE VE KOLAY YÖNETİCİ PANELİ) ---
@@ -909,12 +907,10 @@
               <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin: 0;">${panelTitle}</h2>
               <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Berber</span>
             </div>
-            <div style="display: flex; gap: 6px;">
-              ${isAdminRole ? `
-                <button onclick="openAdminPhoneModal()" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">📱 Tel No</button>
-              ` : ''}
-              <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 Yenile</button>
-              <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer;">← Müşteri</button>
+            <div>
+              <button onclick="openAdminMenuModal()" style="background: rgba(245,158,11,0.18); border: 1.5px solid var(--gold-primary); color: var(--gold-primary); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(245,158,11,0.25);">
+                ⚙️ ADMIN
+              </button>
             </div>
           </div>
 
@@ -1370,6 +1366,48 @@
         const bar = document.getElementById('booking-confirm-bar');
         if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 50);
+    }
+
+    function openAdminMenuModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      const isAdminRole = state.role === 'admin';
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 400px; text-align: center; border-color: var(--gold-primary);">
+            <div style="width: 50px; height: 50px; margin: 0 auto 10px; border-radius: 16px; background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+              ⚙️
+            </div>
+            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 4px;">Yönetici Menüsü</h3>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">Hızlı yönetim ve ayar işlemleri:</p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              ${isAdminRole ? `
+                <button onclick="closeModal(); openAdminPhoneModal();" style="width: 100%; padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid var(--gold-primary); color: var(--gold-primary); font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                  <span>📱 Bildirim Numarası Ayarla</span>
+                  <span style="font-size: 10px; opacity: 0.8;">(${state.adminPhone || '05338000000'})</span>
+                </button>
+              ` : ''}
+
+              <button onclick="closeModal(); fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="width: 100%; padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid rgba(16,185,129,0.4); color: #34d399; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                <span>🔄 Canlı Verileri Yenile</span>
+                <span style="font-size: 10px; opacity: 0.8;">(Senkronize Et)</span>
+              </button>
+
+              <button onclick="closeModal(); switchRole('customer');" style="width: 100%; padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid var(--border-color); color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                <span>👤 Müşteri Ekranına Dön</span>
+                <span style="font-size: 10px; opacity: 0.8;">(Randevu Ekranı)</span>
+              </button>
+
+              <button onclick="closeModal()" style="width: 100%; margin-top: 4px; padding: 10px; border-radius: 10px; background: transparent; border: none; color: #94a3b8; font-size: 11px; font-weight: 700; cursor: pointer;">
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     function openAdminPhoneModal() {
