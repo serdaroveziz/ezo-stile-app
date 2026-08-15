@@ -833,19 +833,53 @@
       }
     }
 
+    function sanitizeState() {
+      if (!Array.isArray(state.services) || state.services.length === 0) state.services = DEFAULT_SERVICES;
+      if (!Array.isArray(state.appointments)) state.appointments = [];
+      if (!Array.isArray(state.notifications)) state.notifications = [];
+      if (!Array.isArray(state.dateSlotOverrides)) state.dateSlotOverrides = [];
+      if (!state.weeklySchedule || typeof state.weeklySchedule !== 'object') {
+        state.weeklySchedule = {
+          1: { isOpen: true, start: '12:00', end: '22:00' },
+          2: { isOpen: true, start: '09:00', end: '21:00' },
+          3: { isOpen: true, start: '09:00', end: '21:00' },
+          4: { isOpen: true, start: '09:00', end: '21:00' },
+          5: { isOpen: true, start: '09:00', end: '23:00' },
+          6: { isOpen: true, start: '09:00', end: '23:00' },
+          0: { isOpen: true, start: '10:00', end: '20:00' }
+        };
+      }
+      if (!state.selectedDate || typeof state.selectedDate !== 'string' || state.selectedDate.length < 8) {
+        state.selectedDate = getInitialBookingDate();
+      }
+    }
+
     // --- MAIN RENDERER ---
     function renderApp() {
-      const main = document.getElementById('main-app');
-      document.getElementById('header-subtitle').innerText = t('subtitle');
-      document.getElementById('btn-staff-login').innerText = t('staffLogin');
-      document.getElementById('btn-back-customer').innerText = t('backToCustomer');
-      const langSelect = document.getElementById('lang-select');
-      if (langSelect) langSelect.value = state.language;
-      
-      if (state.role === 'customer') {
-        renderCustomerView(main);
-      } else {
-        renderAdminView(main);
+      try {
+        sanitizeState();
+        const main = document.getElementById('main-app');
+        if (!main) return;
+
+        const subTitle = document.getElementById('header-subtitle');
+        if (subTitle) subTitle.innerText = t('subtitle');
+        
+        const staffBtn = document.getElementById('btn-staff-login');
+        if (staffBtn) staffBtn.innerText = t('staffLogin');
+        
+        const backBtn = document.getElementById('btn-back-customer');
+        if (backBtn) backBtn.innerText = t('backToCustomer');
+        
+        const langSelect = document.getElementById('lang-select');
+        if (langSelect) langSelect.value = state.language;
+        
+        if (state.role === 'customer') {
+          renderCustomerView(main);
+        } else {
+          renderAdminView(main);
+        }
+      } catch (err) {
+        console.error('renderApp error:', err);
       }
     }
 
@@ -1544,11 +1578,11 @@
             localStorage.setItem('gc_last_cloud_ts', latestData.updatedAt.toString());
 
             if (latestData.appointments) {
-              state.appointments = latestData.appointments;
+              state.appointments = Array.isArray(latestData.appointments) ? latestData.appointments : [];
               pruneAppointmentsLimit();
             }
             if (latestData.dateSlotOverrides) {
-              state.dateSlotOverrides = latestData.dateSlotOverrides;
+              state.dateSlotOverrides = Array.isArray(latestData.dateSlotOverrides) ? latestData.dateSlotOverrides : [];
               localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
             }
             if (latestData.weeklySchedule) {
@@ -1556,7 +1590,7 @@
               localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
             }
             if (latestData.services) {
-              state.services = latestData.services;
+              state.services = Array.isArray(latestData.services) ? latestData.services : DEFAULT_SERVICES;
               localStorage.setItem('gc_services', JSON.stringify(state.services));
             }
             if (latestData.adminPhone) {
@@ -1564,10 +1598,11 @@
               localStorage.setItem('gc_admin_phone', latestData.adminPhone);
             }
             if (latestData.notifications) {
-              state.notifications = latestData.notifications;
+              state.notifications = Array.isArray(latestData.notifications) ? latestData.notifications : [];
               localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
             }
 
+            sanitizeState();
             renderApp();
           }
         } else if (lastLocalUpdateTimestamp === 0 && (!latestData || !latestData.updatedAt)) {
