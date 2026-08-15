@@ -838,7 +838,7 @@
       container.innerHTML = html;
     }
 
-    // --- ADMIN VIEW ---
+    // --- ADMIN VIEW (SADE VE KOLAY YÖNETİCİ PANELİ) ---
     function renderAdminView(container) {
       const pendingApts = state.appointments.filter(a => a.status === 'pending');
       const approvedApts = state.appointments.filter(a => a.status === 'approved');
@@ -846,45 +846,47 @@
 
       let html = `
         <div class="card" style="border-color: var(--gold-primary);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary);">${t('adminPanel')}</h2>
-            <div style="display: flex; gap: 6px;">
-              <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri başarıyla yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 Canlı Yenile</button>
-              <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">${t('backToCustomer')}</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h2 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin: 0;">👑 Yönetici Paneli</h2>
+              <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Berber</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button onclick="fetchFromCloud(); alert('✅ Canlı bulut verileri yenilendi!');" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer;">🔄 Yenile</button>
+              <button onclick="switchRole('customer')" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">← Müşteri Ekranı</button>
             </div>
           </div>
 
-          <!-- MAIN TABS -->
-          <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; overflow-x: auto;">
-            <button onclick="setAdminTab('requests')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: ${state.adminTab === 'requests' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'requests' ? '#000' : '#fff'}; border: 1px solid var(--border-color); flex-shrink: 0;">
-              ${t('requests')} (${pendingApts.length})
+          <!-- MAIN 4 NAVIGATION TABS -->
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px;">
+            <button onclick="setAdminTab('requests')" style="padding: 12px 8px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'requests' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'requests' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'requests' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
+              📋 Talepler (${pendingApts.length})
             </button>
-            <button onclick="setAdminTab('weeklySchedule')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: ${state.adminTab === 'weeklySchedule' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'weeklySchedule' ? '#000' : '#fff'}; border: 1px solid var(--border-color); flex-shrink: 0;">
-              ${t('weeklySchedule')}
+            <button onclick="setAdminTab('weeklySchedule')" style="padding: 12px 8px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'weeklySchedule' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'weeklySchedule' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'weeklySchedule' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
+              ⏰ Çalışma Saatleri
             </button>
-            <button onclick="setAdminTab('slotLocking')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: ${state.adminTab === 'slotLocking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'slotLocking' ? '#000' : '#fff'}; border: 1px solid var(--border-color); flex-shrink: 0;">
-              ${t('slotLocking')}
+            <button onclick="setAdminTab('slotLocking')" style="padding: 12px 8px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'slotLocking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'slotLocking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'slotLocking' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
+              🔒 Özel Saat Kilit
             </button>
-            <button onclick="setAdminTab('servicesAdmin')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; border: 1px solid var(--border-color); flex-shrink: 0;">
-              ${t('servicesAdmin')}
+            <button onclick="setAdminTab('servicesAdmin')" style="padding: 12px 8px; border-radius: 14px; font-size: 12px; font-weight: 900; border: 1px solid ${state.adminTab === 'servicesAdmin' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
+              ✂️ Hizmet & Fiyat
             </button>
           </div>
       `;
 
-      // REQUESTS TAB WITH SEPARATE SUB-TABS FOR PENDING, APPROVED, REJECTED
+      // 1. REQUESTS TAB (BEKLEYENLER / ONAYLANANLAR / REDDEDİLENLER)
       if (state.adminTab === 'requests') {
         html += `
           <div>
-            <!-- SUB-TABS: BEKLEYENLER / ONAYLANANLAR / REDDEDİLENLER -->
             <div style="display: flex; gap: 6px; margin-bottom: 16px; background: #070c1a; padding: 4px; border-radius: 14px; border: 1px solid var(--border-color);">
-              <button onclick="setRequestsSubTab('pending')" style="flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'pending' ? 'var(--gold-primary)' : 'transparent'}; color: ${state.requestsSubTab === 'pending' ? '#000' : '#94a3b8'};">
-                ${t('tabPending')} (${pendingApts.length})
+              <button onclick="setRequestsSubTab('pending')" style="flex: 1; padding: 10px 4px; border-radius: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'pending' ? 'var(--gold-primary)' : 'transparent'}; color: ${state.requestsSubTab === 'pending' ? '#000' : '#94a3b8'};">
+                ⏳ Bekleyen (${pendingApts.length})
               </button>
-              <button onclick="setRequestsSubTab('approved')" style="flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'approved' ? '#10b981' : 'transparent'}; color: ${state.requestsSubTab === 'approved' ? '#000' : '#94a3b8'};">
-                ${t('tabApproved')} (${approvedApts.length})
+              <button onclick="setRequestsSubTab('approved')" style="flex: 1; padding: 10px 4px; border-radius: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'approved' ? '#10b981' : 'transparent'}; color: ${state.requestsSubTab === 'approved' ? '#000' : '#94a3b8'};">
+                ✅ Onaylanan (${approvedApts.length})
               </button>
-              <button onclick="setRequestsSubTab('rejected')" style="flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'rejected' ? '#f43f5e' : 'transparent'}; color: ${state.requestsSubTab === 'rejected' ? '#fff' : '#94a3b8'};">
-                ${t('tabRejected')} (${rejectedApts.length})
+              <button onclick="setRequestsSubTab('rejected')" style="flex: 1; padding: 10px 4px; border-radius: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'rejected' ? '#f43f5e' : 'transparent'}; color: ${state.requestsSubTab === 'rejected' ? '#fff' : '#94a3b8'};">
+                ❌ İptal/Red (${rejectedApts.length})
               </button>
             </div>
         `;
@@ -892,28 +894,25 @@
         const activeList = state.requestsSubTab === 'pending' ? pendingApts : state.requestsSubTab === 'approved' ? approvedApts : rejectedApts;
 
         if (activeList.length === 0) {
-          html += `<p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px;">Bu kategoride randevu bulunmamaktadır.</p>`;
+          html += `<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 30px;">Bu kategoride randevu bulunmamaktadır.</p>`;
         } else {
-          html += `<div style="display: flex; flex-direction: column; gap: 10px;">`;
+          html += `<div style="display: flex; flex-direction: column; gap: 12px;">`;
           activeList.forEach(a => {
             html += `
-              <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div>
-                  <div style="font-weight: 800; font-size: 14px; color: #fff;">👤 ${a.customerName} (${a.customerPhone})</div>
-                  <div style="font-size: 12px; color: var(--gold-primary); margin-top: 2px;">📌 ${a.serviceName} — 📅 ${a.date} ⏰ ${a.time} (${a.price} TL)</div>
-                  <div style="margin-top: 4px;">
-                    <span class="badge ${a.status === 'approved' ? 'badge-approved' : a.status === 'rejected' || a.status === 'cancelled' ? 'badge-rejected' : 'badge-pending'}">
-                      ${a.status === 'approved' ? t('statusApprovedText') : a.status === 'rejected' ? t('statusRejectedText') : a.status === 'cancelled' ? t('statusCancelledText') : t('statusPendingText')}
-                    </span>
-                  </div>
+                  <div style="font-weight: 900; font-size: 15px; color: #fff;">👤 ${a.customerName}</div>
+                  <div style="font-size: 12px; color: var(--gold-primary); font-weight: 700; margin-top: 2px;">📞 ${a.customerPhone}</div>
+                  <div style="font-size: 13px; color: #fff; margin-top: 6px; font-weight: 800;">📌 ${a.serviceName}</div>
+                  <div style="font-size: 12px; color: var(--gold-primary); font-weight: 700; margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
                 </div>
 
-                <div style="display: flex; gap: 6px;">
+                <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
                   ${a.status !== 'approved' ? `
-                    <button onclick="adminApproveApt('${a.id}')" class="gold-btn" style="padding: 8px 14px; font-size: 11px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #10b981;">✓ ONAYLA</button>
+                    <button onclick="adminApproveApt('${a.id}')" class="gold-btn" style="padding: 10px 16px; font-size: 12px; font-weight: 900; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #10b981;">✓ RANDEVUYU ONAYLA</button>
                   ` : ''}
                   ${a.status !== 'rejected' ? `
-                    <button onclick="adminRejectApt('${a.id}')" class="gold-btn" style="padding: 8px 14px; font-size: 11px; background: rgba(244,63,94,0.2); color: #fb7185; border: 1px solid #f43f5e;">✕ İPTAL ET / REDDET</button>
+                    <button onclick="adminRejectApt('${a.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 10px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer;">✕ REDDET / İPTAL</button>
                   ` : ''}
                 </div>
               </div>
@@ -925,7 +924,7 @@
         html += `</div>`;
       }
 
-      // WEEKLY SCHEDULE TAB
+      // 2. WEEKLY SCHEDULE TAB
       else if (state.adminTab === 'weeklySchedule') {
         const days = [
           { idx: 1, key: 'dayMonday' }, { idx: 2, key: 'dayTuesday' }, { idx: 3, key: 'dayWednesday' },
@@ -933,40 +932,40 @@
         ];
 
         html += `
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-            ${days.map(d => {
-              const sched = state.weeklySchedule[d.idx] || { isOpen: true, start: '12:00', end: '22:00' };
-              return `
-                <div style="background: #070c1a; padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-                  <div style="display: flex; align-items: center; gap: 10px;">
-                    <button onclick="toggleDayOpen(${d.idx})" class="badge ${sched.isOpen ? 'badge-approved' : 'badge-rejected'}" style="cursor: pointer; padding: 6px 12px;">
-                      ${sched.isOpen ? t('dayIsOpen') : t('dayIsClosed')}
-                    </button>
-                    <span style="font-weight: 800; font-size: 14px; min-width: 90px; color: #fff;">${t(d.key)}</span>
-                  </div>
-                  ${sched.isOpen ? `
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
-                      <span>${t('openingTime')}:</span>
-                      <input type="time" value="${sched.start}" onchange="updateScheduleTime(${d.idx}, 'start', this.value)" class="input-field" style="padding: 4px 8px; width: 100px;">
-                      <span>${t('closingTime')}:</span>
-                      <input type="time" value="${sched.end}" onchange="updateScheduleTime(${d.idx}, 'end', this.value)" class="input-field" style="padding: 4px 8px; width: 100px;">
+          <div>
+            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 12px;">📅 Haftalık Çalışma Saatleri</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+              ${days.map(d => {
+                const sched = state.weeklySchedule[d.idx] || { isOpen: true, start: '12:00', end: '22:00' };
+                return `
+                  <div style="background: #070c1a; padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <button onclick="toggleDayOpen(${d.idx})" class="badge ${sched.isOpen ? 'badge-approved' : 'badge-rejected'}" style="cursor: pointer; padding: 6px 14px; font-size: 12px; font-weight: 800;">
+                        ${sched.isOpen ? t('dayIsOpen') : t('dayIsClosed')}
+                      </button>
+                      <span style="font-weight: 800; font-size: 14px; color: #fff;">${t(d.key)}</span>
                     </div>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')}
-
-            <!-- CONFIRM & SAVE SCHEDULE BUTTON -->
-            <div style="margin-top: 16px; pt-4; border-top: 1px solid var(--border-color);">
-              <button onclick="confirmScheduleChanges()" class="gold-btn" style="width: 100%; padding: 16px; font-size: 14px; font-weight: 900;">
-                ${t('confirmScheduleBtn')}
-              </button>
+                    ${sched.isOpen ? `
+                      <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                        <span>Açılış:</span>
+                        <input type="time" value="${sched.start}" onchange="updateScheduleTime(${d.idx}, 'start', this.value)" class="input-field" style="padding: 6px 10px; width: 100px; font-weight: 700;">
+                        <span>Kapanış:</span>
+                        <input type="time" value="${sched.end}" onchange="updateScheduleTime(${d.idx}, 'end', this.value)" class="input-field" style="padding: 6px 10px; width: 100px; font-weight: 700;">
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')}
             </div>
+
+            <button onclick="confirmScheduleChanges()" class="gold-btn" style="width: 100%; padding: 18px; font-size: 15px; font-weight: 900;">
+              💾 Çalışma Saatlerini Kaydet
+            </button>
           </div>
         `;
       }
 
-      // SLOT LOCKING TAB (SADECE O GÜN İÇİN ÖZEL SAAT AÇMA/KAPATMA)
+      // 3. SLOT LOCKING TAB
       else if (state.adminTab === 'slotLocking') {
         const timeSlots = [];
         for (let h = 0; h < 24; h++) {
@@ -977,15 +976,15 @@
 
         html += `
           <div>
-            <h3 style="font-size: 14px; font-weight: 800; color: var(--gold-primary); margin-bottom: 6px;">${t('slotLocking')}</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Aşağıdan tarih seçip saatlere tıklayarak <strong>sadece o gün için özel olarak</strong> saat açabilir veya kapatabilirsiniz.</p>
+            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">🔒 Özel Saat Açma / Kilitleme</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Tarih seçip saatlere tıklayarak sadece o gün için özel saat kilitleyebilirsiniz.</p>
 
-            <div style="margin-bottom: 14px;">
-              <label style="font-size: 12px; font-weight: 700;">Tarih Seçiniz:</label>
-              <input type="date" value="${state.selectedDate}" onchange="selectDate(this.value)" class="input-field" style="margin-top: 4px;">
+            <div style="margin-bottom: 16px;">
+              <label style="font-size: 12px; font-weight: 800; color: var(--gold-primary);">Tarih Seçiniz:</label>
+              <input type="date" value="${state.selectedDate}" onchange="selectDate(this.value)" class="input-field" style="margin-top: 6px; padding: 12px; font-size: 14px; font-weight: 700;">
             </div>
 
-            <div class="slot-grid">
+            <div class="slot-grid" style="margin-bottom: 20px;">
               ${timeSlots.map(time => {
                 const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
                 const isBlocked = override ? override.status === 'blocked' : false;
@@ -994,50 +993,47 @@
                 return `
                   <button onclick="toggleDateSlotOverride('${state.selectedDate}', '${time}')" class="slot-btn ${isBlocked ? 'blocked' : isOpened ? 'opened' : ''}">
                     ${time}
-                    <span style="display: block; font-size: 9px;">${isBlocked ? '🔒 KAPALI' : isOpened ? '✅ AÇIK' : '• NORM'}</span>
+                    <span style="display: block; font-size: 9px; font-weight: 800;">${isBlocked ? '🔒 KAPALI' : isOpened ? '✅ AÇIK' : '• NORM'}</span>
                   </button>
                 `;
               }).join('')}
             </div>
 
-            <!-- CONFIRM & SAVE SCHEDULE BUTTON -->
-            <div style="margin-top: 20px;">
-              <button onclick="confirmScheduleChanges()" class="gold-btn" style="width: 100%; padding: 16px; font-size: 14px; font-weight: 900;">
-                ${t('confirmScheduleBtn')}
-              </button>
-            </div>
+            <button onclick="confirmScheduleChanges()" class="gold-btn" style="width: 100%; padding: 18px; font-size: 15px; font-weight: 900;">
+              💾 Saat Kilitlerini Kaydet
+            </button>
           </div>
         `;
       }
 
-      // SERVICES ADMIN TAB (HİZMET İSMİ VE FİYAT YÖNETİMİ)
+      // 4. SERVICES ADMIN TAB
       else if (state.adminTab === 'servicesAdmin') {
         html += `
           <div>
-            <h3 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 6px;">${t('servicesAdmin')}</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">${t('servicesAdminDesc')}</p>
+            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">✂️ Hizmet ve Fiyat Yönetimi</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Hizmet adını, süresini veya fiyatını doğrudan değiştirip kaydedebilirsiniz.</p>
 
             <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
               ${state.services.map((s, idx) => {
                 const displayName = getServiceName(s);
                 return `
-                  <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
+                  <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span style="font-size: 12px; font-weight: 800; color: var(--gold-primary);">Hizmet #${idx + 1} (${displayName})</span>
-                      <button onclick="deleteService('${s.id}')" style="background: none; border: none; color: #fb7185; font-size: 11px; font-weight: 700; cursor: pointer;">🗑️ Sil</button>
+                      <span style="font-size: 13px; font-weight: 900; color: var(--gold-primary);">Hizmet #${idx + 1}: ${displayName}</span>
+                      <button onclick="deleteService('${s.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">🗑️ Sil</button>
                     </div>
                     <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
                       <div>
-                        <label style="font-size: 10px; color: var(--text-muted);">Hizmet Adı:</label>
-                        <input type="text" value="${s.name}" oninput="updateServiceField('${s.id}', 'name', this.value)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+                        <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Hizmet Adı:</label>
+                        <input type="text" value="${s.name}" oninput="updateServiceField('${s.id}', 'name', this.value)" class="input-field" style="padding: 8px 10px; font-size: 13px; font-weight: 700;">
                       </div>
                       <div>
-                        <label style="font-size: 10px; color: var(--text-muted);">Süre:</label>
-                        <input type="text" value="${s.duration}" oninput="updateServiceField('${s.id}', 'duration', this.value)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+                        <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Süre:</label>
+                        <input type="text" value="${s.duration}" oninput="updateServiceField('${s.id}', 'duration', this.value)" class="input-field" style="padding: 8px 10px; font-size: 13px; font-weight: 700;">
                       </div>
                       <div>
-                        <label style="font-size: 10px; color: var(--text-muted);">Fiyat (TL):</label>
-                        <input type="number" value="${s.price}" oninput="updateServiceField('${s.id}', 'price', Number(this.value))" class="input-field" style="padding: 6px 10px; font-size: 12px; color: var(--gold-primary); font-weight: 800;">
+                        <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Fiyat (TL):</label>
+                        <input type="number" value="${s.price}" oninput="updateServiceField('${s.id}', 'price', Number(this.value))" class="input-field" style="padding: 8px 10px; font-size: 13px; color: var(--gold-primary); font-weight: 900;">
                       </div>
                     </div>
                   </div>
@@ -1046,19 +1042,19 @@
             </div>
 
             <!-- ADD NEW SERVICE FORM -->
-            <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px dashed var(--gold-primary); margin-bottom: 16px;">
-              <h4 style="font-size: 13px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">${t('newServiceTitle')}</h4>
-              <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-                <input id="new-svc-name" type="text" placeholder="Hizmet Adı (Örn: Cilt Maskesi)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
-                <input id="new-svc-dur" type="text" placeholder="Süre (Örn: 30 dk)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
-                <input id="new-svc-price" type="number" placeholder="Fiyat (TL)" class="input-field" style="padding: 6px 10px; font-size: 12px;">
+            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px dashed var(--gold-primary); margin-bottom: 20px;">
+              <h4 style="font-size: 13px; font-weight: 900; color: var(--gold-primary); margin-bottom: 10px;">➕ Yeni Hizmet Ekle</h4>
+              <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                <input id="new-svc-name" type="text" placeholder="Hizmet Adı" class="input-field" style="padding: 8px 10px; font-size: 12px;">
+                <input id="new-svc-dur" type="text" placeholder="Süre (30 dk)" class="input-field" style="padding: 8px 10px; font-size: 12px;">
+                <input id="new-svc-price" type="number" placeholder="Fiyat (TL)" class="input-field" style="padding: 8px 10px; font-size: 12px;">
               </div>
-              <button onclick="addNewService()" class="gold-btn" style="width: 100%; padding: 10px; font-size: 12px;">${t('addServiceBtn')}</button>
+              <button onclick="addNewService()" class="gold-btn" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 900;">➕ Hizmeti Listeye Ekle</button>
             </div>
 
             <!-- SAVE ALL SERVICES BUTTON -->
-            <button onclick="saveServices()" class="gold-btn" style="width: 100%; padding: 16px; font-size: 14px; font-weight: 900;">
-              ${t('saveServicesBtn')}
+            <button onclick="saveServices()" class="gold-btn" style="width: 100%; padding: 18px; font-size: 15px; font-weight: 900;">
+              💾 Tüm Fiyat & Hizmetleri Kaydet
             </button>
           </div>
         `;
