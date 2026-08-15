@@ -576,8 +576,9 @@
 
       // REGISTERED CUSTOMER VIEW: SADE & KOLAY TASARIM
       state.customerTab = state.customerTab || 'booking';
+      pruneAppointmentsLimit();
 
-      const myApts = state.appointments.filter(a => a.customerPhone === state.currentUser.phone);
+      const myApts = state.appointments.filter(a => a && a.customerPhone === state.currentUser.phone);
       const myNotifs = state.notifications.filter(n => n.phone === state.currentUser.phone);
       const upcoming1h = myApts.find(check1HourReminder);
 
@@ -1064,6 +1065,32 @@
       container.innerHTML = html;
     }
 
+    // --- AUTOMATIC 5-APPOINTMENT CLEANUP ENGINE ---
+    function pruneAppointmentsLimit() {
+      if (!Array.isArray(state.appointments)) return;
+      const byPhone = {};
+      state.appointments.forEach(a => {
+        if (!a || !a.customerPhone) return;
+        if (!byPhone[a.customerPhone]) byPhone[a.customerPhone] = [];
+        byPhone[a.customerPhone].push(a);
+      });
+
+      const keptIds = new Set();
+      Object.keys(byPhone).forEach(phone => {
+        const list = byPhone[phone];
+        list.sort((a, b) => {
+          const dtA = (a.date || '') + ' ' + (a.time || '');
+          const dtB = (b.date || '') + ' ' + (b.time || '');
+          return dtB.localeCompare(dtA);
+        });
+        // Her müşteri için sadece en güncel 5 randevuyu koru
+        list.slice(0, 5).forEach(a => keptIds.add(a.id));
+      });
+
+      state.appointments = state.appointments.filter(a => !a || !a.customerPhone || keptIds.has(a.id));
+      localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+    }
+
     // --- TRIPLE-REDUNDANT HIGH-AVAILABILITY REAL-TIME CLOUD BACKEND ENGINE ---
     const CLOUD_ENDPOINTS = [
       'https://ezostile-barber-default-rtdb.europe-west1.firebasedatabase.app/ezostile_v5.json'
@@ -1173,7 +1200,7 @@
 
             if (latestData.appointments) {
               state.appointments = latestData.appointments;
-              localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+              pruneAppointmentsLimit();
             }
             if (latestData.dateSlotOverrides) {
               state.dateSlotOverrides = latestData.dateSlotOverrides;
@@ -1271,7 +1298,7 @@
       };
 
       state.appointments.unshift(newApt);
-      localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+      pruneAppointmentsLimit();
       syncToCloud();
       window.dispatchEvent(new Event('storage'));
 
