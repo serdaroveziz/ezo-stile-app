@@ -1116,40 +1116,65 @@
                       `;
                     }
 
-                    return displaySlotsCustomer.map(time => {
-                      const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
-                      const isDirectlyBooked = occupiedSlotsSet.has(time);
+                  return displaySlotsCustomer.map(time => {
+                    const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
+                    const isDirectlyBooked = occupiedSlotsSet.has(time);
+                    const isDirectlyBlocked = override ? override.status === 'blocked' : false;
 
-                      // Check if there are enough consecutive free slots for the selected service duration
-                      let hasEnoughConsecutiveTime = true;
-                      const [startH, startM] = time.split(':').map(Number);
-                      let checkMinTotal = startH * 60 + startM;
+                    // Check if there are enough consecutive free slots for the selected service duration
+                    let hasEnoughConsecutiveTime = true;
+                    const [startH, startM] = time.split(':').map(Number);
+                    let checkMinTotal = startH * 60 + startM;
 
-                      for (let i = 0; i < neededSlotsForActiveSvc; i++) {
-                        const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
-                        const mm = (checkMinTotal % 60).toString().padStart(2, '0');
-                        const checkTimeStr = `${hh}:${mm}`;
+                    for (let i = 0; i < neededSlotsForActiveSvc; i++) {
+                      const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
+                      const mm = (checkMinTotal % 60).toString().padStart(2, '0');
+                      const checkTimeStr = `${hh}:${mm}`;
 
-                        const checkOverride = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === checkTimeStr);
-                        const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSlotsSet.has(checkTimeStr);
+                      const checkOverride = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === checkTimeStr);
+                      const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSlotsSet.has(checkTimeStr);
 
-                        if (isCheckBlocked || !availableSlots.includes(checkTimeStr)) {
-                          hasEnoughConsecutiveTime = false;
-                          break;
-                        }
-                        checkMinTotal += 30;
+                      if (isCheckBlocked || !availableSlots.includes(checkTimeStr)) {
+                        hasEnoughConsecutiveTime = false;
+                        break;
                       }
+                      checkMinTotal += 30;
+                    }
 
-                      const isBlocked = isDirectlyBooked || (override ? override.status === 'blocked' : false) || !hasEnoughConsecutiveTime;
-                      const isSelected = state.selectedTime === time;
+                    const isSelected = state.selectedTime === time;
 
+                    if (isDirectlyBooked) {
                       return `
-                        <button onclick="selectTimeAccordion('${time}')" ${isBlocked ? 'disabled' : ''} class="slot-btn ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                        <button disabled class="slot-btn blocked" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
                           ${time}
-                          ${isDirectlyBooked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotBooked') + '</span>' : isBlocked ? '<span style="display:block; font-size:7px; color:#fb7185;">' + t('slotClosed') + '</span>' : ''}
+                          <span style="display:block; font-size:7px; color:#fb7185;">🔴 ${t('slotBooked')}</span>
                         </button>
                       `;
-                    }).join('');
+                    } else if (isDirectlyBlocked) {
+                      return `
+                        <button disabled class="slot-btn blocked" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                          ${time}
+                          <span style="display:block; font-size:7px; color:#94a3b8;">⚪ ${t('slotClosed')}</span>
+                        </button>
+                      `;
+                    } else if (!hasEnoughConsecutiveTime) {
+                      const svcName = activeSelectedService ? getServiceName(activeSelectedService) : '';
+                      const svcDur = activeSelectedService ? activeSelectedService.duration : '';
+                      return `
+                        <button onclick="alert('⚠️ Hizmetinizin Saati Yüzünden Randevu Alamadınız!\\n\\nSeçtiğiniz ${svcName} (${svcDur}) hizmetinin süresi salon kapanış saatini veya sonraki randevuyu aştığı için ${time} saati yetersizdir.\\n\\nLütfen daha erken bir saat seçiniz!')" class="slot-btn blocked" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px; background: rgba(245,158,11,0.12); border: 1px dashed rgba(245,158,11,0.5); color: #fbbf24; cursor: pointer;">
+                          ${time}
+                          <span style="display:block; font-size:7px; color:#fbbf24; font-weight: 800;">⚠️ Süre Yetersiz</span>
+                        </button>
+                      `;
+                    } else {
+                      return `
+                        <button onclick="selectTimeAccordion('${time}')" class="slot-btn ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                          ${time}
+                          <span style="display:block; font-size:7px; color:#34d399;">🟢 Serbest</span>
+                        </button>
+                      `;
+                    }
+                  }).join('');
                   })()}
                 </div>
               `}
@@ -2417,6 +2442,49 @@
 
       const activeSvc = state.services.find(s => s.id === state.selectedServiceId) || state.services[0];
       const activeSvcName = getServiceName(activeSvc);
+
+      // Duration & Slot bounds validation
+      const occupiedSlotsSet = getOccupiedSlotsForDate(state.selectedDate);
+      const neededSlots = activeSvc ? getServiceSlotCount(activeSvc.duration) : 1;
+      
+      let hasEnoughConsecutiveTime = true;
+      const [startH, startM] = state.selectedTime.split(':').map(Number);
+      let checkMinTotal = startH * 60 + startM;
+
+      const sched = state.weeklySchedule[new Date(state.selectedDate).getDay()] || { isOpen: true, start: '09:00', end: '21:00' };
+      const startHour = parseInt((sched.start || '09:00').split(':')[0]);
+      const endHour = parseInt((sched.end || '21:00').split(':')[0]);
+      const availableSlots = [];
+      if (sched.isOpen) {
+        for (let h = startHour; h <= endHour; h++) {
+          const hh = h.toString().padStart(2, '0');
+          availableSlots.push(`${hh}:00`);
+          if (h !== endHour) availableSlots.push(`${hh}:30`);
+        }
+      }
+
+      for (let i = 0; i < neededSlots; i++) {
+        const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
+        const mm = (checkMinTotal % 60).toString().padStart(2, '0');
+        const checkTimeStr = `${hh}:${mm}`;
+
+        const checkOverride = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === checkTimeStr);
+        const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSlotsSet.has(checkTimeStr);
+
+        if (isCheckBlocked || !availableSlots.includes(checkTimeStr)) {
+          hasEnoughConsecutiveTime = false;
+          break;
+        }
+        checkMinTotal += 30;
+      }
+
+      if (!hasEnoughConsecutiveTime) {
+        alert(`⚠️ Hizmetinizin Saati Yüzünden Randevu Alamadınız!\n\nSeçtiğiniz "${activeSvcName}" (${activeSvc.duration}) hizmetinin süresi salon kapanış saatini veya sonraki randevuyu aştığı için ${state.selectedTime} saatine randevu oluşturulamadı.\n\nLütfen daha erken bir randevu saati seçiniz.`);
+        state.selectedTime = '';
+        state.accordionStep = 3;
+        renderApp();
+        return;
+      }
 
       const newApt = {
         id: Date.now().toString(),
