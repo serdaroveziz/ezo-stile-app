@@ -39,7 +39,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW Load:', e));
+        navigator.serviceWorker.register('./sw.js?v=1.0.46').catch(e => console.log('SW Load:', e));
       });
     }
 
@@ -84,6 +84,10 @@
           alert('✅ Kilitli ekran ve sesli bildirimler başarıyla aktif edildi!');
         } else {
           alert('⚠️ Bildirim izni reddedildi. Cihazınızın bildirim ayarlarını kontrol ediniz.');
+        }
+        if (typeof state !== 'undefined') {
+          if (state.role === 'customer' && typeof openCustomerProfileModal === 'function') openCustomerProfileModal();
+          else if (typeof openAdminProfileModal === 'function') openAdminProfileModal();
         }
       });
     }
@@ -749,11 +753,30 @@
         { code: 'ru', flag: '🇷🇺', name: 'Русский' },
         { code: 'tk', flag: '🇹🇲', name: 'Türkmençe' }
       ];
+      const curLang = (state && state.language) ? state.language : 'tr';
       return langs.map(l => {
-        const isSel = state.language === l.code;
+        const isSel = curLang === l.code;
         return `
-          <button type="button" onclick="setLanguage('${l.code}')" style="padding: 12px 6px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 2px solid ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.12)'}; background: ${isSel ? 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)' : '#070c1a'}; color: ${isSel ? '#000' : '#cbd5e1'}; cursor: pointer; transition: all 0.2s; box-shadow: ${isSel ? '0 4px 18px rgba(245,158,11,0.5)' : 'none'}; transform: ${isSel ? 'scale(1.02)' : 'scale(1)'}; display: flex; align-items: center; justify-content: center; gap: 4px;">
-            ${l.flag} ${l.name} ${isSel ? '<span style="background:#000; color:#fbbf24; padding:2px 5px; border-radius:6px; font-size:9px; font-weight:900;">✓ SEÇİLDİ</span>' : ''}
+          <button type="button" onclick="setLanguage('${l.code}')" style="
+            padding: 12px 8px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 900;
+            border: ${isSel ? '2px solid #fbbf24' : '1px solid rgba(255,255,255,0.15)'};
+            background: ${isSel ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' : '#070c1a'};
+            color: ${isSel ? '#000000' : '#cbd5e1'};
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: ${isSel ? '0 0 20px rgba(251, 191, 36, 0.65), inset 0 1px 0 rgba(255,255,255,0.5)' : 'none'};
+            transform: ${isSel ? 'scale(1.04)' : 'scale(1)'};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            position: relative;
+          ">
+            <span>${l.flag} ${l.name}</span>
+            ${isSel ? '<span style="background:#000000; color:#fbbf24; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; box-shadow:0 2px 6px rgba(0,0,0,0.5);">✓ SEÇİLDİ</span>' : ''}
           </button>
         `;
       }).join('');
@@ -843,7 +866,7 @@
               ` : ''}
 
               <!-- 6. ÇIKIŞ YAP -->
-              <button onclick="closeModal(); logoutAdmin();" style="background: rgba(244,63,94,0.15); border: 1.5px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px;">
+              <button onclick="confirmLogoutModal();" style="background: rgba(244,63,94,0.15); border: 1.5px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 18px;">🚪</span>
                   <span>Admin Oturumunu Kapat</span>
@@ -882,14 +905,21 @@
     }
 
     function testSoundWithFeedback() {
-      playNotificationSound(true);
+      if (typeof playNotificationSound === 'function') playNotificationSound(true);
+      if (typeof triggerLockScreenNotification === 'function') {
+        triggerLockScreenNotification('EZO STİLE VIP 💇‍♂️', '🔊 Bildirim sesi ve titreşim testi çalışıyor!');
+      }
+      if (navigator.vibrate) {
+        try { navigator.vibrate([300, 100, 300, 100, 300]); } catch(e) {}
+      }
       const btn = document.getElementById('btn-test-sound-modal');
       if (btn) {
-        btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-        btn.style.color = '#fff';
+        btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        btn.style.color = '#ffffff';
         btn.style.borderColor = '#34d399';
-        btn.style.transform = 'scale(1.02)';
-        btn.innerHTML = '<div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 18px;">🔊</span><span style="font-size:12px; font-weight:900;">SES & TİTREŞİM ÇALINIYOR!</span></div><span style="background:#fff; color:#059669; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:900;">✅ AKTİF</span>';
+        btn.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.6)';
+        btn.style.transform = 'scale(1.03)';
+        btn.innerHTML = '<div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 18px;">🔊</span><span style="font-size:12px; font-weight:900;">SES & TİTREŞİM ÇALINIYOR!</span></div><span style="background:#000000; color:#34d399; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:900;">✅ AKTİF</span>';
         setTimeout(() => {
           if (state.role === 'customer') openCustomerProfileModal();
           else openAdminProfileModal();
@@ -898,11 +928,51 @@
     }
 
     function requestNotifPermissionFromModal() {
-      requestNotificationPermission();
+      if (typeof requestLockScreenNotifications === 'function') {
+        requestLockScreenNotifications();
+      } else if (typeof requestNotificationPermission === 'function') {
+        requestNotificationPermission();
+      }
       setTimeout(() => {
         if (state.role === 'customer') openCustomerProfileModal();
         else openAdminProfileModal();
       }, 1000);
+    }
+
+    function testLockNotificationFromModal() {
+      if (typeof triggerLockScreenNotification === 'function') {
+        triggerLockScreenNotification('EZO STİLE VIP 💇‍♂️', '🔔 Kilitli ekran bildirim testi başarıyla alındı!');
+      }
+      if (typeof playNotificationSound === 'function') playNotificationSound(true);
+      alert('✅ Kilit ekranı bildirim testi cihaza gönderildi!');
+    }
+
+    function confirmLogoutModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 380px; width: 90%; border: 1.5px solid rgba(244,63,94,0.5); padding: 24px; background: #040711; box-shadow: 0 25px 60px rgba(0,0,0,0.95); border-radius: 24px; text-align: center;">
+            
+            <div style="width: 58px; height: 58px; border-radius: 20px; background: rgba(244,63,94,0.15); border: 2px solid rgba(244,63,94,0.4); display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fb7185; margin: 0 auto 16px; box-shadow: 0 0 25px rgba(244,63,94,0.3);">
+              🚪
+            </div>
+
+            <h3 style="font-size: 18px; font-weight: 900; color: #ffffff; margin-bottom: 8px; letter-spacing: 0.5px;">Oturumu Kapat?</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5;">Hesabınızdan çıkış yapmak istediğinize emin misiniz?</p>
+
+            <div style="display: flex; gap: 10px;">
+              <button type="button" onclick="closeModal(); ${state.role === 'customer' ? 'openCustomerProfileModal()' : 'openAdminProfileModal()'};" style="flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; padding: 14px 10px; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; transition: all 0.2s;">
+                ✕ Hayır, Vazgeç
+              </button>
+              <button type="button" onclick="closeModal(); ${state.role === 'customer' ? 'logoutCustomer()' : 'logoutAdmin()'};" style="flex: 1; background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); border: none; color: #ffffff; padding: 14px 10px; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(244,63,94,0.4); transition: all 0.2s;">
+                ✓ Evet, Çıkış Yap
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     function openCustomerProfileModal() {
@@ -919,12 +989,12 @@
 
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.95); border-radius: 24px;">
             
             <!-- HEADER -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1.5px solid var(--border-color);">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 46px; height: 46px; border-radius: 16px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
+                <div style="width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; font-weight: 900; box-shadow: 0 4px 18px rgba(245,158,11,0.4);">
                   👤
                 </div>
                 <div>
@@ -932,7 +1002,7 @@
                   <span style="font-size: 12px; color: var(--gold-primary); font-weight: 800;">📞 ${user.phone}</span>
                 </div>
               </div>
-              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: 34px; height: 34px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: 34px; height: 34px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">✕</button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 14px;">
@@ -946,15 +1016,15 @@
               </div>
 
               <!-- 2. KİLİT EKRANI BİLDİRİM İZNİ -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isNotifPermissionGranted ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff;">🔔 Kilit Ekranı Bildirim İzni</div>
-                  <div style="font-size: 10px; color: ${isNotifPermissionGranted ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">${isNotifPermissionGranted ? '🟢 İzin Verildi (Aktif)' : '🔴 İzin Verilmedi'}</div>
+                  <div style="font-size: 10px; color: ${isNotifPermissionGranted ? '#34d399' : '#fb7185'}; font-weight: 800; margin-top: 2px;">${isNotifPermissionGranted ? '🟢 İzin Verildi (Aktif)' : '🔴 İzin Verilmedi'}</div>
                 </div>
                 ${!isNotifPermissionGranted ? `
-                  <button onclick="requestNotifPermissionFromModal()" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900;">🔔 İzin Ver</button>
+                  <button onclick="requestNotifPermissionFromModal()" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900; white-space: nowrap;">🔔 İzin Ver</button>
                 ` : `
-                  <span style="font-size: 11px; color: #34d399; font-weight: 900;">✅ İzinli</span>
+                  <button onclick="testLockNotificationFromModal()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all 0.2s;">🔔 Test Et</button>
                 `}
               </div>
 
@@ -964,16 +1034,16 @@
                   <span style="font-size: 18px;">🔊</span>
                   <span>Bildirim Sesi & Titreşimi Test Et</span>
                 </div>
-                <span style="font-size: 11px;">▶️ Çal</span>
+                <span style="font-size: 11px; background: rgba(245,158,11,0.2); padding: 4px 8px; border-radius: 8px; color: #fff; font-weight: 900;">▶️ Çal</span>
               </button>
 
               <!-- 4. HESAPTAN ÇIKIŞ YAP -->
-              <button onclick="closeModal(); logoutCustomer();" style="background: rgba(244,63,94,0.15); border: 1.5px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px;">
+              <button onclick="confirmLogoutModal();" style="background: rgba(244,63,94,0.12); border: 1.5px solid rgba(244,63,94,0.35); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px; transition: all 0.2s;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 18px;">🚪</span>
                   <span>Hesabımdan Çıkış Yap</span>
                 </div>
-                <span style="font-size: 14px;">←</span>
+                <span style="font-size: 14px; font-weight: 900;">←</span>
               </button>
 
             </div>
@@ -1051,9 +1121,23 @@
     function setLanguage(lang) {
       state.language = lang;
       localStorage.setItem('gc_lang', lang);
-      document.getElementById('btn-staff-login').innerText = t('staffLogin');
-      document.getElementById('btn-back-customer').innerText = t('backToCustomer');
+      const btnStaff = document.getElementById('btn-staff-login');
+      if (btnStaff) btnStaff.innerText = t('staffLogin');
+      const btnBack = document.getElementById('btn-back-customer');
+      if (btnBack) btnBack.innerText = t('backToCustomer');
+      const langSel = document.getElementById('lang-select');
+      if (langSel) langSel.value = lang;
+      
       renderApp();
+      
+      const modalRoot = document.getElementById('modal-root');
+      if (modalRoot && modalRoot.children.length > 0) {
+        if (state.role === 'customer' && typeof openCustomerProfileModal === 'function') {
+          openCustomerProfileModal();
+        } else if (typeof openAdminProfileModal === 'function') {
+          openAdminProfileModal();
+        }
+      }
     }
 
     function switchRole(role) {
