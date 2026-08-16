@@ -1,5 +1,5 @@
-// EZO STİLE Lock Screen & Background Push Service Worker v1.0.2
-const CACHE_NAME = 'ezo-stile-v1.0.2';
+// EZO STİLE Lock Screen & Background Push Service Worker v1.0.46
+const CACHE_NAME = 'ezo-stile-v1.0.46';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -27,8 +27,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || 'Randevu onayı bekliyor',
-    icon: './insta.png',
-    badge: './insta.png',
+    icon: './icon-512.png',
+    badge: './icon-512.png',
     vibrate: [300, 100, 300, 100, 300],
     tag: 'randevu-onayi-' + Date.now(),
     renotify: true,

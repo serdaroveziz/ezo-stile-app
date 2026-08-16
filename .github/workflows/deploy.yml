@@ -13,17 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Copy latest index.html to docs
+      - name: Prepare site files
         run: |
-          cp index.html docs/index.html
-          cp -f public/sw.js docs/sw.js 2>/dev/null || true
-          cp -f insta.png docs/insta.png 2>/dev/null || true
+          mkdir -p docs
+          cp -f index.html docs/index.html
+          cp -f sw.js docs/sw.js
+          cp -f sw.js public/sw.js 2>/dev/null || true
 
       - name: Deploy to gh-pages
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git checkout -B gh-pages
-          git add docs/
+          cp -f index.html docs/index.html
+          cp -f sw.js docs/sw.js
+          git add -A
           git commit -m "Auto deploy from main" --allow-empty
           git push origin gh-pages --force
