@@ -749,11 +749,30 @@
         { code: 'ru', flag: '🇷🇺', name: 'Русский' },
         { code: 'tk', flag: '🇹🇲', name: 'Türkmençe' }
       ];
+      const curLang = (state && state.language) ? state.language : 'tr';
       return langs.map(l => {
-        const isSel = state.language === l.code;
+        const isSel = curLang === l.code;
         return `
-          <button type="button" onclick="setLanguage('${l.code}')" style="padding: 12px 6px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 2px solid ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.12)'}; background: ${isSel ? 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)' : '#070c1a'}; color: ${isSel ? '#000' : '#cbd5e1'}; cursor: pointer; transition: all 0.2s; box-shadow: ${isSel ? '0 4px 18px rgba(245,158,11,0.5)' : 'none'}; transform: ${isSel ? 'scale(1.02)' : 'scale(1)'}; display: flex; align-items: center; justify-content: center; gap: 4px;">
-            ${l.flag} ${l.name} ${isSel ? '<span style="background:#000; color:#fbbf24; padding:2px 5px; border-radius:6px; font-size:9px; font-weight:900;">✓ SEÇİLDİ</span>' : ''}
+          <button type="button" onclick="setLanguage('${l.code}')" style="
+            padding: 12px 8px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 900;
+            border: ${isSel ? '2px solid #fbbf24' : '1px solid rgba(255,255,255,0.15)'};
+            background: ${isSel ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' : '#070c1a'};
+            color: ${isSel ? '#000000' : '#cbd5e1'};
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: ${isSel ? '0 0 20px rgba(251, 191, 36, 0.65), inset 0 1px 0 rgba(255,255,255,0.5)' : 'none'};
+            transform: ${isSel ? 'scale(1.04)' : 'scale(1)'};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            position: relative;
+          ">
+            <span>${l.flag} ${l.name}</span>
+            ${isSel ? '<span style="background:#000000; color:#fbbf24; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; box-shadow:0 2px 6px rgba(0,0,0,0.5);">✓ SEÇİLDİ</span>' : ''}
           </button>
         `;
       }).join('');
@@ -1051,9 +1070,23 @@
     function setLanguage(lang) {
       state.language = lang;
       localStorage.setItem('gc_lang', lang);
-      document.getElementById('btn-staff-login').innerText = t('staffLogin');
-      document.getElementById('btn-back-customer').innerText = t('backToCustomer');
+      const btnStaff = document.getElementById('btn-staff-login');
+      if (btnStaff) btnStaff.innerText = t('staffLogin');
+      const btnBack = document.getElementById('btn-back-customer');
+      if (btnBack) btnBack.innerText = t('backToCustomer');
+      const langSel = document.getElementById('lang-select');
+      if (langSel) langSel.value = lang;
+      
       renderApp();
+      
+      const modalRoot = document.getElementById('modal-root');
+      if (modalRoot && modalRoot.children.length > 0) {
+        if (state.role === 'customer' && typeof openCustomerProfileModal === 'function') {
+          openCustomerProfileModal();
+        } else if (typeof openAdminProfileModal === 'function') {
+          openAdminProfileModal();
+        }
+      }
     }
 
     function switchRole(role) {
