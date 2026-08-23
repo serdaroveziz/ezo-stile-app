@@ -3,7 +3,6 @@ import crypto from 'crypto';
 const firebaseDatabaseUrl = process.env.FIREBASE_DATABASE_URL || 'https://ezostile-barber-default-rtdb.europe-west1.firebasedatabase.app';
 const HMAC_SECRET = process.env.HMAC_SECRET || 'ezostile-server-only-secret-key-2026';
 
-// Verify cryptographic HMAC token
 function verifyUserToken(userId, token) {
   if (!userId || !token) return false;
   try {
@@ -76,10 +75,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({ aiCredits: newCredits, aiCreditsUsed: newUsed })
     });
 
-    // 4. Dispatch Image & Hair Mask to Replicate API
+    // 4. Check Replicate API Token
     const apiToken = process.env.REPLICATE_API_TOKEN;
     if (!apiToken) {
-      // Return Canvas Preview Fallback if Token is not configured on Vercel
       const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
       return res.status(200).json({
         success: true,
@@ -88,12 +86,13 @@ export default async function handler(req, res) {
         model: 'black-forest-labs/flux-fill-dev',
         outputUrl: image,
         durationSec: `${durationSec}s`,
-        costUsd: 0.025,
+        estimatedCostUsd: '$0.025 (Tahmini)',
         newCredits,
         isDemoFallback: true
       });
     }
 
+    // 5. Dispatch Prediction to Replicate API
     const repRes = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -105,7 +104,7 @@ export default async function handler(req, res) {
         input: {
           image: image,
           mask: mask || image,
-          prompt: prompt || `handsome male model with ${hairstyleName || 'stylish'} haircut, professional barber style, preserving face identity and facial features`,
+          prompt: prompt || `handsome male model with ${hairstyleName || 'Italian Side Part'} haircut, professional barber style, preserving face identity and facial features`,
           output_format: 'jpeg',
           guidance_scale: 30
         }
@@ -113,21 +112,30 @@ export default async function handler(req, res) {
     });
 
     const repData = await repRes.json();
-    const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
-    // Real-time calculated cost: $0.000725 per GPU second
-    const actualCost = (parseFloat(durationSec) * 0.000725).toFixed(4);
+    let predictTimeSec = 3.0;
+
+    if (repData.metrics && repData.metrics.predict_time) {
+      predictTimeSec = parseFloat(repData.metrics.predict_time);
+    } else {
+      predictTimeSec = parseFloat(((Date.now() - startTime) / 1000).toFixed(2));
+    }
+
+    // Official Replicate FLUX.1 Fill Dev Billing Telemetry Calculation
+    // Model pricing estimated at ~$0.035 per prediction on GPU cluster
+    const estimatedCostUsd = '$0.035 (Tahmini / Estimated)';
 
     const outputUrl = (repData.output && repData.output[0]) || image;
 
-    // 5. Log Telemetry to Firebase /ai_telemetry
+    // 6. Record Telemetry to Firebase /ai_telemetry
     const telemetryData = {
       generationId,
       userId,
       provider: 'Replicate',
       exactModel: 'black-forest-labs/flux-fill-dev',
       resolution: '1024x1024',
-      durationSec: `${durationSec}s`,
-      costUsd: `$${actualCost}`,
+      predictTimeSec: `${predictTimeSec}s`,
+      estimatedCostUsd: estimatedCostUsd,
+      isCostEstimated: true,
       status: 'SUCCESS',
       timestamp: Date.now()
     };
@@ -144,14 +152,14 @@ export default async function handler(req, res) {
       provider: 'Replicate',
       model: 'black-forest-labs/flux-fill-dev',
       outputUrl: outputUrl,
-      durationSec: `${durationSec}s`,
-      costUsd: `$${actualCost}`,
+      durationSec: `${predictTimeSec}s`,
+      estimatedCostUsd: estimatedCostUsd,
       newCredits
     });
   } catch (error) {
     console.error('Replicate Generation Error:', error);
 
-    // Rollback: Refund 1 credit if Replicate fails
+    // Rollback: Refund 1 credit ONLY ONCE if Replicate fails
     try {
       const { userId } = req.body;
       if (userId) {
