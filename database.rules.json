@@ -3,13 +3,60 @@
     "users": {
       "$uid": {
         ".read": "auth != null",
-        ".write": "auth != null && auth.uid === $uid && !newData.hasChild('aiCredits') && !newData.hasChild('aiCreditsUsed') && !newData.hasChild('role') && !newData.hasChild('subscription')",
-        "name": { ".validate": "newData.isString()" },
-        "phone": { ".validate": "newData.isString()" },
-        "language": { ".validate": "newData.isString()" }
+        ".write": "auth != null && auth.uid === $uid",
+        "aiCredits": {
+          ".write": false
+        },
+        "economyCredits": {
+          ".write": false
+        },
+        "premiumCredits": {
+          ".write": false
+        },
+        "aiStars": {
+          ".write": false
+        },
+        "lifetimeStarsEarned": {
+          ".write": false
+        },
+        "lifetimeStarsSpent": {
+          ".write": false
+        },
+        "dailyRewardedAds": {
+          ".write": false
+        },
+        "lastRewardDate": {
+          ".write": false
+        },
+        "role": {
+          ".write": false
+        },
+        "subscription": {
+          ".write": false
+        }
       }
     },
-    "ezostile_v5": {
+    "system_config": {
+      ".read": true,
+      ".write": false
+    },
+    "ai_telemetry": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "ai_refunds": {
+      ".read": false,
+      ".write": false
+    },
+    "ad_transactions": {
+      ".read": false,
+      ".write": false
+    },
+    "businesses": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "appointments": {
       ".read": true,
       ".write": "auth != null"
     }
