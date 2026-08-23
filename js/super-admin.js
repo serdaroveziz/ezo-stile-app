@@ -102,3 +102,38 @@ function toggleBusinessStatus(bizId) {
     renderApp();
   }
 }
+
+
+function upgradeBusinessPlan(bizId, newPlan) {
+  if (typeof state === 'undefined') return;
+  const adminPassword = state.adminPassword || '1405';
+
+  fetch('/api/admin-upgrade-plan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ businessId: bizId, newPlan: newPlan, adminPassword: adminPassword })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      const b = (state.businesses || []).find(x => x.id === bizId);
+      if (b) {
+        b.package = newPlan.toUpperCase();
+        b.subscription = data.subscription;
+      }
+      alert(`✅ İşletme paketi "${newPlan.toUpperCase()}" olarak başarıyla yükseltildi!`);
+      renderApp();
+    } else {
+      alert('⚠️ Yükseltme hatası: ' + (data.error || 'İşlem başarısız'));
+    }
+  })
+  .catch(err => {
+    console.warn('Fallback local upgrade:', err);
+    const b = (state.businesses || []).find(x => x.id === bizId);
+    if (b) {
+      b.package = newPlan.toUpperCase();
+      b.subscription = { plan: newPlan.toLowerCase(), status: 'active', startedAt: Date.now() };
+    }
+    renderApp();
+  });
+}

@@ -309,6 +309,7 @@
   <script src="./js/multi-tenant.js"></script>
   <script src="./js/super-admin.js"></script>
   <script src="./js/monetization.js"></script>
+  <script src="./js/subscription.js"></script>
 </head>
 <body>
   <!-- RECAPTCHA CONTAINER FOR FIREBASE REAL AUTOMATED SMS OTP -->
@@ -1997,6 +1998,50 @@ appName: 'EZO STİLE',
         `;
       }
 
+      
+      // 5. MY PACKAGE TAB (İŞLETME PAKETİM)
+      else if (state.adminTab === 'myPackage') {
+        const curBiz = (typeof DEFAULT_MAIN_BUSINESS !== 'undefined') ? DEFAULT_MAIN_BUSINESS : { name: 'EZO STİLE', package: 'Free' };
+        const staffCount = (state.staffList || []).filter(s => !s.isAny).length;
+        const maxLimit = (typeof getEmployeeLimit === 'function') ? getEmployeeLimit(curBiz) : 1;
+
+        html += `
+          <div class="animate-fade">
+            <div style="background: #070c1a; padding: 20px; border-radius: 16px; border: 1px solid var(--border-gold); margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <span class="badge badge-approved" style="font-weight: 700;">${(curBiz.package || 'FREE').toUpperCase()} PAKET</span>
+                  <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin: 4px 0 0;">${curBiz.name} Abonelik Durumu</h3>
+                </div>
+                <button onclick="openPlanComparisonModal()" class="btn btn-gold" style="min-height: 40px; font-size: 12px;">
+                  👑 Paketleri Karşılaştır / Yükselt
+                </button>
+              </div>
+
+              <!-- USAGE METERS -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 16px;">
+                <div style="background: rgba(15,23,42,0.8); padding: 14px; border-radius: 12px; border: 1px solid var(--border-color);">
+                  <div style="font-size: 11px; color: var(--text-muted);">Çalışan Kullanımı</div>
+                  <div style="font-size: 20px; font-weight: 700; color: var(--gold-primary); margin-top: 4px;">${staffCount} / ${maxLimit}</div>
+                  <div style="font-size: 10px; color: #34d399; margin-top: 2px;">${staffCount >= maxLimit ? '⚠️ Limite Ulaşıldı' : '✓ Kullanılabilir'}</div>
+                </div>
+
+                <div style="background: rgba(15,23,42,0.8); padding: 14px; border-radius: 12px; border: 1px solid var(--border-color);">
+                  <div style="font-size: 11px; color: var(--text-muted);">Gelişmiş İstatistikler</div>
+                  <div style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 4px;">${(typeof hasFeature === 'function' && hasFeature(curBiz, 'advancedAnalytics')) ? '🟢 AÇIK' : '🔒 Kapalı'}</div>
+                </div>
+
+                <div style="background: rgba(15,23,42,0.8); padding: 14px; border-radius: 12px; border: 1px solid var(--border-color);">
+                  <div style="font-size: 11px; color: var(--text-muted);">AI Saç Entegrasyonu</div>
+                  <div style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 4px;">${(typeof hasFeature === 'function' && hasFeature(curBiz, 'aiFeatures')) ? '🟢 AÇIK' : '🔒 Kapalı'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+
       container.innerHTML = html;
     }
 
@@ -2074,7 +2119,8 @@ appName: 'EZO STİLE',
               <div>
                 <div class="admin-group-title">👥 Personel & Raporlar</div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
-                  <button onclick="setAdminTab('staffManagement')" class="btn ${state.adminTab === 'staffManagement' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
+                  <button onclick="openPlanComparisonModal()" class="btn btn-outline-gold" style="min-height: 38px; font-size: 11px; margin-right: 6px;">👑 Paketim</button>
+            <button onclick="setAdminTab('staffManagement')" class="btn ${state.adminTab === 'staffManagement' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
                     <span>👥 Personel & Şifreler</span>
                   </button>
                   <button onclick="setAdminTab('revenueDashboard')" class="btn ${state.adminTab === 'revenueDashboard' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
@@ -4350,11 +4396,45 @@ appName: 'EZO STİLE',
     }
 
     
-    function handleAddNewStaff(e) {
+    async function handleAddNewStaff(e) {
       e.preventDefault();
       const name = document.getElementById('new-staff-name').value;
       const roleTitle = document.getElementById('new-staff-title').value || 'VIP Berber';
       if (!name) return;
+
+      const currentStaffCount = (state.staffList || []).filter(s => !s.isAny).length;
+      const currentBiz = (typeof DEFAULT_MAIN_BUSINESS !== 'undefined') ? DEFAULT_MAIN_BUSINESS : { id: 'ezo-stile-main', package: 'Free' };
+
+      // 1. Client-Side Centralized Limit Check
+      if (typeof getEmployeeLimit === 'function') {
+        const maxLimit = getEmployeeLimit(currentBiz);
+        if (currentStaffCount >= maxLimit) {
+          alert(`⚠️ ${currentBiz.name || 'Salonunuz'} için ${currentBiz.package || 'Free'} paket çalışan limitine (${maxLimit} çalışan) ulaştınız!\n\nYeni çalışan eklemek için lütfen paketinizi yükseltiniz.`);
+          if (typeof openPlanComparisonModal === 'function') openPlanComparisonModal();
+          return;
+        }
+      }
+
+      // 2. Serverless Function API Limit Check
+      try {
+        const checkRes = await fetch('/api/business-limits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessId: currentBiz.id || 'ezo-stile-main',
+            action: 'add_staff',
+            currentStaffCount: currentStaffCount
+          })
+        });
+        const checkData = await checkRes.json();
+        if (checkData && checkData.allowed === false) {
+          alert('⚠️ ' + (checkData.reason || 'Paket limitine ulaşıldı!'));
+          if (typeof openPlanComparisonModal === 'function') openPlanComparisonModal();
+          return;
+        }
+      } catch (err) {
+        console.warn('Serverless limit check fallback:', err);
+      }
 
       const newStaff = {
         id: 'staff-' + Date.now(),
