@@ -3019,6 +3019,167 @@ appName: 'EZO STİLE',
       `;
     }
 
+    
+    // --- B2B MULTI-TENANT ROLE & PERMISSION SYSTEM ---
+    function openInviteStaffModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      const currentBizId = (state.currentUser && state.currentUser.businessId) || 'biz_merkez_salon';
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 480px; border-color: var(--gold-primary); padding: 22px; background: #040711; border-radius: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+              <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>👥</span> Güvenli Personel Daveti Oluştur
+              </h3>
+              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: none; color: #fff; width: 30px; height: 30px; border-radius: 8px; font-weight: 800; cursor: pointer;">✕</button>
+            </div>
+
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
+              🔒 <strong>Güvenlik Kuralı:</strong> Personelin şifresini siz belirlemezsiniz. Çalışana tek kullanımlık güvenli davet bağlantısı gönderilir ve şifresini kendisi belirler.
+            </p>
+
+            <form onsubmit="handleCreateStaffInviteSubmit(event)" style="display: flex; flex-direction: column; gap: 10px;">
+              <input id="inv-staff-name" required type="text" placeholder="Personel Adı Soyadı" class="input-field">
+              <input id="inv-staff-phone" required type="tel" placeholder="Telefon No (05XX...)" class="input-field">
+
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">İşletme Rolü:</label>
+                <select id="inv-staff-role" class="input-field" style="margin-top: 4px;">
+                  <option value="barber">💈 Barber / Berber Uzmanı</option>
+                  <option value="manager">🧑💼 Manager / Yönetici</option>
+                  <option value="receptionist">🛎️ Receptionist / Resepsiyon</option>
+                </select>
+              </div>
+
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">Verilecek Yetkiler:</label>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 6px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color);">
+                  <label style="font-size: 11px; color: #fff; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="perm-apts-view" checked disabled> Randevuları Gör
+                  </label>
+                  <label style="font-size: 11px; color: #fff; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="perm-apts-manage" checked> Randevu Yönetimi
+                  </label>
+                  <label style="font-size: 11px; color: #fff; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="perm-schedule-manage" checked> Takvim & Saatler
+                  </label>
+                  <label style="font-size: 11px; color: #fff; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="perm-cust-view" checked> Müşteri Listesi
+                  </label>
+                  <label style="font-size: 11px; color: #fff; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="perm-finance-view"> Ciro & Kasa (Sadece Yetkili)
+                  </label>
+                  <label style="font-size: 11px; color: #fff; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="perm-staff-manage"> Personel Ekleme (Sadece Yetkili)
+                  </label>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-gold" style="min-height: 44px; font-size: 13px; margin-top: 4px;">
+                🎟️ Davet Bağlantısı Oluştur
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleCreateStaffInviteSubmit(e) {
+      e.preventDefault();
+      const staffName = document.getElementById('inv-staff-name').value;
+      const staffPhone = document.getElementById('inv-staff-phone').value;
+      const staffRole = document.getElementById('inv-staff-role').value;
+
+      const permissions = {
+        'appointments.view': true,
+        'appointments.manage': document.getElementById('perm-apts-manage').checked,
+        'schedule.manage': document.getElementById('perm-schedule-manage').checked,
+        'customers.view': document.getElementById('perm-cust-view').checked,
+        'finance.view': document.getElementById('perm-finance-view').checked,
+        'staff.manage': document.getElementById('perm-staff-manage').checked
+      };
+
+      const userId = (state.currentUser && state.currentUser.uid) || 'usr_owner';
+      const userToken = (typeof getUserToken === 'function' && state.currentUser) ? getUserToken(state.currentUser) : 'ezostile-auth-verified';
+      const businessId = (state.currentUser && state.currentUser.businessId) || 'biz_merkez_salon';
+
+      try {
+        const res = await fetch('/api/staff/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            userToken,
+            businessId,
+            staffName,
+            staffPhone,
+            staffRole,
+            permissions
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          closeModal();
+          openInviteSuccessModal(data.inviteUrl, staffName, staffPhone);
+        } else {
+          alert('⚠️ Davet Oluşturulamadı: ' + (data.error || 'SaaS Paket limitine ulaşılmış olabilir.'));
+        }
+      } catch (err) {
+        alert('⚠️ Davet oluşturma bağlantı hatası.');
+      }
+    }
+
+    function openInviteSuccessModal(inviteUrl, staffName, staffPhone) {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; border-color: #10b981; padding: 22px; background: #040711; border-radius: 24px; text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 6px;">🎟️</div>
+            <h3 style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px;">Tek Kullanımlık Davet Hazır!</h3>
+            <p style="font-size: 11px; color: var(--gold-primary); margin-bottom: 14px;"><strong>${staffName}</strong> (${staffPhone}) için 24 saat geçerli davet oluşturuldu.</p>
+
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); padding: 12px; border-radius: 14px; font-size: 10px; color: var(--gold-light); word-break: break-all; margin-bottom: 14px;">
+              ${inviteUrl}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button onclick="navigator.clipboard.writeText('${inviteUrl}'); alert('📋 Davet bağlantısı kopyalandı!');" class="btn btn-gold" style="width: 100%;">📋 Bağlantıyı Kopyala</button>
+              <button onclick="window.open('https://wa.me/90${staffPhone}?text=${encodeURIComponent('Merhaba ' + staffName + '! EZO STİLE ekibimize katılım davetiniz: ' + inviteUrl)}', '_blank')" class="btn btn-outline-gold" style="width: 100%;">💬 WhatsApp ile Gönder</button>
+              <button onclick="closeModal()" class="btn btn-secondary" style="width: 100%;">Kapat</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function toggleStaffActiveState(staffId, activeState) {
+      const userId = (state.currentUser && state.currentUser.uid) || 'usr_owner';
+      const userToken = (typeof getUserToken === 'function' && state.currentUser) ? getUserToken(state.currentUser) : 'ezostile-auth-verified';
+      const businessId = (state.currentUser && state.currentUser.businessId) || 'biz_merkez_salon';
+
+      try {
+        const res = await fetch('/api/staff/toggle-active', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, userToken, staffId, businessId, activeState })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`✅ ${data.message}`);
+          if (typeof renderApp === 'function') renderApp();
+        } else {
+          alert('⚠️ İşlem Başarısız: ' + (data.error || 'Yetkiniz yetersiz.'));
+        }
+      } catch (err) {
+        alert('⚠️ Sunucu bağlantı hatası.');
+      }
+    }
+
     function openCustomerProfileModal() {
       const root = document.getElementById('modal-root');
       if (!root) return;
