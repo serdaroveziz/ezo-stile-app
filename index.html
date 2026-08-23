@@ -82,35 +82,24 @@
         
         // If turning ON and permission not granted yet:
         if (!state.lockScreenNotifEnabled) {
-          if ('Notification' in window) {
+          if ('Notification' in window && Notification.permission !== 'granted') {
             Notification.requestPermission().then(permission => {
               if (permission === 'granted') {
                 state.lockScreenNotifEnabled = true;
                 localStorage.setItem('gc_lock_notif_enabled', 'true');
-                if (typeof triggerLockScreenNotification === 'function') {
-                  triggerLockScreenNotification('EZO STİLE VIP 💇‍♂️', '🔔 Kilitli ekran bildirimleri aktif edildi!');
-                }
-                alert('✅ Kilitli ekran bildirimleri başarıyla aktif edildi!');
               } else {
-                alert('⚠️ Cihazınızda bildirim izni verilemedi. Lütfen tarayıcı ayarlarından bildirimlere izin veriniz.');
                 state.lockScreenNotifEnabled = false;
                 localStorage.setItem('gc_lock_notif_enabled', 'false');
               }
               if (state.role === 'customer' && typeof openCustomerProfileModal === 'function') openCustomerProfileModal();
               else if (typeof openAdminProfileModal === 'function') openAdminProfileModal();
-            });
+            }).catch(() => {});
             return;
           }
         }
 
         state.lockScreenNotifEnabled = !state.lockScreenNotifEnabled;
         localStorage.setItem('gc_lock_notif_enabled', state.lockScreenNotifEnabled ? 'true' : 'false');
-
-        if (state.lockScreenNotifEnabled) {
-          if (typeof triggerLockScreenNotification === 'function') {
-            triggerLockScreenNotification('EZO STİLE VIP 💇‍♂️', '🔔 Kilitli ekran bildirimleri AÇIK konumuna getirildi!');
-          }
-        }
 
         if (state.role === 'customer') {
           if (typeof openCustomerProfileModal === 'function') openCustomerProfileModal();
