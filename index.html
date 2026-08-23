@@ -306,6 +306,8 @@
     .animate-fade { animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
   </style>
   <script src="./js/ai-consultant.js"></script>
+  <script src="./js/multi-tenant.js"></script>
+  <script src="./js/super-admin.js"></script>
 </head>
 <body>
   <!-- RECAPTCHA CONTAINER FOR FIREBASE REAL AUTOMATED SMS OTP -->
@@ -360,7 +362,12 @@
       </button>
     </div>
     <p>© 2026 EZO STİLE VIP Barber Studio. Tüm Hakları Saklıdır.</p>
-  </footer>
+  <div style="margin-top: 10px;">
+        <button onclick="openBusinessJoinModal()" class="btn btn-outline-gold" style="font-size: 11px; min-height: 32px; padding: 4px 12px;">
+          🏢 İşletme Olarak Katıl
+        </button>
+      </div>
+    </footer>
 
   <!-- MODAL CONTAINER -->
   <div id="modal-root"></div>
@@ -1337,6 +1344,63 @@ appName: 'EZO STİLE',
       };
       setCustomerTab('booking');
       alert(`✨ "${model.name}" saç modeli randevunuza bağlandı! Şimdi saat seçip onaylayabilirsiniz.`);
+    }
+
+    
+    function openBusinessJoinModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3 style="font-size: 17px; font-weight: 700; color: var(--gold-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>🏢</span> İşletme Olarak Katıl
+              </h3>
+              <button onclick="closeModal()" class="btn btn-secondary" style="min-height: 32px; width: 32px; padding: 0;">✕</button>
+            </div>
+            
+            <p class="text-muted" style="margin-bottom: 16px;">EZO STİLE platformuna kendi berber salonunuzu eklemek için formu doldurunuz.</p>
+
+            <form onsubmit="handleBusinessRegisterSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+              <input id="biz-reg-name" required type="text" placeholder="İşletme Adı (Örn: Makas VIP Berber)" class="input-field">
+              <input id="biz-reg-phone" required type="tel" placeholder="Yetkili Telefon No (05XX...)" class="input-field">
+              <input id="biz-reg-address" required type="text" placeholder="Adres / İlçe / Şehir" class="input-field">
+              <textarea id="biz-reg-desc" placeholder="İşletme Hakkında Kısa Bilgi" class="input-field" style="height: 70px; resize: none;"></textarea>
+
+              <button type="submit" class="btn btn-gold" style="min-height: 46px; font-size: 14px; margin-top: 4px;">
+                ✓ Başvuruyu Gönder
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleBusinessRegisterSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('biz-reg-name').value;
+      const phone = document.getElementById('biz-reg-phone').value;
+      const address = document.getElementById('biz-reg-address').value;
+      const description = document.getElementById('biz-reg-desc').value;
+
+      if (typeof registerNewBusiness === 'function') {
+        registerNewBusiness({ name, phone, address, description }, function(newBiz) {
+          closeModal();
+          alert(`✅ "${name}" başvurunuz başarıyla alındı! Süper Admin onayından sonra işletmeniz aktif edilecektir.`);
+        });
+      }
+    }
+
+    function loginAsSuperAdmin() {
+      const pwd = prompt('Lütfen Süper Admin Şifresini Giriniz:');
+      if (pwd === (state.adminPassword || '1405')) {
+        state.role = 'super_admin';
+        renderApp();
+      } else if (pwd !== null) {
+        alert('⚠️ Hatalı Süper Admin şifresi!');
+      }
     }
 
     function sanitizeState() {
