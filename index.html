@@ -305,6 +305,7 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade { animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
   </style>
+  <script src="./js/ai-consultant.js"></script>
 </head>
 <body>
   <!-- RECAPTCHA CONTAINER FOR FIREBASE REAL AUTOMATED SMS OTP -->
@@ -1277,6 +1278,67 @@ appName: 'EZO STİLE',
     }
     state.selectedStaffId = state.selectedStaffId || 'staff-any';
 
+    
+    function handleAiPhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        state.aiUserPhoto = e.target.result;
+        renderApp();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function selectAiOption(key, val) {
+      if (typeof state === 'undefined') return;
+      state[key] = val;
+      renderApp();
+    }
+
+    function runAiHairAnalysis() {
+      if (!state.aiUserPhoto) {
+        alert('⚠️ Lütfen önce kendi fotoğrafınızı yükleyiniz!');
+        return;
+      }
+      const style = state.aiStyle || 'İtalyan';
+      const length = state.aiLength || 'Kısa';
+      const pref = state.aiPref || 'Bakımı kolay olsun';
+
+      if (typeof generateAiRecommendations === 'function') {
+        state.aiResults = generateAiRecommendations(style, length, pref);
+        state.aiActivePreview = null;
+        renderApp();
+      }
+    }
+
+    function runTryOnAiModel(idx) {
+      if (!state.aiResults || !state.aiResults[idx] || !state.aiUserPhoto) return;
+      const model = state.aiResults[idx];
+      if (typeof processTryOnCanvas === 'function') {
+        processTryOnCanvas(state.aiUserPhoto, model, function(processedDataUrl) {
+          state.aiActivePreview = {
+            index: idx,
+            modelName: model.name,
+            imageUrl: processedDataUrl
+          };
+          renderApp();
+        });
+      }
+    }
+
+    function bookWithAiModel(idx) {
+      if (!state.aiResults || !state.aiResults[idx]) return;
+      const model = state.aiResults[idx];
+      state.selectedAiModel = {
+        name: model.name,
+        recipe: model.barberRecipe,
+        imageUrl: (state.aiActivePreview && state.aiActivePreview.index === idx) ? state.aiActivePreview.imageUrl : (state.aiUserPhoto || '')
+      };
+      setCustomerTab('booking');
+      alert(`✨ "${model.name}" saç modeli randevunuza bağlandı! Şimdi saat seçip onaylayabilirsiniz.`);
+    }
+
     function sanitizeState() {
       if (!state.adminPassword) state.adminPassword = localStorage.getItem('gc_admin_pwd') || '1405';
       if (!Array.isArray(state.managerPasswords) || state.managerPasswords.length === 0) {
@@ -1464,6 +1526,123 @@ appName: 'EZO STİLE',
               </div>
             </div>
             <button onclick="event.stopPropagation(); this.parentElement.remove();" class="btn btn-secondary" style="min-height: 32px; padding: 4px 10px; font-size: 11px;">✕ Kapat</button>
+          </div>
+        `;
+      }
+
+      
+      // --- AI SAÇ DANIŞMANI CARD COMPONENT ---
+      state.aiStyle = state.aiStyle || 'İtalyan';
+      state.aiLength = state.aiLength || 'Kısa';
+      state.aiPref = state.aiPref || 'Bakımı kolay olsun';
+
+      const styleBtns = ['İtalyan', 'Klasik', 'Modern', 'Sportif', 'Olgun', 'Doğal'].map(st => 
+        `<button onclick="selectAiOption('aiStyle', '${st}')" class="btn ${state.aiStyle === st ? 'btn-gold' : 'btn-secondary'}" style="min-height: 34px; padding: 4px 10px; font-size: 11px;">${st}</button>`
+      ).join('');
+
+      const lengthBtns = ['Kısa', 'Orta', 'Uzun'].map(len => 
+        `<button onclick="selectAiOption('aiLength', '${len}')" class="btn ${state.aiLength === len ? 'btn-gold' : 'btn-secondary'}" style="flex: 1; min-height: 34px; padding: 4px; font-size: 11px;">${len}</button>`
+      ).join('');
+
+      html += `
+        <div class="card card-gold animate-fade" style="margin-bottom: 20px; padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: 700; box-shadow: 0 4px 15px rgba(245,158,11,0.35);">
+                🤖
+              </div>
+              <div>
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--gold-primary); margin: 0;">AI Saç Danışmanı & Üzerimde Dene</h3>
+                <p class="text-muted" style="margin-top: 2px;">Fotoğrafını yükle, sana en uygun 3 saç modelini deneyelim!</p>
+              </div>
+            </div>
+            <span class="badge badge-approved" style="font-weight: 700;">PRO AI 2.0</span>
+          </div>
+
+          <!-- PHOTO UPLOAD & PREVIEW AREA -->
+          <div style="background: #070c1a; border-radius: 14px; border: 1px dashed var(--border-gold); padding: 16px; text-align: center; margin-bottom: 14px;">
+            ${state.aiUserPhoto ? `
+              <div style="position: relative; max-width: 200px; margin: 0 auto 12px;">
+                <img src="${state.aiUserPhoto}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 14px; border: 2px solid var(--gold-primary);" alt="Yüklenen Fotoğraf">
+                <button onclick="state.aiUserPhoto=null; state.aiResults=null; state.aiActivePreview=null; renderApp();" class="btn btn-danger" style="position: absolute; top: -8px; right: -8px; min-height: 28px; width: 28px; padding: 0; border-radius: 50%; font-size: 12px;">✕</button>
+              </div>
+            ` : `
+              <div style="font-size: 36px; margin-bottom: 6px;">📸</div>
+              <p style="font-size: 13px; color: #fff; font-weight: 600; margin-bottom: 4px;">Fotoğrafınızı Yükleyin</p>
+              <p class="text-muted" style="margin-bottom: 12px;">Yüzünüzün net göründüğü bir selfie/fotoğraf seçiniz</p>
+              <label class="btn btn-gold" style="cursor: pointer; display: inline-flex;">
+                📷 Fotoğraf Seç
+                <input type="file" accept="image/*" onchange="handleAiPhotoUpload(event)" style="display: none;">
+              </label>
+            `}
+          </div>
+
+          <!-- OPTIONS SELECTOR -->
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+            <!-- TARZ SEÇİMİ -->
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">İstediğiniz Tarz:</label>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+                ${styleBtns}
+              </div>
+            </div>
+
+            <!-- UZUNLUK SEÇİMİ -->
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">Saç Uzunluğu:</label>
+              <div style="display: flex; gap: 6px; margin-top: 6px;">
+                ${lengthBtns}
+              </div>
+            </div>
+          </div>
+
+          <button onclick="runAiHairAnalysis()" class="btn btn-gold" style="width: 100%; min-height: 46px; font-size: 14px;">
+            🤖 AI İle Saç Modellerini Analiz Et
+          </button>
+        </div>
+      `;
+
+      <!-- AI RESULTS PRESENTATION (TOP 3 MODELS) -->
+      if (state.aiResults && state.aiResults.length > 0) {
+        html += `
+          <div class="card card-gold animate-fade" style="margin-bottom: 20px; padding: 20px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--gold-primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+              <span>✨</span> Size En Uygun 3 Saç Modeli Önerisi
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              ${state.aiResults.map((m, idx) => {
+                const isPreviewActive = state.aiActivePreview && state.aiActivePreview.index === idx;
+                return `
+                  <div style="background: #070c1a; border-radius: 14px; border: 1px solid var(--border-gold); padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <h4 style="font-size: 15px; font-weight: 700; color: #fff;">${idx + 1}. ${m.name}</h4>
+                      <span class="badge badge-approved">${m.styleCategory} / ${m.lengthCategory}</span>
+                    </div>
+
+                    <p style="font-size: 12px; color: #34d399; font-weight: 600;">💡 <strong>Neden Size Uygun:</strong> ${m.reason}</p>
+                    <p style="font-size: 12px; color: #cbd5e1;">✂️ <strong>Kesim Detayı:</strong> ${m.haircutDetail}</p>
+                    <p style="font-size: 12px; color: var(--gold-primary);">💈 <strong>Berber Tarifi:</strong> ${m.barberRecipe}</p>
+
+                    ${isPreviewActive ? `
+                      <div style="margin-top: 8px; text-align: center; background: rgba(245,158,11,0.1); padding: 12px; border-radius: 12px; border: 1px solid var(--gold-primary);">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--gold-primary); margin-bottom: 6px;">📸 Fotoğrafınız Üzerinde Denendi:</div>
+                        <img src="${state.aiActivePreview.imageUrl}" style="max-width: 220px; width: 100%; height: 220px; object-fit: cover; border-radius: 12px; border: 2px solid var(--gold-primary);" alt="Simülasyon">
+                      </div>
+                    ` : ''}
+
+                    <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+                      <button onclick="runTryOnAiModel(${idx})" class="btn btn-outline-gold" style="flex: 1; min-height: 38px; font-size: 12px;">
+                        📸 Üzerimde Dene
+                      </button>
+                      <button onclick="bookWithAiModel(${idx})" class="btn btn-gold" style="flex: 1; min-height: 38px; font-size: 12px;">
+                        📅 Bu Modelle Randevu Al
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
         `;
       }
@@ -3053,7 +3232,9 @@ appName: 'EZO STİLE',
       }
 
       const selectedStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { id: 'staff-any', name: 'Fark Etmez' };
+      const aiModelInfo = state.selectedAiModel ? { aiModelName: state.selectedAiModel.name, aiRecipe: state.selectedAiModel.recipe } : {};
       const newApt = {
+        ...aiModelInfo,
         staffId: selectedStaffObj.id,
         staffName: selectedStaffObj.name,
         id: Date.now().toString(),
@@ -3424,7 +3605,9 @@ appName: 'EZO STİLE',
       const date = state.adminSelectedDate || state.selectedDate || getInitialBookingDate();
 
       const selectedStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { id: 'staff-any', name: 'Fark Etmez' };
+      const aiModelInfo = state.selectedAiModel ? { aiModelName: state.selectedAiModel.name, aiRecipe: state.selectedAiModel.recipe } : {};
       const newApt = {
+        ...aiModelInfo,
         staffId: selectedStaffObj.id,
         staffName: selectedStaffObj.name,
         id: Date.now().toString(),
