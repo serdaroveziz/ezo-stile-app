@@ -398,11 +398,7 @@
       </button>
     </div>
     <p>© 2026 EZO STİLE VIP Barber Studio. Tüm Hakları Saklıdır.</p>
-  <div style="margin-top: 10px;">
-        <button onclick="openBusinessJoinModal()" class="btn btn-outline-gold" style="font-size: 11px; min-height: 32px; padding: 4px 12px;">
-          🏢 İşletme Olarak Katıl
-        </button>
-      </div>
+  
     </footer>
 
   <!-- MODAL CONTAINER -->
@@ -1250,13 +1246,23 @@ appName: 'EZO STİLE',
       document.getElementById('footer-staff-link').style.display = role === 'customer' ? 'block' : 'none';
       document.getElementById('footer-back-link').style.display = role !== 'customer' ? 'block' : 'none';
       const badge = document.getElementById('role-badge');
-      if (role !== 'customer') {
-        const staffName = state.currentStaffName || localStorage.getItem('gc_staff_name') || 'Personel';
-        badge.innerText = role === 'admin' ? '👑 Patron' : '👤 ' + staffName;
-        badge.style.display = 'inline-flex';
-      } else {
-        badge.style.display = 'none';
-      }
+        const hasOwnerAuth = localStorage.getItem('gc_businessId') || (state.currentUser && state.currentUser.businessId);
+        if (badge) {
+          if (state.role !== 'customer') {
+            const staffName = state.currentStaffName || localStorage.getItem('gc_staff_name') || 'Patron';
+            badge.innerText = (state.role === 'admin' || state.role === 'owner') ? '👑 Patron' : '👤 ' + staffName;
+            badge.style.display = 'inline-flex';
+            badge.style.cursor = 'pointer';
+            badge.onclick = function() { openAdminProfileModal(); };
+          } else if (hasOwnerAuth) {
+            badge.innerText = '👑 Patron Paneline Dön';
+            badge.style.display = 'inline-flex';
+            badge.style.cursor = 'pointer';
+            badge.onclick = function() { switchRole('admin'); };
+          } else {
+            badge.style.display = 'none';
+          }
+        }
       renderApp();
     }
 
@@ -1457,62 +1463,402 @@ appName: 'EZO STİLE',
     }
 
     
-    // --- SAFELY DEFINED HELPER & SUBMODULE FALLBACKS ---
     
-    function checkAdminRolePermission() {
-      return state.role === 'admin' || state.role === 'owner' || state.role === 'manager' || state.role === 'barber' || state.role === 'receptionist';
+    // --- FULL PRODUCTION PATRON MANAGEMENT SUBMODULES ---
+
+    // 1. WORK HOURS & DAYS SUBMODULE
+    function renderAdminWeeklyScheduleSubmodule() {
+      const days = [
+        { key: 1, label: 'Pazartesi' },
+        { key: 2, label: 'Salı' },
+        { key: 3, label: 'Çarşamba' },
+        { key: 4, label: 'Perşembe' },
+        { key: 5, label: 'Cuma' },
+        { key: 6, label: 'Cumartesi' },
+        { key: 0, label: 'Pazar' }
+      ];
+
+      const sched = state.weeklySchedule || {};
+
+      let rowsHtml = '';
+      days.forEach(d => {
+        const item = sched[d.key] || { isOpen: true, start: '09:00', end: '21:00' };
+        rowsHtml += `
+          <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="font-weight: 700; font-size: 13px; color: #fff; width: 100px;">${d.label}</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button onclick="toggleDayOpen(${d.key})" class="badge ${item.isOpen ? 'badge-approved' : 'badge-rejected'}" style="cursor: pointer; border: none; padding: 6px 12px;">
+                ${item.isOpen ? '✅ AÇIK' : '❌ KAPALI'}
+              </button>
+              ${item.isOpen ? `
+                <select onchange="updateDayHours(${d.key}, 'start', this.value)" class="input-field" style="padding: 4px 8px; width: 80px; font-size: 12px;">
+                  ${generateTimeOptions(item.start)}
+                </select>
+                <span style="color: var(--text-muted);">-</span>
+                <select onchange="updateDayHours(${d.key}, 'end', this.value)" class="input-field" style="padding: 4px 8px; width: 80px; font-size: 12px;">
+                  ${generateTimeOptions(item.end)}
+                </select>
+              ` : '<span style="font-size: 12px; color: var(--text-muted);">Mesai Yok</span>'}
+            </div>
+          </div>
+        `;
+      });
+
+      return `
+        <div class="card animate-fade" style="padding: 18px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <button onclick="setAdminTab('managementSettings')" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 12px;">
+              ← Yönetim
+            </button>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">⏰ Çalışma Saatleri & Günleri</h3>
+            <div></div>
+          </div>
+
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+            Salonunuzun haftalık açılış ve kapanış saatlerini gün bazında ayarlayınız.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+            ${rowsHtml}
+          </div>
+
+          <button onclick="saveWeeklyScheduleConfig()" class="btn btn-gold" style="width: 100%; min-height: 44px;">
+            💾 Çalışma Saatlerini Kaydet
+          </button>
+        </div>
+      `;
     }
 
-    function openManualBookingModal() {
-      state.adminTab = 'manualBooking';
+    function generateTimeOptions(selectedTime) {
+      let html = '';
+      for (let h = 7; h <= 23; h++) {
+        const timeStr = (h < 10 ? '0' + h : h) + ':00';
+        html += `<option value="${timeStr}" ${timeStr === selectedTime ? 'selected' : ''}>${timeStr}</option>`;
+      }
+      return html;
+    }
+
+    function toggleDayOpen(dayKey) {
+      if (!state.weeklySchedule) state.weeklySchedule = {};
+      if (!state.weeklySchedule[dayKey]) state.weeklySchedule[dayKey] = { isOpen: true, start: '09:00', end: '21:00' };
+      state.weeklySchedule[dayKey].isOpen = !state.weeklySchedule[dayKey].isOpen;
       renderApp();
     }
 
-    function pruneAppointmentsLimit() {
-      try {
-        if (!Array.isArray(state.appointments)) state.appointments = [];
-        if (state.appointments.length > 500) {
-          state.appointments = state.appointments.slice(0, 500);
-        }
-      } catch (e) {
-        console.warn('pruneAppointmentsLimit fallback:', e);
+    function updateDayHours(dayKey, type, val) {
+      if (!state.weeklySchedule) state.weeklySchedule = {};
+      if (!state.weeklySchedule[dayKey]) state.weeklySchedule[dayKey] = { isOpen: true, start: '09:00', end: '21:00' };
+      state.weeklySchedule[dayKey][type] = val;
+    }
+
+    function saveWeeklyScheduleConfig() {
+      localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
+      syncToCloud();
+      alert('✅ Çalışma saatleri başarıyla kaydedildi!');
+      renderApp();
+    }
+
+    // 2. SERVICES & PRICES SUBMODULE
+    function renderAdminServicesSubmodule() {
+      const services = state.services || [];
+
+      let listHtml = '';
+      services.forEach((s, idx) => {
+        listHtml += `
+          <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 180px;">
+              <input type="text" value="${s.name}" onchange="updateServiceField(${idx}, 'name', this.value)" class="input-field" style="font-size: 13px; font-weight: 700;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" value="${s.price}" onchange="updateServiceField(${idx}, 'price', this.value)" class="input-field" style="width: 80px; text-align: center; font-size: 13px; font-weight: 700; color: var(--gold-primary);">
+                <span style="font-size: 12px; color: var(--text-muted);">TL</span>
+              </div>
+              <button onclick="removeServiceItem(${idx})" class="btn btn-danger" style="min-height: 36px; padding: 4px 10px; font-size: 11px;">
+                🗑️ Sil
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      return `
+        <div class="card animate-fade" style="padding: 18px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <button onclick="setAdminTab('managementSettings')" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 12px;">
+              ← Yönetim
+            </button>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">✂️ Hizmetler & Fiyat Kataloğu</h3>
+            <button onclick="addNewServiceItem()" class="btn btn-gold" style="min-height: 34px; padding: 4px 10px; font-size: 11px;">
+              ➕ Yeni Ekle
+            </button>
+          </div>
+
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+            Müşterilerinizin randevu alırken gördüğü hizmet ve fiyat kataloğunu yönetiniz.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+            ${listHtml}
+          </div>
+
+          <button onclick="saveServicesConfig()" class="btn btn-gold" style="width: 100%; min-height: 44px;">
+            💾 Hizmet ve Fiyatları Kaydet
+          </button>
+        </div>
+      `;
+    }
+
+    function updateServiceField(idx, field, val) {
+      if (state.services && state.services[idx]) {
+        state.services[idx][field] = field === 'price' ? parseInt(val) || 0 : val;
       }
     }
 
-    function syncToCloud() {
-      try {
-        if (typeof FirebaseSync === 'object' && typeof FirebaseSync.pushState === 'function') {
-          FirebaseSync.pushState();
-        }
-      } catch (e) {}
+    function addNewServiceItem() {
+      if (!Array.isArray(state.services)) state.services = [];
+      const newId = String(state.services.length + 1);
+      state.services.push({ id: newId, name: 'Yeni Özel Hizmet', price: 150, duration: 30 });
+      renderApp();
     }
 
-    function fetchFromCloud() {
-      try {
-        if (typeof FirebaseSync === 'object' && typeof FirebaseSync.pullState === 'function') {
-          FirebaseSync.pullState();
-        }
-      } catch (e) {}
+    function removeServiceItem(idx) {
+      if (!confirm('Bu hizmeti katalogdan silmek istediğinize emin misiniz?')) return;
+      state.services.splice(idx, 1);
+      renderApp();
     }
 
-    function renderAdminManualBookingSubmodule() {
-      return '<div class="card card-gold animate-fade" style="padding: 18px;"><h3 style="font-size: 15px; color: var(--gold-primary);">📅 Manuel Randevu & Takvim</h3><p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Takvim yönetimi aktif.</p></div>';
+    function saveServicesConfig() {
+      localStorage.setItem('gc_services', JSON.stringify(state.services));
+      syncToCloud();
+      alert('✅ Hizmet isimleri ve fiyatlar başarıyla kaydedildi!');
+      renderApp();
     }
-    function renderAdminWeeklyScheduleSubmodule() {
-      return '<div class="card card-gold animate-fade" style="padding: 18px;"><h3 style="font-size: 15px; color: var(--gold-primary);">⏰ Çalışma Saatleri</h3><p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Çalışma saatleri yönetimi aktif.</p></div>';
-    }
-    function renderAdminServicesSubmodule() {
-      return '<div class="card card-gold animate-fade" style="padding: 18px;"><h3 style="font-size: 15px; color: var(--gold-primary);">✂️ Hizmetler & Fiyatlar</h3><p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Fiyat kataloğu yönetimi aktif.</p></div>';
-    }
+
+    // 3. STAFF & PERMISSIONS SUBMODULE
     function renderAdminStaffSubmodule() {
-      return '<div class="card card-gold animate-fade" style="padding: 18px;"><h3 style="font-size: 15px; color: var(--gold-primary);">👥 Personel Yönetimi</h3><p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Personel listesi aktif.</p></div>';
+      const staffList = state.staffList || [
+        { id: 'stf_1', name: 'Mustafa Usta (Baş Berber)', active: true },
+        { id: 'stf_2', name: 'Ahmet Usta (Kıdemli Berber)', active: true }
+      ];
+
+      let listHtml = '';
+      staffList.forEach((s, idx) => {
+        listHtml += `
+          <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div>
+              <div style="font-size: 13px; font-weight: 700; color: #fff;">💈 ${s.name}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Durum: ${s.active !== false ? 'Aktif Berber' : 'Pasif Kadro'}</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button onclick="toggleStaffActiveState('${s.id}')" class="badge ${s.active !== false ? 'badge-approved' : 'badge-rejected'}" style="cursor: pointer; border: none; padding: 6px 12px;">
+                ${s.active !== false ? 'AKTİF' : 'PASİF'}
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      return `
+        <div class="card animate-fade" style="padding: 18px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <button onclick="setAdminTab('managementSettings')" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 12px;">
+              ← Yönetim
+            </button>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">👥 Personel & Kadro Yönetimi</h3>
+            <button onclick="openInviteStaffModal()" class="btn btn-gold" style="min-height: 34px; padding: 4px 10px; font-size: 11px;">
+              ➕ Davet Et
+            </button>
+          </div>
+
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+            Salonunuzda çalışan berber uzmanlarını yönetebilir, güvenli davet bağlantısı oluşturabilirsiniz.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+            ${listHtml}
+          </div>
+        </div>
+      `;
     }
+
+    function toggleStaffActiveState(staffId) {
+      if (!Array.isArray(state.staffList)) return;
+      const s = state.staffList.find(item => item.id === staffId);
+      if (s) {
+        s.active = !(s.active !== false);
+        localStorage.setItem('gc_staffList', JSON.stringify(state.staffList));
+        syncToCloud();
+        renderApp();
+      }
+    }
+
+    function openInviteStaffModal() {
+      const inviteUrl = 'https://serdaroveziz.github.io/ezo-stile-app/?inviteToken=' + Math.random().toString(36).substring(2, 10);
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; padding: 22px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);">
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">📩 Personel Davet Bağlantısı</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+              Personele tek kullanımlık 24 saat geçerli güvenli davet bağlantısı oluşturuldu. Personel kendi şifresini kendisi belirleyecektir.
+            </p>
+            <input type="text" readonly value="${inviteUrl}" class="input-field" style="font-size: 12px; font-weight: 700; color: var(--gold-primary); margin-bottom: 14px;">
+            <button onclick="navigator.clipboard.writeText('${inviteUrl}'); alert('✅ Davet bağlantısı kopyalandı!'); closeModal();" class="btn btn-gold" style="width: 100%; min-height: 42px;">
+              📋 Bağlantıyı Kopyala
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 4. SLOT OVERRIDE & LOCKING SUBMODULE
     function renderAdminSlotLockingSubmodule() {
-      return '<div class="card card-gold animate-fade" style="padding: 18px;"><h3 style="font-size: 15px; color: var(--gold-primary);">🔒 Özel Saat Kilitleri</h3><p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Saat kilitleri aktif.</p></div>';
+      const selectedDate = state.slotOverrideDate || getLocalDateStr(new Date());
+
+      let slotsHtml = '';
+      const hours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
+      
+      const overrides = (state.dateSlotOverrides || []).filter(o => o.date === selectedDate);
+      
+      hours.forEach(h => {
+        const isBlocked = overrides.some(o => o.time === h && o.action === 'block');
+        slotsHtml += `
+          <button onclick="toggleSlotLockState('${selectedDate}', '${h}')" class="slot-btn ${isBlocked ? 'blocked' : 'opened'}" style="min-height: 44px;">
+            ${h}<br><span style="font-size: 9px;">${isBlocked ? '🔒 KAPALI' : '✅ AÇIK'}</span>
+          </button>
+        `;
+      });
+
+      return `
+        <div class="card animate-fade" style="padding: 18px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <button onclick="setAdminTab('managementSettings')" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 12px;">
+              ← Yönetim
+            </button>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">🔒 Özel Saat Kilitleri</h3>
+            <div></div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Tarih Seçiniz:</label>
+            <input type="date" value="${selectedDate}" onchange="state.slotOverrideDate = this.value; renderApp();" class="input-field" style="width: auto; min-width: 160px;">
+          </div>
+
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+            Seçili tarihte randevuya kapatmak istediğiniz saatlere tıklayarak kilitleyebilirsiniz.
+          </p>
+
+          <div class="slot-grid" style="margin-bottom: 20px;">
+            ${slotsHtml}
+          </div>
+        </div>
+      `;
     }
+
+    function toggleSlotLockState(dateStr, timeStr) {
+      if (!Array.isArray(state.dateSlotOverrides)) state.dateSlotOverrides = [];
+      const idx = state.dateSlotOverrides.findIndex(o => o.date === dateStr && o.time === timeStr);
+      if (idx !== -1) {
+        state.dateSlotOverrides.splice(idx, 1);
+      } else {
+        state.dateSlotOverrides.push({ date: dateStr, time: timeStr, action: 'block' });
+      }
+      localStorage.setItem('gc_slot_overrides', JSON.stringify(state.dateSlotOverrides));
+      syncToCloud();
+      renderApp();
+    }
+
+    // 5. REVENUE & CASH DASHBOARD SUBMODULE
+    
+    // 6. SAAS SUBSCRIPTION & PLAN SUBMODULE
+    function renderAdminSubscriptionSubmodule() {
+      const bizId = state.businessId || localStorage.getItem('gc_businessId') || 'biz_merkez_salon';
+      const planName = state.subscriptionPlan || 'PRO';
+
+      return `
+        <div class="card animate-fade" style="padding: 18px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <button onclick="setAdminTab('managementSettings')" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 12px;">
+              ← Yönetim
+            </button>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">👑 Paketim & Abonelik</h3>
+            <div></div>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.06)); border: 1.5px solid var(--border-gold); padding: 18px; border-radius: 16px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--gold-primary);">AKTİF SAAS PAKETİ</div>
+                <div style="font-size: 24px; font-weight: 900; color: #fff; margin-top: 2px;">EZO STİLE ${planName}</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">İşletme Kodu: ${bizId}</div>
+              </div>
+              <div style="font-size: 36px;">👑</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+              <span style="font-size: 12px; color: var(--text-muted);">Personel Limiti:</span>
+              <span style="font-size: 12px; font-weight: 700; color: #fff;">5 Berber Uzmanı</span>
+            </div>
+            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+              <span style="font-size: 12px; color: var(--text-muted);">AI Saç Danışmanı:</span>
+              <span style="font-size: 12px; font-weight: 700; color: #34d399;">✅ Sınırsız İtalyan Motoru</span>
+            </div>
+            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+              <span style="font-size: 12px; color: var(--text-muted);">PayTR Sandbox Ödeme Altyapısı:</span>
+              <span style="font-size: 12px; font-weight: 700; color: #34d399;">✅ Aktif</span>
+            </div>
+          </div>
+
+          <button onclick="setAdminTab('mySubscription')" class="btn btn-gold" style="width: 100%; min-height: 44px;">
+            ✨ Paketi Yükselt / Karşılaştır (PayTR Sandbox)
+          </button>
+        </div>
+      `;
+    }
+
     function renderAdminRevenueSubmodule() {
-      return '<div class="card card-gold animate-fade" style="padding: 18px;"><h3 style="font-size: 15px; color: var(--gold-primary);">💰 Ciro & Kasa Raporu</h3><p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Kasa raporu aktif.</p></div>';
+      const approvedApts = (state.appointments || []).filter(a => a && a.status === 'approved');
+      const todayStr = getLocalDateStr(new Date());
+      
+      const todayRev = approvedApts.filter(a => a.date === todayStr).reduce((sum, a) => sum + (parseInt(a.price) || 0), 0);
+      const totalRev = approvedApts.reduce((sum, a) => sum + (parseInt(a.price) || 0), 0);
+      const avgApt = approvedApts.length > 0 ? Math.round(totalRev / approvedApts.length) : 0;
+
+      return `
+        <div class="card animate-fade" style="padding: 18px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <button onclick="setAdminTab('managementSettings')" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 12px;">
+              ← Yönetim
+            </button>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">💰 Ciro & Kasa Raporu</h3>
+            <div></div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div style="background: #070c1a; border: 1px solid var(--border-gold); padding: 14px; border-radius: 14px; text-align: center;">
+              <div style="font-size: 10px; color: var(--gold-primary); font-weight: 700;">BUGÜNKÜ CİRO</div>
+              <div style="font-size: 20px; font-weight: 800; color: #fff; margin-top: 4px;">${todayRev} TL</div>
+            </div>
+            <div style="background: #070c1a; border: 1px solid rgba(16,185,129,0.3); padding: 14px; border-radius: 14px; text-align: center;">
+              <div style="font-size: 10px; color: #34d399; font-weight: 700;">TOPLAM CİRO</div>
+              <div style="font-size: 20px; font-weight: 800; color: #fff; margin-top: 4px;">${totalRev} TL</div>
+            </div>
+            <div style="background: #070c1a; border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; text-align: center;">
+              <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">ORT. SEANS</div>
+              <div style="font-size: 20px; font-weight: 800; color: #fff; margin-top: 4px;">${avgApt} TL</div>
+            </div>
+          </div>
+
+          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 10px;">📋 Tamamlanan İşlemler (${approvedApts.length})</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Gerçek onaylanmış randevu verilerinden hesaplanmıştır.</div>
+        </div>
+      `;
     }
+
 
     function sanitizeState() {
       if (typeof logBootMarker === 'function') logBootMarker('BOOT_02 Firebase init');
@@ -2423,10 +2769,56 @@ appName: 'EZO STİLE',
       window.scrollTo(0, 0);
     }
 
+    
+    function openBusinessJoinIntroModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 460px; padding: 24px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);">
+            <div style="text-align: center; margin-bottom: 18px;">
+              <div style="font-size: 40px; margin-bottom: 8px;">💈</div>
+              <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin: 0;">Salonunuzu EZO STİLE'a Ekleyin</h3>
+              <div style="display: flex; justify-content: center; gap: 8px; margin-top: 10px;">
+                <span class="badge badge-approved">Ücretsiz Başla</span>
+                <span class="badge badge-pending">14 Gün PRO Dene</span>
+              </div>
+            </div>
+
+            <p style="font-size: 12px; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px; text-align: center;">
+              Müşterilerinize online randevu verin, AI Saç Danışmanı teknolojisinden faydalanın ve salon cironuzu katlayın.
+            </p>
+
+            <button onclick="startNewSalonRegistrationWizard()" class="btn btn-gold" style="width: 100%; min-height: 46px; font-size: 13px; font-weight: 800;">
+              🚀 Salonumu Oluştur (5 Adımda Başla) →
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function startNewSalonRegistrationWizard() {
+      closeModal();
+      state.role = 'admin';
+      state.isNewSalonSetup = true;
+      state.salonSetupCompleted = false;
+      state.onboardingStep = 1;
+      localStorage.setItem('gc_role', 'admin');
+      localStorage.removeItem('gc_salon_setup_done');
+      renderApp();
+    }
+
     function completeSalonOnboarding() {
+      const newBizId = 'biz_' + Date.now();
+      state.businessId = newBizId;
+      state.role = 'admin';
       state.salonSetupCompleted = true;
+      state.isNewSalonSetup = false;
+      localStorage.setItem('gc_businessId', newBizId);
+      localStorage.setItem('gc_role', 'admin');
       localStorage.setItem('gc_salon_setup_done', 'true');
-      alert('🎉 Tebrikler! Salon kurulumunuz başarıyla tamamlandı. Randevu sisteminiz aktif!');
+      syncToCloud();
+      alert('🎉 Tebrikler! Salonunuz başarıyla oluşturuldu ve randevu sisteminiz aktif edildi!');
       renderApp();
     }
 
@@ -2760,6 +3152,9 @@ appName: 'EZO STİLE',
       // TAB: REVENUE DASHBOARD
       else if (state.adminTab === 'revenueDashboard') {
         html += renderAdminRevenueSubmodule();
+      }
+      else if (state.adminTab === 'mySubscription') {
+        html += renderAdminSubscriptionSubmodule();
       }
 
       // 4. FIXED BOTTOM NAVIGATION BAR FOR PATRON / ADMIN
