@@ -44,6 +44,13 @@
     }
 
     function triggerLockScreenNotification(title, message) {
+      if (typeof state !== 'undefined') {
+        if (typeof state.lockScreenNotifEnabled === 'undefined') {
+          state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
+        }
+        if (state.lockScreenNotifEnabled === false) return;
+      }
+
       if ('Notification' in window && Notification.permission === 'granted') {
         const options = {
           body: message,
@@ -63,6 +70,52 @@
           });
         } else {
           try { new Notification(title, options); } catch(e) {}
+        }
+      }
+    }
+
+    function toggleLockScreenNotifications() {
+      if (typeof state !== 'undefined') {
+        if (typeof state.lockScreenNotifEnabled === 'undefined') {
+          state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
+        }
+        
+        // If turning ON and permission not granted yet:
+        if (!state.lockScreenNotifEnabled) {
+          if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') {
+                state.lockScreenNotifEnabled = true;
+                localStorage.setItem('gc_lock_notif_enabled', 'true');
+                if (typeof triggerLockScreenNotification === 'function') {
+                  triggerLockScreenNotification('EZO STİLE VIP 💇‍♂️', '🔔 Kilitli ekran bildirimleri aktif edildi!');
+                }
+                alert('✅ Kilitli ekran bildirimleri başarıyla aktif edildi!');
+              } else {
+                alert('⚠️ Cihazınızda bildirim izni verilemedi. Lütfen tarayıcı ayarlarından bildirimlere izin veriniz.');
+                state.lockScreenNotifEnabled = false;
+                localStorage.setItem('gc_lock_notif_enabled', 'false');
+              }
+              if (state.role === 'customer' && typeof openCustomerProfileModal === 'function') openCustomerProfileModal();
+              else if (typeof openAdminProfileModal === 'function') openAdminProfileModal();
+            });
+            return;
+          }
+        }
+
+        state.lockScreenNotifEnabled = !state.lockScreenNotifEnabled;
+        localStorage.setItem('gc_lock_notif_enabled', state.lockScreenNotifEnabled ? 'true' : 'false');
+
+        if (state.lockScreenNotifEnabled) {
+          if (typeof triggerLockScreenNotification === 'function') {
+            triggerLockScreenNotification('EZO STİLE VIP 💇‍♂️', '🔔 Kilitli ekran bildirimleri AÇIK konumuna getirildi!');
+          }
+        }
+
+        if (state.role === 'customer') {
+          if (typeof openCustomerProfileModal === 'function') openCustomerProfileModal();
+        } else {
+          if (typeof openAdminProfileModal === 'function') openAdminProfileModal();
         }
       }
     }
@@ -806,6 +859,11 @@
       }
       const isSoundOn = state.soundEnabled !== false;
 
+      if (typeof state.lockScreenNotifEnabled === 'undefined') {
+        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
+      }
+      const isLockNotifOn = state.lockScreenNotifEnabled !== false && isNotifPermissionGranted;
+
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
           <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
@@ -838,25 +896,26 @@
                 </div>
               </div>
 
-              <!-- 2. KİLİT EKRANI BİLDİRİM İZNİ -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isNotifPermissionGranted ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.3)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <!-- 2. KİLİT EKRANI BİLDİRİM AÇ / KAPAT TOGGLE -->
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
                     <span>🔔</span>
                     <span>${t('lockScreenNotifPerm')}</span>
                   </div>
-                  <div style="font-size: 10px; color: ${isNotifPermissionGranted ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
-                    ${isNotifPermissionGranted ? '🟢 İzin Verildi (Aktif Çalışıyor)' : '🔴 Bildirim İzni Verilmedi'}
+                  <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
+                    ${isLockNotifOn ? '🟢 Açık (Kilitli Ekrana Bildirim Gelir)' : '🔴 Kapalı (Bildirim Gönderilmez)'}
                   </div>
                 </div>
-                ${!isNotifPermissionGranted ? `
-                  <button onclick="requestNotifPermissionFromModal()" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900; white-space: nowrap;">🔔 İzin Ver</button>
-                ` : `
-                  <button onclick="requestNotifPermissionFromModal()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all 0.2s;">✅ İzinli (Test)</button>
-                `}
+                <button type="button" onclick="toggleLockScreenNotifications()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.25s; border: ${isLockNotifOn ? '1.5px solid #10b981' : '1.5px solid #475569'}; background: ${isLockNotifOn ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15))' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
+                  <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
+                  <div style="width: 24px; height: 14px; border-radius: 10px; background: ${isLockNotifOn ? '#10b981' : '#475569'}; position: relative; transition: all 0.2s;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: ${isLockNotifOn ? '12px' : '2px'}; transition: all 0.2s;"></div>
+                  </div>
+                </button>
               </div>
 
-              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE ANAHTARI -->
+              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE -->
               <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
@@ -1129,6 +1188,11 @@
       }
       const isSoundOn = state.soundEnabled !== false;
 
+      if (typeof state.lockScreenNotifEnabled === 'undefined') {
+        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
+      }
+      const isLockNotifOn = state.lockScreenNotifEnabled !== false && isNotifPermissionGranted;
+
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
           <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
@@ -1168,25 +1232,26 @@
                 </div>
               </div>
 
-              <!-- 2. KİLİT EKRANI BİLDİRİM İZNİ -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isNotifPermissionGranted ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.3)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <!-- 2. KİLİT EKRANI BİLDİRİM AÇ / KAPAT TOGGLE -->
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
                     <span>🔔</span>
-                    <span>${t('lockScreenNotifPerm')}</span>
+                    <span>Kilit Ekranı Bildirimi</span>
                   </div>
-                  <div style="font-size: 10px; color: ${isNotifPermissionGranted ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
-                    ${isNotifPermissionGranted ? '🟢 İzin Verildi (Aktif Çalışıyor)' : '🔴 Bildirim İzni Verilmedi'}
+                  <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
+                    ${isLockNotifOn ? '🟢 Açık (Kilitli Ekrana Bildirim Gelir)' : '🔴 Kapalı (Bildirim Gönderilmez)'}
                   </div>
                 </div>
-                ${!isNotifPermissionGranted ? `
-                  <button onclick="requestNotifPermissionFromModal()" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900; white-space: nowrap;">🔔 İzin Ver</button>
-                ` : `
-                  <button onclick="requestNotifPermissionFromModal()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all 0.2s;">✅ İzinli (Test)</button>
-                `}
+                <button type="button" onclick="toggleLockScreenNotifications()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.25s; border: ${isLockNotifOn ? '1.5px solid #10b981' : '1.5px solid #475569'}; background: ${isLockNotifOn ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15))' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
+                  <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
+                  <div style="width: 24px; height: 14px; border-radius: 10px; background: ${isLockNotifOn ? '#10b981' : '#475569'}; position: relative; transition: all 0.2s;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: ${isLockNotifOn ? '12px' : '2px'}; transition: all 0.2s;"></div>
+                  </div>
+                </button>
               </div>
 
-              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE ANAHTARI -->
+              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE -->
               <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
@@ -3537,6 +3602,11 @@
       }
       const isSoundOn = state.soundEnabled !== false;
 
+      if (typeof state.lockScreenNotifEnabled === 'undefined') {
+        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
+      }
+      const isLockNotifOn = state.lockScreenNotifEnabled !== false && isNotifPermissionGranted;
+
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
           <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
@@ -3569,25 +3639,26 @@
                 </div>
               </div>
 
-              <!-- 2. KİLİT EKRANI BİLDİRİM İZNİ -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isNotifPermissionGranted ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.3)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <!-- 2. KİLİT EKRANI BİLDİRİM AÇ / KAPAT TOGGLE -->
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
                     <span>🔔</span>
                     <span>${t('lockScreenNotifPerm')}</span>
                   </div>
-                  <div style="font-size: 10px; color: ${isNotifPermissionGranted ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
-                    ${isNotifPermissionGranted ? '🟢 İzin Verildi (Aktif Çalışıyor)' : '🔴 Bildirim İzni Verilmedi'}
+                  <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
+                    ${isLockNotifOn ? '🟢 Açık (Kilitli Ekrana Bildirim Gelir)' : '🔴 Kapalı (Bildirim Gönderilmez)'}
                   </div>
                 </div>
-                ${!isNotifPermissionGranted ? `
-                  <button onclick="requestNotifPermissionFromModal()" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900; white-space: nowrap;">🔔 İzin Ver</button>
-                ` : `
-                  <button onclick="requestNotifPermissionFromModal()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all 0.2s;">✅ İzinli (Test)</button>
-                `}
+                <button type="button" onclick="toggleLockScreenNotifications()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.25s; border: ${isLockNotifOn ? '1.5px solid #10b981' : '1.5px solid #475569'}; background: ${isLockNotifOn ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15))' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
+                  <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
+                  <div style="width: 24px; height: 14px; border-radius: 10px; background: ${isLockNotifOn ? '#10b981' : '#475569'}; position: relative; transition: all 0.2s;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: ${isLockNotifOn ? '12px' : '2px'}; transition: all 0.2s;"></div>
+                  </div>
+                </button>
               </div>
 
-              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE ANAHTARI -->
+              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE -->
               <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
@@ -3680,6 +3751,11 @@
       }
       const isSoundOn = state.soundEnabled !== false;
 
+      if (typeof state.lockScreenNotifEnabled === 'undefined') {
+        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
+      }
+      const isLockNotifOn = state.lockScreenNotifEnabled !== false && isNotifPermissionGranted;
+
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
           <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
@@ -3719,25 +3795,26 @@
                 </div>
               </div>
 
-              <!-- 2. KİLİT EKRANI BİLDİRİM İZNİ -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isNotifPermissionGranted ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.3)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <!-- 2. KİLİT EKRANI BİLDİRİM AÇ / KAPAT TOGGLE -->
+              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
                     <span>🔔</span>
-                    <span>${t('lockScreenNotifPerm')}</span>
+                    <span>Kilit Ekranı Bildirimi</span>
                   </div>
-                  <div style="font-size: 10px; color: ${isNotifPermissionGranted ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
-                    ${isNotifPermissionGranted ? '🟢 İzin Verildi (Aktif Çalışıyor)' : '🔴 Bildirim İzni Verilmedi'}
+                  <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
+                    ${isLockNotifOn ? '🟢 Açık (Kilitli Ekrana Bildirim Gelir)' : '🔴 Kapalı (Bildirim Gönderilmez)'}
                   </div>
                 </div>
-                ${!isNotifPermissionGranted ? `
-                  <button onclick="requestNotifPermissionFromModal()" class="gold-btn" style="padding: 8px 12px; font-size: 11px; font-weight: 900; white-space: nowrap;">🔔 İzin Ver</button>
-                ` : `
-                  <button onclick="requestNotifPermissionFromModal()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all 0.2s;">✅ İzinli (Test)</button>
-                `}
+                <button type="button" onclick="toggleLockScreenNotifications()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.25s; border: ${isLockNotifOn ? '1.5px solid #10b981' : '1.5px solid #475569'}; background: ${isLockNotifOn ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15))' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
+                  <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
+                  <div style="width: 24px; height: 14px; border-radius: 10px; background: ${isLockNotifOn ? '#10b981' : '#475569'}; position: relative; transition: all 0.2s;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: ${isLockNotifOn ? '12px' : '2px'}; transition: all 0.2s;"></div>
+                  </div>
+                </button>
               </div>
 
-              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE ANAHTARI -->
+              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE -->
               <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
