@@ -11,7 +11,7 @@
       console.log('⚡ [' + marker + '] @ ' + new Date().toLocaleTimeString());
       var diagEl = document.getElementById('boot-diagnostic-badge');
       if (diagEl) {
-        diagEl.innerText = 'Build: 723becb | SW: v1.0.53 | ' + marker;
+        diagEl.innerText = 'Build: ec8eb27 | SW: v1.0.53 | ' + marker;
       }
     }
 
@@ -21,7 +21,7 @@
         var mainEl = document.getElementById('main-app');
         if (mainEl && mainEl.innerText && mainEl.innerText.includes('Randevu Sistemi Yükleniyor')) {
           console.warn('[EARLY BOOT GUARD] App boot exceeded 8s timeout limit. Rendering Fallback Recovery Card.');
-          mainEl.innerHTML = '<div class="card card-gold text-center animate-fade" style="max-width: 440px; margin: 30px auto; padding: 26px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);"><div style="font-size: 44px; margin-bottom: 10px;">📡</div><h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px;">İşletme Bilgileri Yüklenemedi</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Sunucuyla bağlantı kurulurken zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p><div style="display: flex; flex-direction: column; gap: 10px;"><button onclick="location.reload()" class="btn btn-gold" style="width: 100%; min-height: 44px; font-size: 13px;">🔄 Yeniden Dene</button><button onclick="localStorage.setItem(\'gc_role\', \'customer\'); location.reload();" class="btn btn-outline-gold" style="width: 100%; min-height: 40px; font-size: 12px;">← Müşteri Ekranına Dön</button></div><div style="font-size: 10px; color: #64748b; margin-top: 14px;">Build: 723becb | SW: v1.0.50 | Last: ' + (window.EZO_LAST_MARKER || 'BOOT_TIMEOUT') + '</div></div>';
+          mainEl.innerHTML = '<div class="card card-gold text-center animate-fade" style="max-width: 440px; margin: 30px auto; padding: 26px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);"><div style="font-size: 44px; margin-bottom: 10px;">📡</div><h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px;">İşletme Bilgileri Yüklenemedi</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Sunucuyla bağlantı kurulurken zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p><div style="display: flex; flex-direction: column; gap: 10px;"><button onclick="location.reload()" class="btn btn-gold" style="width: 100%; min-height: 44px; font-size: 13px;">🔄 Yeniden Dene</button><button onclick="localStorage.setItem(\'gc_role\', \'customer\'); location.reload();" class="btn btn-outline-gold" style="width: 100%; min-height: 40px; font-size: 12px;">← Müşteri Ekranına Dön</button></div><div style="font-size: 10px; color: #64748b; margin-top: 14px;">Build: ec8eb27 | SW: v1.0.50 | Last: ' + (window.EZO_LAST_MARKER || 'BOOT_TIMEOUT') + '</div></div>';
         }
       }, 8000);
     })();
@@ -380,7 +380,7 @@
       <h2 style="font-size: 22px; font-weight: 900; color: var(--gold-primary);">EZO STİLE VIP</h2>
       <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Randevu Sistemi Yükleniyor...</p>
       <div id="boot-diagnostic-badge" style="font-size: 10px; font-weight: 600; color: var(--gold-primary); margin-top: 10px; background: rgba(245,158,11,0.08); padding: 4px 10px; border-radius: 8px; display: inline-block; border: 1px solid var(--border-gold);">
-        Build: 723becb | SW: v1.0.50 | BOOT_00 Head Init
+        Build: ec8eb27 | SW: v1.0.50 | BOOT_00 Head Init
       </div>
     </div>
   </main>
