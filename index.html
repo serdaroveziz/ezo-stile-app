@@ -308,6 +308,7 @@
   <script src="./js/ai-consultant.js"></script>
   <script src="./js/multi-tenant.js"></script>
   <script src="./js/super-admin.js"></script>
+  <script src="./js/monetization.js"></script>
 </head>
 <body>
   <!-- RECAPTCHA CONTAINER FOR FIREBASE REAL AUTOMATED SMS OTP -->
@@ -1304,6 +1305,7 @@ appName: 'EZO STİLE',
     }
 
     function runAiHairAnalysis() {
+      if (typeof useAiCredit === 'function' && !useAiCredit()) return;
       if (!state.aiUserPhoto) {
         alert('⚠️ Lütfen önce kendi fotoğrafınızı yükleyiniz!');
         return;
@@ -1620,7 +1622,14 @@ appName: 'EZO STİLE',
                 <p class="text-muted" style="margin-top: 2px;">Fotoğrafını yükle, sana en uygun 3 saç modelini deneyelim!</p>
               </div>
             </div>
-            <span class="badge badge-approved" style="font-weight: 700;">PRO AI 2.0</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge badge-approved" style="font-weight: 700; font-size: 11px;">
+                ✨ AI Hak: ${typeof getCustomerAiCredits === 'function' ? getCustomerAiCredits() : 3}
+              </span>
+              <button onclick="watchRewardAd()" class="btn btn-gold" style="min-height: 28px; padding: 2px 8px; font-size: 10px;">
+                🎬 +1 Hak Kazan
+              </button>
+            </div>
           </div>
 
           <!-- PHOTO UPLOAD & PREVIEW AREA -->
