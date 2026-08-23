@@ -2421,6 +2421,12 @@ appName: 'EZO STİLE',
                   <div style="font-weight: 700; font-size: 14px; color: #fff;">👤 ${a.customerName}</div>
                   <div style="font-size: 12px; color: var(--gold-primary); font-weight: 600; margin-top: 2px;">📞 ${a.customerPhone}</div>
                   <div style="font-size: 13px; color: #fff; margin-top: 6px; font-weight: 600;">📌 ${a.serviceName}</div>
+                  ${a.aiModelName ? `
+                    <div style="background: rgba(245,158,11,0.1); border: 1px solid var(--border-gold); border-radius: 8px; padding: 6px 10px; margin-top: 6px;">
+                      <div style="font-size: 11px; font-weight: 700; color: var(--gold-primary);">✨ AI Seçilen Saç Modeli: ${a.aiModelName}</div>
+                      <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">💈 Berber Tarifi: ${a.aiRecipe || 'Özel Kesim'}</div>
+                    </div>
+                  ` : ''}
                   <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
                 </div>
 
@@ -4621,6 +4627,24 @@ appName: 'EZO STİLE',
       const apt = state.appointments.find(a => a.id === id);
       if (apt) {
         apt.status = 'approved';
+
+        // GRANT +2 ECONOMY AI CREDITS BONUS EXACTLY ONCE PER APPOINTMENT
+        if (!apt.bonusGranted) {
+          apt.bonusGranted = true;
+          const custPhone = apt.customerPhone || (state.currentUser && state.currentUser.phone);
+          if (state.currentUser && state.currentUser.phone === custPhone) {
+            state.currentUser.economyCredits = (state.currentUser.economyCredits || 0) + 2;
+          }
+          const dbUrl = 'https://ezostile-barber-default-rtdb.europe-west1.firebasedatabase.app';
+          if (custPhone) {
+            fetch(`${dbUrl}/users/usr_${custPhone}.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ economyCredits: ((state.currentUser && state.currentUser.economyCredits) || 2) })
+            }).catch(e => console.warn('+2 Bonus error:', e));
+          }
+        }
+
         localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
 
         const notif = {
