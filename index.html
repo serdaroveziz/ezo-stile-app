@@ -310,6 +310,7 @@
   <script src="./js/super-admin.js"></script>
   <script src="./js/monetization.js"></script>
   <script src="./js/subscription.js"></script>
+  <script src="./js/ai-production.js"></script>
 </head>
 <body>
   <!-- RECAPTCHA CONTAINER FOR FIREBASE REAL AUTOMATED SMS OTP -->
@@ -1709,7 +1710,7 @@ appName: 'EZO STİLE',
                     ` : ''}
 
                     <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
-                      <button onclick="runTryOnAiModel(${idx})" class="btn btn-outline-gold" style="flex: 1; min-height: 38px; font-size: 12px;">
+                      <button id="try-on-btn-${idx}" onclick="executeProductionTryOn(${idx})" class="btn btn-outline-gold" style="flex: 1; min-height: 38px; font-size: 12px;">
                         📸 Üzerimde Dene
                       </button>
                       <button onclick="bookWithAiModel(${idx})" class="btn btn-gold" style="flex: 1; min-height: 38px; font-size: 12px;">
