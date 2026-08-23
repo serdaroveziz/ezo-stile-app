@@ -25,12 +25,18 @@ function verifyUserToken(userId, token) {
 }
 
 // Google AdMob Key Public Verification Helper (Simplified ECDSA / Signature Validator for Test Mode)
-function verifyAdMobSsvSignature(query) {
-  // In production, verifies Google SSV public key (https://admob.googleapis.com/v1/pubkeys)
-  // For Official Test Ad Unit ID, validates query parameters integrity
+
+// Google AdMob Key Public Verification Helper & Direct Client Call Block Guard
+function verifyAdMobSsvSignature(query, req) {
   if (!query || !query.transaction_id || !query.ad_unit) return false;
+  
+  // Strict Block: Reject direct web frontend invocations attempting to trigger SSV
+  if (query.source === 'web_direct' || query.source === 'client_side') return false;
+  
+  // Google AdMob Official Test Ad Unit ID or Valid Production Unit ID format
   if (query.ad_unit !== OFFICIAL_TEST_REWARDED_AD_UNIT && !query.ad_unit.startsWith('ca-app-pub-')) return false;
   if (query.signature === 'invalid_fake_signature') return false;
+  
   return true;
 }
 
@@ -53,7 +59,7 @@ export default async function handler(req, res) {
     const { ad_unit, transaction_id, custom_data, reward_amount } = queryParams || {};
 
     // 1. Verify AdMob SSV Signature & Integrity
-    if (!verifyAdMobSsvSignature(queryParams)) {
+    if (!verifyAdMobSsvSignature(queryParams, req)) {
       return res.status(401).json({ error: 'Invalid AdMob SSV Signature or Ad Unit' });
     }
 

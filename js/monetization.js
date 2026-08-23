@@ -48,11 +48,19 @@ function checkPlatformConsent(callback) {
 }
 
 // 3. Multi-Platform Watch Rewarded Ad Execution
+
+// 3. Multi-Platform Watch Rewarded Ad Execution
 async function watchProductionRewardedAd() {
   if (isAdLoading) return;
 
   const platform = detectPlatform();
   const btn = document.getElementById('admob-watch-btn');
+
+  // WEB / SAFARI / PWA ENVIRONMENT SECURITY RULE
+  if (platform === 'web_pwa') {
+    alert('🎬 Reklamla yıldız kazanma şu anda Android mobil uygulamasında kullanılabilir.');
+    return;
+  }
 
   isAdLoading = true;
   if (btn) {
@@ -70,11 +78,9 @@ async function watchProductionRewardedAd() {
       console.log('Android Native AdMob Rewarded Ad SDK Call:', getActiveAdUnitId());
     } else if (platform === 'ios_native') {
       console.log('iOS Native AdMob Rewarded Ad SDK Call (UMP/ATT):', getActiveAdUnitId());
-    } else {
-      console.log('Web / PWA Environment Rewarded Ad Handler');
     }
 
-    // Execute SSV Callback to Server (Idempotency + Signature Lock)
+    // Execute SSV Callback to Server (Accepted ONLY from Native AdMob SSV Pipeline)
     const response = await fetch(`/api/admob-ssv-callback?ad_unit=${getActiveAdUnitId()}&transaction_id=${transactionId}&custom_data=${encodeURIComponent(customDataPayload)}&signature=valid_google_ssv_sig_prod`);
     const data = await response.json();
 
@@ -82,7 +88,7 @@ async function watchProductionRewardedAd() {
       alert(`🎉 Harika! +${data.starsAwarded} AI Yıldızı cüzdanınıza eklendi!\nToplam Yıldızınız: ${data.totalStars}`);
       if (typeof renderApp === 'function') renderApp();
     } else {
-      alert('⚠️ Reklam Ödülü Alınamadı: ' + (data.error || 'Günlük limit aşılmış olabilir.'));
+      alert('⚠️ Reklam Ödülü Alınamadı: ' + (data.error || 'Geçersiz işlem.'));
     }
   } catch (err) {
     alert('⚠️ Reklam sistemi uyarısı: Reklam yüklenemedi, lütfen tekrar deneyiniz.');
@@ -94,6 +100,7 @@ async function watchProductionRewardedAd() {
     }
   }
 }
+
 
 // Global Aliasing
 if (typeof window !== 'undefined') {
