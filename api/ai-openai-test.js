@@ -23,6 +23,23 @@ function verifyUserToken(userId, token) {
   }
 }
 
+// Calculate OpenAI Total Estimated Cost (Input Vision Tokens + Text Prompt + Output Image)
+function calculateOpenAiTotalCost(modelName, quality = 'medium') {
+  if (modelName === 'gpt-image-2') {
+    // Quality Candidate: Input vision tokens ($0.005) + Text ($0.001) + Output Image ($0.040) = $0.046
+    return '$0.046 (Input Token: $0.006 + Output: $0.040)';
+  } else if (modelName === 'gpt-image-1-mini') {
+    if (quality === 'high') {
+      // Mini High: Input ($0.003) + Output ($0.015) = $0.018
+      return '$0.018 (Input Token: $0.003 + Output: $0.015)';
+    } else {
+      // Mini Medium: Input ($0.002) + Output ($0.008) = $0.010
+      return '$0.010 (Input Token: $0.002 + Output: $0.008)';
+    }
+  }
+  return '$0.020 (Tahmini)';
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -45,7 +62,7 @@ export default async function handler(req, res) {
   const generationId = 'gen_oai_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 
   try {
-    const { userId, userToken, image, prompt, hairstyleName } = req.body;
+    const { userId, userToken, image, prompt, hairstyleName, modelName, quality } = req.body;
 
     if (!userId || !userToken || !image) {
       return res.status(400).json({ error: 'Missing required parameters (userId, userToken, image)' });
@@ -57,6 +74,9 @@ export default async function handler(req, res) {
     }
 
     const openAiApiKey = process.env.OPENAI_API_KEY;
+    const selectedModel = modelName || 'gpt-image-2';
+    const selectedQuality = quality || 'medium';
+    const estimatedTotalCostUsd = calculateOpenAiTotalCost(selectedModel, selectedQuality);
 
     // 2. Fallback if OPENAI_API_KEY is not defined on Vercel
     if (!openAiApiKey) {
@@ -66,11 +86,12 @@ export default async function handler(req, res) {
         predictionId: 'oai_edit_demo_' + Date.now(),
         userId,
         provider: 'OpenAI',
-        exactModel: 'dall-e-2 (images/edits)',
+        exactModel: selectedModel,
+        quality: selectedQuality,
         outputCount: 1,
         inputResolution: '1024x1024',
         userWaitTimeSec: `${userWaitTimeSec}s (Vercel HTTP)`,
-        estimatedCostUsd: '$0.020 (Resmi Model Fiyatı / Official OpenAI Price)',
+        estimatedTotalCostUsd: estimatedTotalCostUsd,
         isCostEstimated: true,
         status: 'SUCCESS',
         isDemoFallback: true,
@@ -84,18 +105,19 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3. Dispatch to OpenAI Images Edit API
-    const openAiRes = await fetch('https://api.openai.com/v1/images/edits', {
+    // 3. Dispatch to OpenAI Images API
+    const openAiRes = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAiApiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'dall-e-2',
+        model: selectedModel,
         prompt: prompt || `handsome male model with clean ${hairstyleName || 'Italian Side Part'} haircut, professional barber style, natural hair texture, preserving face identity and facial features`,
         n: 1,
         size: '1024x1024',
+        quality: selectedQuality,
         response_format: 'url'
       })
     });
@@ -109,11 +131,12 @@ export default async function handler(req, res) {
       predictionId: 'oai_edit_' + Date.now(),
       userId,
       provider: 'OpenAI',
-      exactModel: 'dall-e-2 (images/edits)',
+      exactModel: selectedModel,
+      quality: selectedQuality,
       outputCount: 1,
       inputResolution: '1024x1024',
       userWaitTimeSec: `${userWaitTimeSec}s`,
-      estimatedCostUsd: '$0.020 (Resmi OpenAI Fiyatı / Official Price)',
+      estimatedTotalCostUsd: estimatedTotalCostUsd,
       isCostEstimated: true,
       status: openAiData.error ? 'FAILED' : 'SUCCESS',
       createdAt: new Date().toISOString()
