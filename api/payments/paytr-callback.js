@@ -63,7 +63,67 @@ export default async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
-    // 4. Handle Chargeback / Dispute Notification
+    // 4. Handle B2B Salon Subscription Payments
+    if (paymentData.type === 'b2b_subscription' && status === 'success') {
+      const businessId = paymentData.businessId;
+      const targetPlan = paymentData.targetPlan || 'pro';
+      const billingPeriod = paymentData.billingPeriod || 'monthly';
+
+      const durationMs = billingPeriod === 'yearly' ? 365 * 86400000 : 30 * 86400000;
+      const subStart = Date.now();
+      const subEnd = subStart + durationMs;
+
+      // Update Salon Subscription Record
+      await fetch(`${firebaseDatabaseUrl}/businesses/${businessId}/subscription.json`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: targetPlan,
+          subscriptionStatus: 'active',
+          subscriptionStart: subStart,
+          subscriptionEnd: subEnd,
+          billingPeriod,
+          paymentProvider: 'paytr',
+          lastPaymentId: merchant_oid,
+          autoRenew: true,
+          gracePeriodDays: 5,
+          aiMonthlyQuota: targetPlan === 'premium' ? 200 : 50,
+          aiQuotaUsed: 0,
+          updatedAt: subStart
+        })
+      });
+
+      // Mark Payment as Completed & Verified
+      await fetch(`${firebaseDatabaseUrl}/payments/${merchant_oid}.json`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'success',
+          creditsGranted: true,
+          completedAt: subStart,
+          providerTransactionId: `paytr_sub_tx_${Date.now()}`
+        })
+      });
+
+      // Log SaaS Telemetry Metrics
+      const telemetryRes = await fetch(`${firebaseDatabaseUrl}/ai_telemetry/saas_summary.json`);
+      const curSaas = (await telemetryRes.json()) || {};
+      const isProd = isProduction;
+
+      await fetch(`${firebaseDatabaseUrl}/ai_telemetry/saas_summary.json`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          totalSubscriptions: (curSaas.totalSubscriptions || 0) + 1,
+          testSaasSales: !isProd ? ((curSaas.testSaasSales || 0) + paymentData.amount) : (curSaas.testSaasSales || 0),
+          realSaasSales: isProd ? ((curSaas.realSaasSales || 0) + paymentData.amount) : (curSaas.realSaasSales || 0)
+        })
+      });
+
+      return res.status(200).send('OK');
+    }
+
+    // 5. Handle Chargeback / Dispute Notification
     if (status === 'disputed' || status === 'chargeback') {
       const userId = paymentData.userId;
       const creditType = paymentData.creditType || 'economyCredits';
@@ -78,64 +138,36 @@ export default async function handler(req, res) {
         })
       });
 
-      // Write Ledger Freeze Reversal Entry
-      const ledgerId = 'led_disp_' + Date.now();
-      await fetch(`${firebaseDatabaseUrl}/users/${userId}/credit_ledger/${ledgerId}.json`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ledgerId,
-          userId,
-          type: 'dispute_freeze',
-          paymentId: merchant_oid,
-          creditType,
-          timestamp: Date.now()
-        })
-      });
-
-      // Flag user account for Risk Review without deleting data
-      await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ riskReview: true, riskReason: 'Chargeback dispute filed' })
-      });
+      if (userId) {
+        await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ riskReview: true, riskReason: 'Chargeback dispute filed' })
+        });
+      }
 
       return res.status(200).send('OK');
     }
 
-    // 5. Handle Refund Notification
+    // 6. Handle Refund Notification
     if (status === 'refunded') {
       const userId = paymentData.userId;
       const creditType = paymentData.creditType || 'economyCredits';
       const creditAmount = paymentData.creditAmount || 10;
 
-      const userRes = await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`);
-      const userData = (await userRes.json()) || {};
-      const currentBalance = userData[creditType] || 0;
+      if (userId) {
+        const userRes = await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`);
+        const userData = (await userRes.json()) || {};
+        const currentBalance = userData[creditType] || 0;
 
-      const newBalance = Math.max(0, currentBalance - creditAmount);
+        const newBalance = Math.max(0, currentBalance - creditAmount);
 
-      await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [creditType]: newBalance })
-      });
-
-      // Write Credit Ledger Refund Entry
-      const ledgerId = 'led_ref_' + Date.now();
-      await fetch(`${firebaseDatabaseUrl}/users/${userId}/credit_ledger/${ledgerId}.json`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ledgerId,
-          userId,
-          type: 'refund',
-          paymentId: merchant_oid,
-          creditType,
-          creditsAmount: -creditAmount,
-          timestamp: Date.now()
-        })
-      });
+        await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [creditType]: newBalance })
+        });
+      }
 
       await fetch(`${firebaseDatabaseUrl}/payments/${merchant_oid}.json`, {
         method: 'PATCH',
@@ -150,7 +182,7 @@ export default async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
-    // 6. Handle Failed Payment Case
+    // 7. Handle Failed Payment Case
     if (status !== 'success') {
       await fetch(`${firebaseDatabaseUrl}/payments/${merchant_oid}.json`, {
         method: 'PATCH',
@@ -165,7 +197,7 @@ export default async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
-    // 7. Handle Successful Payment Case -> Grant Credits & Write Credit Ledger Entry
+    // 8. Handle B2C AI Credit Purchases (Status === 'success')
     const userId = paymentData.userId;
     const creditType = paymentData.creditType || 'economyCredits';
     const creditAmount = paymentData.creditAmount || 10;
@@ -176,37 +208,12 @@ export default async function handler(req, res) {
     const currentCreditBalance = userData[creditType] || 0;
     const newCreditBalance = currentCreditBalance + creditAmount;
 
-    // Grant Credit Balance
     await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [creditType]: newCreditBalance })
     });
 
-    // Write Immutable Credit Ledger Entry
-    const ledgerId = 'led_pur_' + Date.now();
-    const ledgerRecord = {
-      ledgerId,
-      userId,
-      type: 'purchase',
-      paymentId: merchant_oid,
-      creditType,
-      creditsAmount: creditAmount,
-      creditsConsumed: 0,
-      creditsRemaining: creditAmount,
-      priceTRY: paymentData.amount,
-      unitCostUsd: creditType === 'economyCredits' ? 0.013 : 0.040,
-      paymentEnvironment: paymentData.environment || (isProduction ? 'production' : 'sandbox'),
-      timestamp: Date.now()
-    };
-
-    await fetch(`${firebaseDatabaseUrl}/users/${userId}/credit_ledger/${ledgerId}.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ledgerRecord)
-    });
-
-    // Mark Payment as Completed & Credits Granted
     await fetch(`${firebaseDatabaseUrl}/payments/${merchant_oid}.json`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -215,36 +222,6 @@ export default async function handler(req, res) {
         creditsGranted: true,
         completedAt: Date.now(),
         providerTransactionId: `paytr_tx_${Date.now()}`
-      })
-    });
-
-    // Separate Real vs Test Gross Sales in Telemetry
-    const telemetryRes = await fetch(`${firebaseDatabaseUrl}/ai_telemetry/payment_summary.json`);
-    const curMetrics = (await telemetryRes.json()) || {};
-    const isEconomy = creditType === 'economyCredits';
-
-    const updateObj = {
-      successfulPayments: (curMetrics.successfulPayments || 0) + 1
-    };
-
-    if (isProduction) {
-      updateObj.realGrossSales = (curMetrics.realGrossSales || 0) + paymentData.amount;
-    } else {
-      updateObj.testGrossSales = (curMetrics.testGrossSales || 0) + paymentData.amount;
-    }
-
-    if (isEconomy) {
-      updateObj.economyCreditSales = (curMetrics.economyCreditSales || 0) + creditAmount;
-    } else {
-      updateObj.premiumCreditSales = (curMetrics.premiumCreditSales || 0) + creditAmount;
-    }
-
-    await fetch(`${firebaseDatabaseUrl}/ai_telemetry/payment_summary.json`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...curMetrics,
-        ...updateObj
       })
     });
 
