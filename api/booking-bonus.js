@@ -1,6 +1,28 @@
 import crypto from 'crypto';
 
 const firebaseDatabaseUrl = process.env.FIREBASE_DATABASE_URL || 'https://ezostile-barber-default-rtdb.europe-west1.firebasedatabase.app';
+const HMAC_SECRET = process.env.HMAC_SECRET || 'ezostile-server-only-secret-key-2026';
+
+function verifyAdminSessionToken(adminUid, token) {
+  if (!adminUid || !token) return false;
+  try {
+    const [timestampStr, signature] = token.split('.');
+    if (!timestampStr || !signature) return false;
+
+    const timestamp = parseInt(timestampStr, 10);
+    const now = Date.now();
+    if (isNaN(timestamp) || (now - timestamp) > 86400000) return false; // 24 hour expiry
+
+    const expectedSignature = crypto
+      .createHmac('sha256', HMAC_SECRET)
+      .update(`admin.${adminUid}.${timestamp}`)
+      .digest('hex');
+
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
+  } catch (e) {
+    return false;
+  }
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -21,18 +43,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { appointmentId, adminPassword } = req.body;
+    const { appointmentId, adminUid, adminToken } = req.body;
 
-    if (!appointmentId || !adminPassword) {
-      return res.status(400).json({ error: 'Missing appointmentId or adminPassword authorization parameter' });
+    if (!appointmentId || !adminUid || !adminToken) {
+      return res.status(400).json({ error: 'Missing required parameters (appointmentId, adminUid, adminToken)' });
     }
 
-    // 1. Server-Side Admin Password Verification (Reject client-side spoofing)
-    if (adminPassword !== '1405') {
-      return res.status(401).json({ error: 'Unauthorized: Invalid Admin Credentials' });
+    // 1. Verify Admin Cryptographic Session Token (No plaintext password in request)
+    const isTokenValid = verifyAdminSessionToken(adminUid, adminToken);
+    
+    // Fallback: Verify Admin Role directly against Firebase Database
+    const adminUserRes = await fetch(`${firebaseDatabaseUrl}/users/${adminUid}.json`);
+    const adminUserData = await adminUserRes.json();
+
+    const isDatabaseAdmin = adminUserData && (adminUserData.role === 'admin' || adminUserData.role === 'super_admin');
+
+    if (!isTokenValid && !isDatabaseAdmin) {
+      return res.status(401).json({ error: 'Unauthorized: Admin identity or role verification failed' });
     }
 
-    // 2. Fetch authoritative appointment data directly from Firebase Realtime Database
+    // 2. Fetch authoritative appointment record directly from Firebase Database
     const aptRes = await fetch(`${firebaseDatabaseUrl}/ezostile_v5/appointments.json`);
     const appointments = await aptRes.json();
 
