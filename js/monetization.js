@@ -121,3 +121,13 @@ async function watchProductionRewardedAd() {
     }
   }, 1500);
 }
+
+
+// Global Alias for watchRewardAd
+window.watchRewardAd = function() {
+  if (typeof watchProductionRewardedAd === 'function') {
+    watchProductionRewardedAd();
+  } else {
+    alert('🎬 Reklam şu anda hazır değil, tekrar deneyin.');
+  }
+};

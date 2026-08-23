@@ -105,7 +105,7 @@
       else if (typeof openAdminProfileModal === 'function') openAdminProfileModal();
     }
 
-    function requestLockScreenNotifications() {
+    function openNotificationSettingsModal() {
       if (typeof playNotificationSound === 'function') playNotificationSound(true);
       if ('OneSignalDeferred' in window) {
         OneSignalDeferred.push(function(OneSignal) {
@@ -1068,7 +1068,7 @@ appName: 'EZO STİLE',
         }
       }).catch(err => {
         if (typeof requestLockScreenNotifications === 'function') {
-          requestLockScreenNotifications();
+          openNotificationSettingsModal();
         }
       });
     }
@@ -1763,7 +1763,7 @@ appName: 'EZO STİLE',
                   <div style="font-size: 10px; color: var(--gold-primary); margin-top: 2px;">${typeof getCustomerAiCredits === 'function' ? getCustomerAiCredits() : 3} Hak Mevcut</div>
                 </div>
 
-                <div onclick="requestLockScreenNotifications()" style="background: #0b1120; border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; cursor: pointer; text-align: center; transition: all 0.2s;">
+                <div onclick="openNotificationSettingsModal()" style="background: #0b1120; border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; cursor: pointer; text-align: center; transition: all 0.2s;">
                   <div style="font-size: 22px; margin-bottom: 4px;">🔔</div>
                   <div style="font-size: 12px; font-weight: 700; color: #fff;">Bildirimler</div>
                   <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Kilitli ekran bildirimleri</div>
@@ -4287,6 +4287,78 @@ appName: 'EZO STİLE',
       `;
     }
 
+    
+    function openNotificationSettingsModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      let isLockNotifOn = false;
+      try {
+        if (typeof state !== 'undefined' && state.lockScreenNotifEnabled !== undefined) {
+          isLockNotifOn = state.lockScreenNotifEnabled === true;
+        } else {
+          isLockNotifOn = localStorage.getItem('gc_lock_notif_enabled') === 'true';
+        }
+      } catch(e) {}
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; border-color: var(--gold-primary); padding: 22px; background: #040711; border-radius: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+              <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>🔔</span> Bildirim Merkezi & Ayarları
+              </h3>
+              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: none; color: #fff; width: 30px; height: 30px; border-radius: 8px; font-weight: 800; cursor: pointer;">✕</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+              <!-- 1. KİLİTLİ EKRAN & WEB PUSH -->
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.4)' : 'var(--border-color)'}; padding: 14px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">📲 Kilitli Ekran & Web Push</div>
+                  <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--text-muted)'}; margin-top: 2px;">
+                    ${isLockNotifOn ? '🟢 Aktif (OneSignal & ServiceWorker)' : '🔴 Kapalı'}
+                  </div>
+                </div>
+                <button onclick="toggleLockScreenNotifications(); openNotificationSettingsModal();" class="btn ${isLockNotifOn ? 'btn-gold' : 'btn-outline-gold'}" style="min-height: 32px; padding: 4px 10px; font-size: 11px;">
+                  ${isLockNotifOn ? 'Değiştir' : 'Aç'}
+                </button>
+              </div>
+
+              <!-- 2. RANDEVU ONAY UYARILARI -->
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">📅 Randevu Onay Uyarısı</div>
+                  <div style="font-size: 10px; color: #34d399; margin-top: 2px;">🟢 Otomatik Aktif (SMS & WhatsApp)</div>
+                </div>
+                <span class="badge badge-approved">AKTİF</span>
+              </div>
+
+              <!-- 3. 1 SAAT KALA HATIRLATMA -->
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">⏰ 1 Saat Kala Hatırlatma</div>
+                  <div style="font-size: 10px; color: #34d399; margin-top: 2px;">🟢 Sesli & Görsel Banner Uyarısı</div>
+                </div>
+                <span class="badge badge-approved">AKTİF</span>
+              </div>
+
+              <!-- 4. KAMPANYA & DUYURULAR -->
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">📣 VIP Kampanyalar & Fırsatlar</div>
+                  <div style="font-size: 10px; color: #34d399; margin-top: 2px;">🟢 Özel İndirim Duyuruları</div>
+                </div>
+                <span class="badge badge-approved">AKTİF</span>
+              </div>
+            </div>
+
+            <button onclick="closeModal()" class="btn btn-gold" style="width: 100%;">✓ Tamam</button>
+          </div>
+        </div>
+      `;
+    }
+  
     function openCustomerProfileModal() {
       const root = document.getElementById('modal-root');
       if (!root) return;
