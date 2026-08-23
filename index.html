@@ -2294,110 +2294,197 @@ appName: 'EZO STİLE',
       container.innerHTML = html;
     }
 
+    
+    function setAdminTab(tab) {
+      state.adminTab = tab;
+      renderApp();
+      window.scrollTo(0, 0);
+    }
+
+    function completeSalonOnboarding() {
+      state.salonSetupCompleted = true;
+      localStorage.setItem('gc_salon_setup_done', 'true');
+      alert('🎉 Tebrikler! Salon kurulumunuz başarıyla tamamlandı. Randevu sisteminiz aktif!');
+      renderApp();
+    }
+
+    function renderSalonOnboardingWizard(container) {
+      state.onboardingStep = state.onboardingStep || 1;
+      const step = state.onboardingStep;
+
+      let stepContent = '';
+      if (step === 1) {
+        stepContent = `
+          <h4 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px;">1. Salon Temel Bilgileri</h4>
+          <p class="text-muted" style="margin-bottom: 14px;">Salonunuzun adı, adresi ve iletişim bilgilerini giriniz.</p>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="text" placeholder="Salon Adı (Örn: Makas VIP Berber)" value="${state.adminPhone ? 'EZO STİLE VIP Salon' : ''}" class="input-field">
+            <input type="text" placeholder="Salon Adresi (İl / İlçe / Sokak)" value="Dereboyu Cad. No:1" class="input-field">
+            <input type="tel" placeholder="Telefon No (05XX...)" value="${state.adminPhone || '05338000000'}" class="input-field">
+          </div>
+        `;
+      } else if (step === 2) {
+        stepContent = `
+          <h4 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px;">2. Çalışma Günleri ve Saatleri</h4>
+          <p class="text-muted" style="margin-bottom: 14px;">Salonunuzun açılış ve kapanış saatlerini belirleyin.</p>
+          <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-gold); text-align: center;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--gold-primary);">📅 Pazartesi - Cumartesi: 09:00 - 21:00</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Pazar Günleri Kapalı (İsteğe bağlı değiştirilebilir)</div>
+          </div>
+        `;
+      } else if (step === 3) {
+        stepContent = `
+          <h4 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px;">3. Hizmetler ve Fiyat Kataloğu</h4>
+          <p class="text-muted" style="margin-bottom: 14px;">Salonunuzda sunduğunuz temel bakım hizmetlerini onaylayın.</p>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: #070c1a; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+              <span style="font-size: 12px; font-weight: 700; color: #fff;">✂️ Erkek Saç Kesimi</span>
+              <span style="font-size: 12px; color: var(--gold-primary); font-weight: 700;">200 TL</span>
+            </div>
+            <div style="background: #070c1a; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+              <span style="font-size: 12px; font-weight: 700; color: #fff;">💈 Sakal Tıraşı & Tasarım</span>
+              <span style="font-size: 12px; color: var(--gold-primary); font-weight: 700;">100 TL</span>
+            </div>
+            <div style="background: #070c1a; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+              <span style="font-size: 12px; font-weight: 700; color: #fff;">👑 VIP İtalyan Bakım Paketi</span>
+              <span style="font-size: 12px; color: var(--gold-primary); font-weight: 700;">450 TL</span>
+            </div>
+          </div>
+        `;
+      } else if (step === 4) {
+        stepContent = `
+          <h4 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px;">4. Personel Ekle</h4>
+          <p class="text-muted" style="margin-bottom: 14px;">Salonunuzda çalışan berber uzmanlarını ekleyin.</p>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: #070c1a; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: #fff;">💈 Mustafa Usta (Baş berber)</span>
+              <span class="badge badge-approved">AKTİF</span>
+            </div>
+            <div style="background: #070c1a; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: #fff;">💈 Ahmet Usta (Kıdemli Berber)</span>
+              <span class="badge badge-approved">AKTİF</span>
+            </div>
+          </div>
+        `;
+      } else if (step === 5) {
+        stepContent = `
+          <h4 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px;">5. Randevu Sistemini Aç</h4>
+          <p class="text-muted" style="margin-bottom: 14px;">Tebrikler! Salonunuz artık online randevu almaya hazır.</p>
+          <div style="background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.06)); padding: 16px; border-radius: 16px; border: 1px solid #10b981; text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 6px;">🚀</div>
+            <div style="font-size: 14px; font-weight: 800; color: #34d399;">Randevu Sisteminiz Aktif Etmeye Hazır</div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="card card-gold animate-fade" style="max-width: 500px; margin: 30px auto; padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <h3 style="font-size: 17px; font-weight: 800; color: var(--gold-primary); margin: 0;">💈 Salonunuzu Hazırlayalım</h3>
+            <span style="font-size: 11px; font-weight: 700; color: var(--gold-light);">Adım ${step} / 5</span>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            ${stepContent}
+          </div>
+
+          <div style="display: flex; justify-content: space-between; gap: 10px;">
+            ${step > 1 ? `<button onclick="state.onboardingStep--; renderApp();" class="btn btn-secondary" style="flex: 1;">← Geri</button>` : ''}
+            ${step < 5 ? `<button onclick="state.onboardingStep++; renderApp();" class="btn btn-gold" style="flex: 1;">İleri →</button>` : `<button onclick="completeSalonOnboarding()" class="btn btn-gold" style="flex: 1; background: linear-gradient(135deg, #10b981, #059669); border: none;">✓ Sistemi Aç & Paneli Başlat</button>`}
+          </div>
+        </div>
+      `;
+    }
+
+    // --- RESTRUCTURED PATRON / BERBER VIEW ---
     function renderAdminView(container) {
+      if (typeof checkAdminRolePermission === 'function' && !checkAdminRolePermission()) return;
+
+      // NEW SALON ONBOARDING CHECK
+      const isSetupDone = localStorage.getItem('gc_salon_setup_done') === 'true' || state.salonSetupCompleted === true;
+      if (!isSetupDone && state.isNewSalonSetup) {
+        renderSalonOnboardingWizard(container);
+        return;
+      }
+
+      pruneAppointmentsLimit();
+
       const pendingApts = state.appointments.filter(a => a && a.status === 'pending');
       const approvedApts = state.appointments.filter(a => a && a.status === 'approved');
       const rejectedApts = state.appointments.filter(a => a && (a.status === 'rejected' || a.status === 'cancelled'));
 
+      const todayStr = getLocalDateStr(new Date());
+      const todayApts = state.appointments.filter(a => a && a.date === todayStr);
+      const todayTotalApts = todayApts.length;
+      const todayRevenue = approvedApts.filter(a => a.date === todayStr).reduce((sum, a) => sum + (parseInt(a.price) || 0), 0);
+
       const isAdminRole = state.role === 'admin';
-      const staffName = state.currentStaffName || localStorage.getItem('gc_staff_name') || 'Personel';
-      const panelTitle = isAdminRole ? 'Patron Yönetim Paneli' : `${staffName} Paneli`;
+      const staffName = state.currentStaffName || localStorage.getItem('gc_staff_name') || 'Patron';
+      state.adminTab = state.adminTab || 'requests';
 
-      // Security check: restrict manager role from sensitive tabs
-      if (!isAdminRole && (state.adminTab === 'revenueDashboard' || state.adminTab === 'staffManagement' || state.adminTab === 'servicesAdmin' || state.adminTab === 'weeklySchedule')) {
-        state.adminTab = 'requests';
-      }
+      let html = '';
 
-      let html = `
-        <div class="card card-gold">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-            <div>
-              <h2 style="font-size: 18px; font-weight: 700; color: var(--gold-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-                <span>👑</span> ${panelTitle}
-              </h2>
-              <p class="text-muted" style="margin-top: 2px;">EZO STİLE VIP Berber & Kuaför</p>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <button onclick="openAdminProfileModal()" class="btn btn-gold" style="min-height: 38px; padding: 6px 14px; font-size: 12px;">
-                <span>👤</span> ${state.currentStaffName || 'Profil & Ayarlar'}
-              </button>
-              <button onclick="switchRole('customer')" class="btn btn-secondary" style="min-height: 38px; padding: 6px 12px; font-size: 12px;">
-                ← Müşteri
-              </button>
-            </div>
-          </div>
-
-          <!-- GROUPED ADMIN NAVIGATION PANELS -->
-          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
-            
-            <!-- 1. RANDEVU YÖNETİMİ -->
-            <div>
-              <div class="admin-group-title">📅 Randevu Yönetimi</div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
-                <button onclick="setAdminTab('requests')" class="btn ${state.adminTab === 'requests' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: space-between;">
-                  <span>📋 Randevu Talepleri</span>
-                  <span class="badge" style="background: rgba(0,0,0,0.2); color: inherit;">${pendingApts.length}</span>
-                </button>
-                <button onclick="setAdminTab('manualBooking')" class="btn ${state.adminTab === 'manualBooking' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
-                  <span>📅 Manuel Randevu & Takvim</span>
-                </button>
+      // 1. TOP HEADER (SALON NAME, PLAN BADGE, PROFILE BTN)
+      html += `
+        <div class="card" style="padding: 14px 16px; margin-bottom: 16px; background: #070c1a; border: 1.5px solid var(--border-gold);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #fbbf24, #d97706); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: 800;">
+                👑
               </div>
-            </div>
-
-            <!-- 2. SALON YÖNETİMİ -->
-            <div>
-              <div class="admin-group-title">✂️ Salon Yönetimi</div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
-                <button onclick="setAdminTab('slotLocking')" class="btn ${state.adminTab === 'slotLocking' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
-                  <span>🔒 Özel Saat Kilitleri</span>
-                </button>
-                ${isAdminRole ? `
-                  <button onclick="setAdminTab('weeklySchedule')" class="btn ${state.adminTab === 'weeklySchedule' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
-                    <span>⏰ Çalışma Saatleri</span>
-                  </button>
-                  <button onclick="setAdminTab('servicesAdmin')" class="btn ${state.adminTab === 'servicesAdmin' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
-                    <span>✂️ Hizmetler & Fiyatlar</span>
-                  </button>
-                ` : ''}
-              </div>
-            </div>
-
-            <!-- 3. PERSONEL VE ŞİFRELER & RAPORLAR (ONLY ADMIN) -->
-            ${isAdminRole ? `
               <div>
-                <div class="admin-group-title">👥 Personel & Raporlar</div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
-                  <button onclick="openPlanComparisonModal()" class="btn btn-outline-gold" style="min-height: 38px; font-size: 11px; margin-right: 6px;">👑 Paketim</button>
-            <button onclick="setAdminTab('staffManagement')" class="btn ${state.adminTab === 'staffManagement' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
-                    <span>👥 Personel & Şifreler</span>
-                  </button>
-                  <button onclick="setAdminTab('revenueDashboard')" class="btn ${state.adminTab === 'revenueDashboard' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
-                    <span>💰 Ciro & Kasa Raporu</span>
-                  </button>
-                </div>
+                <h1 style="font-size: 17px; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 6px;">
+                  <span>EZO STİLE VIP Salon</span>
+                  <span style="font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(245,158,11,0.2); color: var(--gold-primary); border: 1px solid var(--border-gold);">PRO</span>
+                </h1>
+                <div style="font-size: 11px; color: var(--gold-light); font-weight: 600;">💈 ${staffName} Paneli</div>
               </div>
-            ` : ''}
+            </div>
 
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button onclick="openAdminProfileModal()" class="btn btn-gold" style="min-height: 36px; padding: 6px 12px; font-size: 11px;">
+                👤 Profil & Ayarlar
+              </button>
+            </div>
           </div>
+        </div>
       `;
 
-      
-      // 4. STAFF MANAGEMENT TAB (PERSONEL & ŞİFRELER YÖNETİMİ)
-      
-      // 4. STAFF MANAGEMENT TAB (PERSONEL & ŞİFRELER YÖNETİMİ)
-      // 1. REQUESTS TAB
+      // 2. 4 MINI SUMMARY CARDS (BUGÜN ÖZETİ)
+      html += `
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;">
+          <div style="background: #070c1a; border: 1px solid var(--border-color); padding: 10px; border-radius: 14px; text-align: center;">
+            <div style="font-size: 9px; color: var(--text-muted); font-weight: 700;">BUGÜNKÜ</div>
+            <div style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 2px;">${todayTotalApts}</div>
+          </div>
+          <div style="background: #070c1a; border: 1px solid rgba(245,158,11,0.3); padding: 10px; border-radius: 14px; text-align: center;">
+            <div style="font-size: 9px; color: var(--gold-primary); font-weight: 700;">BEKLEYEN</div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--gold-primary); margin-top: 2px;">${pendingApts.length}</div>
+          </div>
+          <div style="background: #070c1a; border: 1px solid rgba(16,185,129,0.3); padding: 10px; border-radius: 14px; text-align: center;">
+            <div style="font-size: 9px; color: #34d399; font-weight: 700;">ONAYLANAN</div>
+            <div style="font-size: 18px; font-weight: 800; color: #34d399; margin-top: 2px;">${approvedApts.length}</div>
+          </div>
+          <div style="background: #070c1a; border: 1px solid var(--border-gold); padding: 10px; border-radius: 14px; text-align: center;">
+            <div style="font-size: 9px; color: var(--gold-light); font-weight: 700;">CİRO</div>
+            <div style="font-size: 16px; font-weight: 800; color: #fff; margin-top: 2px;">${todayRevenue} TL</div>
+          </div>
+        </div>
+      `;
+
+      // 3. MAIN DASHBOARD CONTENT (TAB ROUTING)
       if (state.adminTab === 'requests') {
         html += `
-          <div>
+          <div class="card animate-fade" style="padding: 16px;">
             <div style="display: flex; gap: 6px; margin-bottom: 16px; background: #070c1a; padding: 4px; border-radius: 12px; border: 1px solid var(--border-color);">
-              <button onclick="setRequestsSubTab('pending')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 12px; border: none; background: ${state.requestsSubTab === 'pending' ? 'var(--gold-primary)' : 'transparent'}; color: ${state.requestsSubTab === 'pending' ? '#000' : 'var(--text-muted)'}; font-weight: 700;">
-                ${t('tabPending')} (${pendingApts.length})
+              <button onclick="setRequestsSubTab('pending')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 11px; border: none; background: ${state.requestsSubTab === 'pending' ? 'var(--gold-primary)' : 'transparent'}; color: ${state.requestsSubTab === 'pending' ? '#000' : 'var(--text-muted)'}; font-weight: 700;">
+                Bekleyen (${pendingApts.length})
               </button>
-              <button onclick="setRequestsSubTab('approved')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 12px; border: none; background: ${state.requestsSubTab === 'approved' ? '#10b981' : 'transparent'}; color: ${state.requestsSubTab === 'approved' ? '#000' : 'var(--text-muted)'}; font-weight: 700;">
-                ${t('tabApproved')} (${approvedApts.length})
+              <button onclick="setRequestsSubTab('approved')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 11px; border: none; background: ${state.requestsSubTab === 'approved' ? '#10b981' : 'transparent'}; color: ${state.requestsSubTab === 'approved' ? '#000' : 'var(--text-muted)'}; font-weight: 700;">
+                Onaylanan (${approvedApts.length})
               </button>
-              <button onclick="setRequestsSubTab('rejected')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 12px; border: none; background: ${state.requestsSubTab === 'rejected' ? '#f43f5e' : 'transparent'}; color: ${state.requestsSubTab === 'rejected' ? '#fff' : 'var(--text-muted)'}; font-weight: 700;">
-                ${t('tabRejected')} (${rejectedApts.length})
+              <button onclick="setRequestsSubTab('rejected')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 11px; border: none; background: ${state.requestsSubTab === 'rejected' ? '#f43f5e' : 'transparent'}; color: ${state.requestsSubTab === 'rejected' ? '#fff' : 'var(--text-muted)'}; font-weight: 700;">
+                İptal/Red (${rejectedApts.length})
               </button>
             </div>
         `;
@@ -2406,9 +2493,9 @@ appName: 'EZO STİLE',
 
         if (activeList.length === 0) {
           html += `
-            <div style="text-align: center; padding: 40px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border-color); margin-top: 10px;">
+            <div style="text-align: center; padding: 36px 16px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border-color);">
               <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
-              <h4 style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px;">Şu anda bu kategoride randevu bulunmuyor</h4>
+              <h4 style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px;">Randevu bulunmuyor</h4>
               <p style="font-size: 12px; color: var(--text-muted);">Yeni bir randevu kaydı oluştuğunda burada listelenecektir.</p>
             </div>
           `;
@@ -2416,26 +2503,30 @@ appName: 'EZO STİLE',
           html += `<div style="display: flex; flex-direction: column; gap: 12px;">`;
           activeList.forEach(a => {
             html += `
-              <div style="background: #070c1a; padding: 16px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div style="background: #070c1a; padding: 16px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
                 <div>
                   <div style="font-weight: 700; font-size: 14px; color: #fff;">👤 ${a.customerName}</div>
                   <div style="font-size: 12px; color: var(--gold-primary); font-weight: 600; margin-top: 2px;">📞 ${a.customerPhone}</div>
                   <div style="font-size: 13px; color: #fff; margin-top: 6px; font-weight: 600;">📌 ${a.serviceName}</div>
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
+
+                  <!-- AI SEÇİLEN MODEL KARTI (IF PRESENT) -->
                   ${a.aiModelName ? `
-                    <div style="background: rgba(245,158,11,0.1); border: 1px solid var(--border-gold); border-radius: 8px; padding: 6px 10px; margin-top: 6px;">
-                      <div style="font-size: 11px; font-weight: 700; color: var(--gold-primary);">✨ AI Seçilen Saç Modeli: ${a.aiModelName}</div>
-                      <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">💈 Berber Tarifi: ${a.aiRecipe || 'Özel Kesim'}</div>
+                    <div style="background: rgba(245,158,11,0.1); border: 1px solid var(--border-gold); border-radius: 10px; padding: 8px 12px; margin-top: 8px;">
+                      <div style="font-size: 12px; font-weight: 700; color: var(--gold-primary); display: flex; align-items: center; gap: 6px;">
+                        <span>✨</span> AI Seçilen Saç Modeli: ${a.aiModelName}
+                      </div>
+                      <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">💈 Berber Tarifi: ${a.aiRecipe || 'Özel Kesim'}</div>
                     </div>
                   ` : ''}
-                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
                 </div>
 
                 <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
                   ${a.status !== 'approved' ? `
-                    <button onclick="adminApproveApt('${a.id}')" class="btn btn-gold" style="min-height: 38px; padding: 6px 14px; font-size: 12px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #10b981;">${t('approveBtn')}</button>
+                    <button onclick="adminApproveApt('${a.id}')" class="btn btn-gold" style="min-height: 36px; padding: 6px 14px; font-size: 11px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #10b981;">✓ Onayla</button>
                   ` : ''}
                   ${a.status !== 'rejected' ? `
-                    <button onclick="adminRejectApt('${a.id}')" class="btn btn-danger" style="min-height: 38px; padding: 6px 14px; font-size: 12px;">${t('rejectBtn')}</button>
+                    <button onclick="adminRejectApt('${a.id}')" class="btn btn-danger" style="min-height: 36px; padding: 6px 14px; font-size: 11px;">❌ Reddet</button>
                   ` : ''}
                 </div>
               </div>
@@ -2447,1354 +2538,137 @@ appName: 'EZO STİLE',
         html += `</div>`;
       }
 
-      // 2. WEEKLY SCHEDULE TAB
-      else if (state.adminTab === 'weeklySchedule') {
-        const days = [
-          { idx: 1, key: 'dayMonday' }, { idx: 2, key: 'dayTuesday' }, { idx: 3, key: 'dayWednesday' },
-          { idx: 4, key: 'dayThursday' }, { idx: 5, key: 'dayFriday' }, { idx: 6, key: 'daySaturday' }, { idx: 0, key: 'daySunday' }
-        ];
-
+      // TAB: MANAGEMENT SETTINGS (⚙️ YÖNETİM)
+      else if (state.adminTab === 'managementSettings') {
         html += `
-          <div>
-            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 12px;">${t('weeklyScheduleTitle')}</h3>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-              ${days.map(d => {
-                const sched = state.weeklySchedule[d.idx] || { isOpen: true, start: '12:00', end: '22:00' };
-                return `
-                  <div style="background: #070c1a; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 10px; min-width: 140px;">
-                      <button onclick="toggleDayOpen(${d.idx})" class="badge ${sched.isOpen ? 'badge-approved' : 'badge-rejected'}" style="cursor: pointer; padding: 6px 12px; font-size: 11px; font-weight: 800; min-width: 80px; text-align: center; justify-content: center; display: inline-flex;">
-                        ${sched.isOpen ? t('dayIsOpen') : t('dayIsClosed')}
-                      </button>
-                      <span style="font-weight: 800; font-size: 13px; color: #fff; white-space: nowrap;">${t(d.key)}</span>
-                    </div>
-                    ${sched.isOpen ? `
-                      <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; margin-left: auto;">
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                          <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; white-space: nowrap;">${t('openingTime')}:</span>
-                          <input type="time" value="${sched.start}" onchange="updateScheduleTime(${d.idx}, 'start', this.value)" class="input-field" style="padding: 5px 8px; width: 95px; font-size: 12px; font-weight: 700; text-align: center;">
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                          <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; white-space: nowrap;">${t('closingTime')}:</span>
-                          <input type="time" value="${sched.end}" onchange="updateScheduleTime(${d.idx}, 'end', this.value)" class="input-field" style="padding: 5px 8px; width: 95px; font-size: 12px; font-weight: 700; text-align: center;">
-                        </div>
-                      </div>
-                    ` : ''}
-                  </div>
-                `;
-              }).join('')}
-            </div>
-
-            <button onclick="confirmScheduleChanges()" class="gold-btn" style="width: 100%; padding: 18px; font-size: 15px; font-weight: 900;">
-              ${t('saveWeeklyScheduleBtn')}
-            </button>
-          </div>
-        `;
-      }
-
-      // 3. SLOT LOCKING TAB
-      else if (state.adminTab === 'slotLocking') {
-        let timeSlots = [];
-        for (let h = 0; h < 24; h++) {
-          const hh = h.toString().padStart(2, '0');
-          timeSlots.push(`${hh}:00`);
-          timeSlots.push(`${hh}:30`);
-        }
-        
-        const now = new Date();
-        const todayStr = getLocalDateStr(now);
-        const currentHour = now.getHours();
-        const currentMin = now.getMinutes();
-        const isToday = state.selectedDate === todayStr;
-
-        if (isToday) {
-          timeSlots = timeSlots.filter(time => {
-            const [sHour, sMin] = time.split(':').map(Number);
-            return sHour > currentHour || (sHour === currentHour && sMin > currentMin);
-          });
-        }
-
-        html += `
-          <div>
-            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">${t('slotLockingTitle')}</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">${t('slotLockingDesc')}</p>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-size: 12px; font-weight: 800; color: var(--gold-primary);">${t('selectDateLabel')}</label>
-              <input type="date" value="${state.selectedDate}" onchange="selectDate(this.value)" class="input-field" style="margin-top: 6px; padding: 12px; font-size: 14px; font-weight: 700;">
-            </div>
-
-            <div class="slot-grid" style="margin-bottom: 20px;">
-              ${timeSlots.map(time => {
-                const override = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === time);
-                const isBlocked = override ? override.status === 'blocked' : false;
-                const isOpened = override ? override.status === 'opened' : false;
-
-                return `
-                  <button onclick="toggleDateSlotOverride('${state.selectedDate}', '${time}')" class="slot-btn ${isBlocked ? 'blocked' : isOpened ? 'opened' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    ${time}
-                    <span style="display: block; font-size: 9px; font-weight: 800; white-space: nowrap; margin-top: 2px;">${isBlocked ? '🔒 ' + t('slotClosed') : isOpened ? '✅ ' + t('slotOpened') : '• ' + t('slotNormal')}</span>
-                  </button>
-                `;
-              }).join('')}
-            </div>
-
-            <button onclick="confirmScheduleChanges()" class="gold-btn" style="width: 100%; padding: 18px; font-size: 15px; font-weight: 900;">
-              ${t('saveSlotLockBtn')}
-            </button>
-          </div>
-        `;
-      }
-
-      // 4. SERVICES ADMIN TAB
-      else if (state.adminTab === 'servicesAdmin') {
-        html += `
-          <div>
-            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">✂️ ${t('servicesAdmin')}</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">${t('servicesAdminDesc')}</p>
-
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-              ${state.services.map((s, idx) => {
-                const displayName = getServiceName(s);
-                return `
-                  <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span style="font-size: 13px; font-weight: 900; color: var(--gold-primary);">${displayName} (#${idx + 1})</span>
-                      <button onclick="deleteService('${s.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">🗑️ ${t('deleteBtn')}</button>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
-                      <div>
-                        <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">${t('serviceNameLabel')}:</label>
-                        <input type="text" value="${displayName}" oninput="updateServiceField('${s.id}', 'name', this.value)" class="input-field" style="padding: 8px 10px; font-size: 13px; font-weight: 700;">
-                      </div>
-                      <div>
-                        <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">${t('durationLabel')}:</label>
-                        <select onchange="updateServiceField('${s.id}', 'duration', this.value)" class="input-field" style="padding: 8px 6px; font-size: 11px; font-weight: 700;">
-                          <option value="30 dk" ${s.duration === '30 dk' ? 'selected' : ''}>30 dk (0.5 Saat)</option>
-                          <option value="45 dk" ${s.duration === '45 dk' ? 'selected' : ''}>45 dk</option>
-                          <option value="60 dk" ${s.duration === '60 dk' || s.duration === '1 saat' ? 'selected' : ''}>60 dk (1 Saat)</option>
-                          <option value="90 dk" ${s.duration === '90 dk' || s.duration === '1.5 saat' ? 'selected' : ''}>90 dk (1.5 Saat)</option>
-                          <option value="120 dk" ${s.duration === '120 dk' || s.duration === '2 saat' ? 'selected' : ''}>120 dk (2 Saat)</option>
-                          <option value="150 dk" ${s.duration === '150 dk' || s.duration === '2.5 saat' ? 'selected' : ''}>150 dk (2.5 Saat)</option>
-                          <option value="180 dk" ${s.duration === '180 dk' || s.duration === '3 saat' ? 'selected' : ''}>180 dk (3 Saat)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">${t('priceLabel')}:</label>
-                        <input type="number" value="${s.price}" oninput="updateServiceField('${s.id}', 'price', Number(this.value))" class="input-field" style="padding: 8px 10px; font-size: 13px; color: var(--gold-primary); font-weight: 900;">
-                      </div>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-
-            <!-- ADD NEW SERVICE FORM -->
-            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px dashed var(--gold-primary); margin-bottom: 20px;">
-              <h4 style="font-size: 13px; font-weight: 900; color: var(--gold-primary); margin-bottom: 10px;">➕ ${t('newServiceTitle')}</h4>
-              <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                <input id="new-svc-name" type="text" placeholder="${t('serviceNameLabel')}" class="input-field" style="padding: 8px 10px; font-size: 12px;">
-                <select id="new-svc-dur" class="input-field" style="padding: 8px 6px; font-size: 11px; font-weight: 700;">
-                  <option value="30 dk">30 dk (0.5 Saat)</option>
-                  <option value="45 dk">45 dk</option>
-                  <option value="60 dk">60 dk (1 Saat)</option>
-                  <option value="90 dk" selected>90 dk (1.5 Saat)</option>
-                  <option value="120 dk">120 dk (2 Saat)</option>
-                  <option value="150 dk">150 dk (2.5 Saat)</option>
-                  <option value="180 dk">180 dk (3 Saat)</option>
-                </select>
-                <input id="new-svc-price" type="number" placeholder="${t('priceLabel')}" class="input-field" style="padding: 8px 10px; font-size: 12px;">
-              </div>
-              <button onclick="addNewService()" class="gold-btn" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 900;">➕ ${t('addServiceBtn')}</button>
-            </div>
-
-            <!-- SAVE ALL SERVICES BUTTON -->
-            <button onclick="saveServices()" class="gold-btn" style="width: 100%; padding: 18px; font-size: 15px; font-weight: 900;">
-              💾 ${t('saveServicesBtn')}
-            </button>
-          </div>
-        `;
-      }
-
-      // 2. REVENUE & TURNOVER DASHBOARD (GÜNLÜK & AYLIK CİRO VE KASA HESAPLAMA)
-      else if (state.adminTab === 'revenueDashboard') {
-        const todayStr = getLocalDateStr(new Date());
-        const thisMonthStr = todayStr.substring(0, 7);
-        const selectedRevDate = state.revenueSelectedDate || todayStr;
-
-        const allApproved = state.appointments.filter(a => a && a.status === 'approved');
-        
-        const todayApprovedApts = allApproved.filter(a => a.date === todayStr);
-        const todayRevenue = todayApprovedApts.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-
-        const monthApprovedApts = allApproved.filter(a => a.date && a.date.startsWith(thisMonthStr));
-        const monthRevenue = monthApprovedApts.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-
-        const selectedRevDateApts = allApproved.filter(a => a.date === selectedRevDate);
-        const selectedRevDateRevenue = selectedRevDateApts.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-
-        const totalAllTimeRevenue = allApproved.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-
-        // Calculate breakdown per service
-        const svcStats = {};
-        allApproved.forEach(a => {
-          const sName = a.serviceName || 'Diğer Hizmet';
-          if (!svcStats[sName]) svcStats[sName] = { count: 0, totalRevenue: 0 };
-          svcStats[sName].count += 1;
-          svcStats[sName].totalRevenue += (Number(a.price) || 0);
-        });
-
-        const serviceBreakdown = Object.keys(svcStats).map(sName => {
-          const stat = svcStats[sName];
-          const percentage = totalAllTimeRevenue > 0 ? Math.round((stat.totalRevenue / totalAllTimeRevenue) * 100) : 0;
-          return { name: sName, count: stat.count, totalRevenue: stat.totalRevenue, percentage };
-        }).sort((a, b) => b.totalRevenue - a.totalRevenue);
-
-        html += `
-          <div class="card" style="padding: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
-              <div>
-                <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin: 0;">💰 Ciro & Kasa Analiz Raporu</h3>
-                <span style="font-size: 11px; color: var(--text-muted);">Günlük, Aylık ve Hizmet Bazlı Kazanç Hesaplama</span>
-              </div>
-            </div>
-
-            <!-- SUMMARY STAT CARDS GRID -->
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px;">
-              <div style="background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08)); border: 1px solid rgba(16,185,129,0.4); padding: 14px; border-radius: 14px;">
-                <span style="font-size: 10px; font-weight: 800; color: #34d399;">📅 BUGÜNKÜ CİRO (${todayStr})</span>
-                <div style="font-size: 20px; font-weight: 900; color: #fff; margin-top: 4px;">${todayRevenue.toLocaleString('tr-TR')} TL</div>
-                <span style="font-size: 10px; color: var(--text-muted); font-weight: 700;">✅ ${todayApprovedApts.length} Randevu</span>
-              </div>
-
-              <div style="background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.08)); border: 1px solid rgba(245,158,11,0.4); padding: 14px; border-radius: 14px;">
-                <span style="font-size: 10px; font-weight: 800; color: var(--gold-primary);">🗓️ BU AYLIK CİRO (${thisMonthStr})</span>
-                <div style="font-size: 20px; font-weight: 900; color: #fff; margin-top: 4px;">${monthRevenue.toLocaleString('tr-TR')} TL</div>
-                <span style="font-size: 10px; color: var(--text-muted); font-weight: 700;">✅ ${monthApprovedApts.length} Randevu</span>
-              </div>
-            </div>
-
-            <!-- CUSTOM DATE FILTER & TURNOVER LEDGER -->
-            <div style="background: #070c1a; padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 18px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                <span style="font-size: 12px; font-weight: 800; color: #fff;">📆 Tarih Bazlı Ciro Hesaplayıcı:</span>
-                <input type="date" value="${selectedRevDate}" onchange="setRevenueSelectedDate(this.value)" class="input-field" style="width: auto; padding: 6px 12px; font-size: 12px; font-weight: 800; color: var(--gold-primary);">
-              </div>
-
-              <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <div>
-                  <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">${selectedRevDate} Tarihindeki Toplam Ciro:</div>
-                  <div style="font-size: 18px; font-weight: 900; color: var(--gold-primary);">${selectedRevDateRevenue.toLocaleString('tr-TR')} TL</div>
-                </div>
-                <span class="badge badge-approved" style="font-size: 11px;">${selectedRevDateApts.length} Randevu</span>
-              </div>
-
-              <!-- DETAILED APPOINTMENT LIST FOR SELECTED DATE -->
-              <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 8px;">📑 ${selectedRevDate} Tarihindeki Randevu & Kazanç Listesi:</div>
-              ${selectedRevDateApts.length === 0 ? `
-                <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px;">
-                  Seçilen tarihte onaylanmış randevu/ciro kaydı bulunmamaktadır.
-                </div>
-              ` : `
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                  ${selectedRevDateApts.map(a => `
-                    <div style="background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                      <div>
-                        <div style="font-size: 12px; font-weight: 800; color: #fff;">👤 ${a.customerName} (${a.customerPhone})</div>
-                        <div style="font-size: 11px; color: var(--gold-primary); font-weight: 700; margin-top: 2px;">✂️ ${a.serviceName} — ⏰ ${a.time}</div>
-                      </div>
-                      <div style="text-align: right;">
-                        <span style="font-size: 14px; font-weight: 900; color: #34d399;">+${a.price} TL</span>
-                        <span style="display: block; font-size: 8px; color: var(--text-muted);">✅ Kasa</span>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              `}
-            </div>
-
-            <!-- SERVICE BREAKDOWN ANALYTICS -->
-            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--border-color);">
-              <h4 style="font-size: 13px; font-weight: 900; color: var(--gold-primary); margin-bottom: 12px;">📊 Hizmet Bazlı Toplam Kazanç Dağılımı</h4>
-              ${serviceBreakdown.length === 0 ? `
-                <div style="text-align: center; padding: 14px; color: var(--text-muted); font-size: 12px;">Henüz ciro kaydı oluşmadı.</div>
-              ` : `
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                  ${serviceBreakdown.map(sb => `
-                    <div style="background: rgba(255,255,255,0.03); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color);">
-                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <span style="font-size: 12px; font-weight: 800; color: #fff;">${sb.name}</span>
-                        <span style="font-size: 13px; font-weight: 900; color: var(--gold-primary);">${sb.totalRevenue.toLocaleString('tr-TR')} TL <small style="font-size: 10px; color: var(--text-muted);">(${sb.count} Adet)</small></span>
-                      </div>
-                      <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
-                        <div style="width: ${sb.percentage}%; height: 100%; background: linear-gradient(90deg, #fbbf24, #f59e0b); border-radius: 3px;"></div>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              `}
-            </div>
-          </div>
-        `;
-      }
-
-      // 3. MANUAL BOOKING TAB (ADMIN ÖZEL RANDEVU ALMA & CANLI TAKVİM)
-      else if (state.adminTab === 'manualBooking') {
-        const now = new Date();
-        const todayStr = getLocalDateStr(now);
-        const currentHour = now.getHours();
-        const currentMin = now.getMinutes();
-
-        const adminDate = state.adminSelectedDate || state.selectedDate || getInitialBookingDate();
-        const isToday = adminDate === todayStr;
-        const isPastDate = adminDate < todayStr;
-
-        const parts = adminDate.split('-');
-        const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        const dayOfWeek = dObj.getDay();
-        const sched = state.weeklySchedule[dayOfWeek] || { isOpen: true, start: '09:00', end: '21:00' };
-
-        const startHour = parseInt((sched.start || '09:00').split(':')[0]);
-        const endHour = parseInt((sched.end || '21:00').split(':')[0]);
-        const allDaySlots = [];
-        if (sched.isOpen) {
-          for (let h = startHour; h <= endHour; h++) {
-            const hh = h.toString().padStart(2, '0');
-            allDaySlots.push(`${hh}:00`);
-            if (h !== endHour) allDaySlots.push(`${hh}:30`);
-          }
-        }
-        allDaySlots.sort();
-
-        // 1. Günü geçmiş saatleri takvimden ve seçimden tamamen kaldır
-        let displaySlots = allDaySlots;
-        if (isToday) {
-          displaySlots = allDaySlots.filter(time => {
-            const [sHour, sMin] = time.split(':').map(Number);
-            return sHour > currentHour || (sHour === currentHour && sMin > currentMin);
-          });
-        }
-
-        const occupiedSet = getOccupiedSlotsForDate(adminDate);
-
-        // 2. Seçili hizmete göre gerekli süre ve çakışma kontrolü
-        const activeSvcId = state.adminBookSelectedSvcId || null;
-        const activeSvc = activeSvcId ? state.services.find(s => s.id === activeSvcId) : null;
-        const neededSlots = activeSvc ? getServiceSlotCount(activeSvc.duration) : 1;
-
-        // Calculate valid start times for selected service duration
-        const validStartTimes = [];
-        displaySlots.forEach(time => {
-          const isDirectlyBooked = occupiedSet.has(time);
-          const override = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === time);
-          const isDirectlyBlocked = override ? override.status === 'blocked' : false;
-
-          let hasEnoughTime = true;
-          const [startH, startM] = time.split(':').map(Number);
-          let checkMinTotal = startH * 60 + startM;
-
-          for (let i = 0; i < neededSlots; i++) {
-            const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
-            const mm = (checkMinTotal % 60).toString().padStart(2, '0');
-            const checkTimeStr = `${hh}:${mm}`;
-
-            const checkOverride = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === checkTimeStr);
-            const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSet.has(checkTimeStr);
-
-            if (isCheckBlocked || !allDaySlots.includes(checkTimeStr)) {
-              hasEnoughTime = false;
-              break;
-            }
-            checkMinTotal += 30;
-          }
-
-          if (!isDirectlyBooked && !isDirectlyBlocked && hasEnoughTime) {
-            validStartTimes.push(time);
-          }
-        });
-
-        html += `
-          <div class="card" style="padding: 16px;">
-            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 12px;">📅 Manuel Randevu Ekle & Canlı Takvim</h3>
+          <div class="card animate-fade" style="padding: 18px;">
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin-bottom: 14px;">⚙️ Salon Yönetim Merkezi</h3>
             
-            <!-- Date Selector & Color Legend -->
-            <div style="background: #070c1a; padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-                <label style="font-size: 12px; font-weight: 800; color: #fff;">📅 Takvim Tarihi Seçin:</label>
-                <input type="date" value="${adminDate}" onchange="setAdminBookingDate(this.value)" class="input-field" style="width: auto; padding: 6px 12px; font-size: 12px; font-weight: 800; color: var(--gold-primary);">
-              </div>
-
-              <!-- Legend -->
-              <div style="display: flex; gap: 8px; font-size: 10px; font-weight: 700; justify-content: center; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-                <span style="color: #64748b; font-weight: 900;">🔘 Seçilmiş Saat (Gri)</span>
-                <span style="color: #34d399;">🟢 Serbest ${activeSvc ? '(' + activeSvc.duration + ' Uygun)' : ''}</span>
-                <span style="color: #fb7185;">🔴 Müşteri Randevusu</span>
-                <span style="color: #fbbf24;">⚠️ Süre Yetersiz</span>
-                <span style="color: #94a3b8;">⚪ Kapalı / Engelli</span>
-              </div>
-            </div>
-
-            <!-- Live Slot Grid Overview -->
-            <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <div style="font-size: 12px; font-weight: 800; color: var(--gold-primary);">📊 ${adminDate} Tarihindeki Canlı Saat Durumu:</div>
-                <span style="font-size: 10px; color: ${activeSvc ? 'var(--gold-primary)' : 'var(--rose)'}; font-weight: 800;">${activeSvc ? 'Hizmet: ' + getServiceName(activeSvc) + ' (' + activeSvc.duration + ')' : '⚠️ Hizmet Seçilmedi'}</span>
-              </div>
-
-              ${!activeSvc ? `
-                <div style="background: rgba(245,158,11,0.12); border: 1px dashed var(--gold-primary); color: #fbbf24; padding: 12px; border-radius: 12px; font-size: 11px; font-weight: 800; text-align: center; margin-bottom: 12px;">
-                  ⚠️ Lütfen önce aşağıdaki formdan bir HİZMET seçiniz. (Saatler seçeceğiniz hizmetin süresine göre filtrelenecektir)
-                </div>
-              ` : ''}
-
-              ${displaySlots.length === 0 ? `
-                <div style="background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 14px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center;">
-                  ⚠️ ${adminDate} günü için salon saatleri tamamlanmıştır. Lütfen başka bir gün seçiniz.
-                </div>
-              ` : `
-                <div class="slot-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                  ${displaySlots.map(time => {
-                    const override = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === time);
-                    const isBooked = occupiedSet.has(time);
-                    const isBlocked = (override ? override.status === 'blocked' : false);
-                    const isSelected = time === state.adminBookSelectedTime;
-
-                    let hasEnoughTime = true;
-                    const [startH, startM] = time.split(':').map(Number);
-                    let checkMinTotal = startH * 60 + startM;
-
-                    for (let i = 0; i < neededSlots; i++) {
-                      const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
-                      const mm = (checkMinTotal % 60).toString().padStart(2, '0');
-                      const checkTimeStr = `${hh}:${mm}`;
-
-                      const checkOverride = state.dateSlotOverrides.find(b => b.date === adminDate && b.time === checkTimeStr);
-                      const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSet.has(checkTimeStr);
-
-                      if (isCheckBlocked || !allDaySlots.includes(checkTimeStr)) {
-                        hasEnoughTime = false;
-                        break;
-                      }
-                      checkMinTotal += 30;
-                    }
-                    
-                    const apt = isBooked ? state.appointments.find(a => a.date === adminDate && a.time === time && a.status !== 'cancelled' && a.status !== 'rejected') : null;
-
-                    if (isBooked) {
-                      return `
-                        <button onclick="alert('🔴 Müşteri Randevusu:\\n${apt ? apt.customerName + ' (' + apt.customerPhone + ')\\nHizmet: ' + apt.serviceName : 'Randevu Mevcut'}')" style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(244,63,94,0.2); border: 1px solid rgba(244,63,94,0.5); color: #fb7185; cursor: pointer;">
-                          ${time}
-                          <span style="display:block; font-size:7px;">🔴 Dolu</span>
-                        </button>
-                      `;
-                    } else if (isBlocked) {
-                      return `
-                        <button style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(148,163,184,0.15); border: 1px solid rgba(148,163,184,0.3); color: #94a3b8; opacity: 0.6;">
-                          ${time}
-                          <span style="display:block; font-size:7px;">⚪ Kapalı</span>
-                        </button>
-                      `;
-                    } else if (isSelected) {
-                      return `
-                        <button onclick="selectTimeForAdminManualBook('${time}')" style="padding: 8px 2px; font-size: 11px; font-weight: 900; border-radius: 10px; background: #64748b; border: 2px solid #cbd5e1; color: #ffffff; cursor: pointer; transform: scale(1.04); box-shadow: 0 0 10px rgba(148, 163, 184, 0.4);">
-                          ${time}
-                          <span style="display:block; font-size:7px; font-weight:900; color:#e2e8f0;">🔘 SEÇİLDİ (GRİ)</span>
-                        </button>
-                      `;
-                    } else if (!hasEnoughTime) {
-                      return `
-                        <button style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(245,158,11,0.15); border: 1px dashed rgba(245,158,11,0.4); color: #fbbf24; opacity: 0.7;" title="${activeSvc ? activeSvc.duration : ''} için süre yetersiz">
-                          ${time}
-                          <span style="display:block; font-size:7px;">⚠️ Yetersiz</span>
-                        </button>
-                      `;
-                    } else {
-                      return `
-                        <button onclick="selectTimeForAdminManualBook('${time}')" style="padding: 8px 2px; font-size: 11px; font-weight: 800; border-radius: 10px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; cursor: pointer;">
-                          ${time}
-                          <span style="display:block; font-size:7px;">🟢 Serbest</span>
-                        </button>
-                      `;
-                    }
-                  }).join('')}
-                </div>
-              `}
-            </div>
-
-            <!-- Quick Admin Booking Form -->
-            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px dashed var(--gold-primary);">
-              <h4 style="font-size: 13px; font-weight: 900; color: var(--gold-primary); margin-bottom: 12px;">➕ Hızlı Manuel Randevu Oluştur</h4>
-              <form onsubmit="submitAdminManualBooking(event)" style="display: flex; flex-direction: column; gap: 10px;">
-                <div>
-                  <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Müşteri Adı Soyadı:</label>
-                  <input id="admin-book-name" required type="text" placeholder="Örn: Ahmet Yılmaz" class="input-field" style="padding: 10px; font-size: 13px;">
-                </div>
-                <div>
-                  <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Müşteri Telefon Numarası:</label>
-                  <input id="admin-book-phone" required type="tel" placeholder="0533XXXXXXX" class="input-field" style="padding: 10px; font-size: 13px;">
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                  <div>
-                    <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Hizmet Seçimi (Süreye Göre Filtreler):</label>
-                    <select id="admin-book-service" onchange="onAdminBookServiceChange(this.value)" class="input-field" style="padding: 10px; font-size: 11px; font-weight: 700;">
-                      <option value="" ${!activeSvcId ? 'selected' : ''} disabled>-- ✂️ Lütfen Hizmet Seçiniz --</option>
-                      ${state.services.map(s => `<option value="${s.id}" ${s.id === activeSvcId ? 'selected' : ''}>${getServiceName(s)} (${s.price} TL - ${s.duration})</option>`).join('')}
-                    </select>
-                  </div>
-                  <div>
-                    <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Uygun Randevu Saati:</label>
-                    <select id="admin-book-time" onchange="selectTimeForAdminManualBook(this.value)" class="input-field" style="padding: 10px; font-size: 12px; font-weight: 800; color: var(--gold-primary);">
-                      ${!activeSvcId ? `
-                        <option value="" selected disabled>⚠️ Önce Hizmet Seçiniz</option>
-                      ` : (validStartTimes.length === 0 ? `
-                        <option value="" selected disabled>⚠️ Bu hizmet (${activeSvc ? activeSvc.duration : ''}) için uygun saat yok</option>
-                      ` : `
-                        <option value="" ${!state.adminBookSelectedTime ? 'selected' : ''} disabled>-- ⏰ Saat Seçiniz --</option>
-                        ${validStartTimes.map(t => `<option value="${t}" ${t === state.adminBookSelectedTime ? 'selected' : ''}>⏰ ${t} (${activeSvc ? activeSvc.duration : ''} Uygun)</option>`).join('')}
-                      `)}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Açıklama / Not (İsteğe Bağlı):</label>
-                  <input id="admin-book-note" type="text" placeholder="Örn: Telefondan arayarak randevu aldı" class="input-field" style="padding: 8px 10px; font-size: 12px;">
-                </div>
-                <button type="submit" ${(!activeSvcId || validStartTimes.length === 0) ? 'disabled' : ''} class="gold-btn" style="padding: 14px; font-size: 14px; font-weight: 900; margin-top: 4px;">
-                  ✅ Manuel Randevuyu Oluştur & Doğrudan Onayla
-                </button>
-              </form>
-            </div>
-                <div>
-                  <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Açıklama / Not (İsteğe Bağlı):</label>
-                  <input id="admin-book-note" type="text" placeholder="Örn: Telefondan arayarak randevu aldı" class="input-field" style="padding: 8px 10px; font-size: 12px;">
-                </div>
-                <button type="submit" ${validStartTimes.length === 0 ? 'disabled' : ''} class="gold-btn" style="padding: 14px; font-size: 14px; font-weight: 900; margin-top: 4px;">
-                  ✅ Manuel Randevuyu Oluştur & Doğrudan Onayla
-                </button>
-              </form>
-            </div>
-          </div>
-        `;
-      }
-
-      // 3. STAFF & PASSWORD MANAGEMENT TAB (ADMIN KENDİSİ YÖNETİCİ ATAYABİLECEK)
-      else if (state.adminTab === 'staffManagement') {
-        html += `
-          <div class="card" style="padding: 16px;">
-            <h3 style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-bottom: 14px;">👥 Yetkili & Şifre Yönetimi</h3>
-            
-            <!-- 1. CROWN ADMIN MASTER PASSWORD -->
-            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--gold-primary); margin-bottom: 18px;">
-              <h4 style="font-size: 13px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">👑 Patron / Ana Admin Şifresi</h4>
-              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Bu şifre ile girildiğinde tüm salon yönetimi ve şifre değiştirme yetkileri açılır.</p>
-
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <input id="master-admin-pwd-input" type="text" value="${state.adminPassword || '1405'}" class="input-field" style="flex: 1; padding: 10px; font-size: 14px; font-weight: 900; color: var(--gold-primary); letter-spacing: 2px;">
-                <button onclick="saveAdminPassword()" class="gold-btn" style="padding: 10px 16px; font-size: 12px; font-weight: 900;">💾 Kaydet</button>
-              </div>
-            </div>
-
-            <!-- 2. MANAGERS / STAFF PASSWORDS LIST -->
-            <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--border-color);">
-              <h4 style="font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 6px;">🛠️ Personel Giriş Şifreleri (Kişiye Özel)</h4>
-              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px;">Her çalışana özel isim ve şifre atayabilirsiniz. Personel kendi şifresi ile girdiğinde sadece randevuları yönetebilir, kasa ve fiyat bilgilerini göremez.</p>
-
-              <!-- ADD NEW STAFF FORM -->
-              <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 16px;">
-                <div style="font-size: 11px; font-weight: 800; color: var(--gold-primary); margin-bottom: 8px;">➕ Yeni Personel & Şifre Ekle</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                  <div>
-                    <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Personel Adı Soyadı:</label>
-                    <input id="new-staff-name-input" type="text" placeholder="Örn: Ahmet Yılmaz" class="input-field" style="padding: 9px; font-size: 12px; font-weight: 700;">
-                  </div>
-                  <div>
-                    <label style="font-size: 10px; color: var(--text-muted); font-weight: 700;">Özel Şifre / PIN:</label>
-                    <input id="new-staff-pin-input" type="text" placeholder="Örn: 5555 veya 1234" class="input-field" style="padding: 9px; font-size: 12px; font-weight: 800; color: var(--gold-primary); letter-spacing: 2px;">
-                  </div>
-                </div>
-                <button onclick="addStaffMember()" class="gold-btn" style="width: 100%; padding: 10px; font-size: 12px; font-weight: 900;">➕ Personeli Kaydet & Şifre Ata</button>
-              </div>
-
-              <!-- LIST OF STAFF MEMBERS -->
-              <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 8px;">📋 Kayıtlı Personeller & Şifreleri:</div>
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                ${(state.staffList || []).map((staff, idx) => `
-                  <div style="background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                      <span style="font-size: 13px; font-weight: 900; color: #fff;">👤 ${staff.name}</span>
-                      <div style="font-size: 11px; color: var(--gold-primary); font-weight: 800; margin-top: 2px;">🔑 Giriş Şifresi: <span style="letter-spacing: 2px; font-size: 13px;">${staff.pin}</span></div>
-                    </div>
-                    <button onclick="deleteStaffMember('${staff.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">🗑️ Sil</button>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      html += `</div>`;
-      container.innerHTML = html;
-    }
-
-    // --- SERVICE DURATION & MULTI-SLOT CALCULATION ENGINE ---
-    function getServiceSlotCount(durationStr) {
-      if (!durationStr) return 1;
-      const str = durationStr.toString().toLowerCase();
-
-      const minMatch = str.match(/(\d+)\s*(dk|min)/);
-      if (minMatch) {
-        const mins = parseInt(minMatch[1], 10);
-        return Math.max(1, Math.ceil(mins / 30));
-      }
-
-      const hourMatch = str.match(/(\d+(?:\.\d+)?)\s*(saat|hr)/);
-      if (hourMatch) {
-        const hours = parseFloat(hourMatch[1]);
-        return Math.max(1, Math.ceil((hours * 60) / 30));
-      }
-
-      return 1;
-    }
-
-    function getOccupiedSlotsForDate(dateStr, targetStaffId = null) {
-      if (!state || !state.appointments) return new Set();
-      const validApts = state.appointments.filter(a => {
-        if (!a || a.date !== dateStr) return false;
-        if (a.status === 'rejected' || a.status === 'cancelled') return false;
-        
-        // If staff filtering is active:
-        if (targetStaffId && targetStaffId !== 'staff-any') {
-          return a.staffId === targetStaffId || !a.staffId;
-        }
-        return true;
-      });
-
-      const set = new Set();
-      validApts.forEach(a => {
-        if (!a.time) return;
-        const dur = a.duration || '30 dk';
-        const slotsCount = getServiceSlotCount(dur);
-        const [h, m] = a.time.split(':').map(Number);
-        let curMin = h * 60 + m;
-        for (let i = 0; i < slotsCount; i++) {
-          const hh = Math.floor(curMin / 60).toString().padStart(2, '0');
-          const mm = (curMin % 60).toString().padStart(2, '0');
-          set.add(`${hh}:${mm}`);
-          curMin += 30;
-        }
-      });
-      return set;
-    }
-
-    // --- AUTOMATIC CLEANUP ENGINE (7 GÜNDEN ESKİ RANDEVULARI SİL + MÜŞTERİ BAŞINA MAKSİMUM 5 RANDEVU KORU) ---
-    function pruneAppointmentsLimit() {
-      if (!Array.isArray(state.appointments)) return;
-      
-      // 1. 7 günden daha eski randevuları otomatik olarak veritabanından temizle
-      const now = new Date();
-      const sevenDaysAgoObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-      const cutoff7DaysAgo = getLocalDateStr(sevenDaysAgoObj);
-
-      let validApts = state.appointments.filter(a => {
-        if (!a || !a.date) return false;
-        return a.date >= cutoff7DaysAgo; // Son 7 gün, bugün veya gelecek randevular kalsın
-      });
-
-      // 2. Müşteri başına en fazla en güncel 5 randevuyu koru
-      const byPhone = {};
-      validApts.forEach(a => {
-        if (!a || !a.customerPhone) return;
-        if (!byPhone[a.customerPhone]) byPhone[a.customerPhone] = [];
-        byPhone[a.customerPhone].push(a);
-      });
-
-      const keptIds = new Set();
-      Object.keys(byPhone).forEach(phone => {
-        const list = byPhone[phone];
-        list.sort((a, b) => {
-          const dtA = (a.date || '') + ' ' + (a.time || '');
-          const dtB = (b.date || '') + ' ' + (b.time || '');
-          return dtB.localeCompare(dtA);
-        });
-        list.slice(0, 5).forEach(a => keptIds.add(a.id));
-      });
-
-      state.appointments = validApts.filter(a => !a || !a.customerPhone || keptIds.has(a.id));
-      localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
-    }
-
-    // --- FIREBASE REALTIME WEBSOCKET & REST HYBRID SYNC ENGINE ---
-    const firebaseConfig = {
-      databaseURL: "https://ezostile-barber-default-rtdb.europe-west1.firebasedatabase.app"
-    };
-    
-    let appDataRef = null;
-    try {
-      if (typeof firebase !== 'undefined') {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(firebaseConfig);
-        }
-        appDataRef = firebase.database().ref('ezostile_v5');
-      }
-    } catch(e) {
-      console.log('Firebase Init error:', e);
-    }
-
-    const CLOUD_ENDPOINTS = [
-      'https://ezostile-barber-default-rtdb.europe-west1.firebasedatabase.app/ezostile_v5.json'
-    ];
-    let isSyncingCloud = false;
-    let lastCloudUpdateTimestamp = Number(localStorage.getItem('gc_last_cloud_ts') || 0);
-    let lastLocalUpdateTimestamp = Number(localStorage.getItem('gc_last_local_ts') || 0);
-
-    function syncToCloud(overridePayload = null) {
-      const now = Date.now();
-      lastLocalUpdateTimestamp = now;
-      lastCloudUpdateTimestamp = now;
-      localStorage.setItem('gc_last_local_ts', now.toString());
-      localStorage.setItem('gc_last_cloud_ts', now.toString());
-
-      const payload = overridePayload || {
-        adminPassword: state.adminPassword,
-        managerPasswords: state.managerPasswords,
-        staffList: state.staffList,
-        appointments: state.appointments,
-        dateSlotOverrides: state.dateSlotOverrides,
-        weeklySchedule: state.weeklySchedule,
-        services: state.services,
-        notifications: state.notifications,
-        adminPhone: state.adminPhone,
-        updatedAt: now
-      };
-
-      // 1. WebSocket Instant Push (<50ms)
-      if (appDataRef) {
-        try { appDataRef.set(payload); } catch(e) {}
-      }
-
-      // 2. HTTP REST Backup Push
-      const bodyStr = JSON.stringify(payload);
-      fetch(CLOUD_ENDPOINTS[0], {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: bodyStr
-      }).catch(() => {});
-    }
-
-    function applyCloudData(latestData) {
-      if (!latestData || !latestData.updatedAt) return;
-
-      if (latestData.updatedAt > lastCloudUpdateTimestamp) {
-        
-        // Check for new pending appointments for Admin audio chime & lock screen notification
-        if (state.role !== 'customer' && latestData.appointments) {
-          const oldPending = (state.appointments || []).filter(a => a.status === 'pending').length;
-          const newPending = latestData.appointments.filter(a => a.status === 'pending').length;
-          if (newPending > oldPending) {
-            playNotificationSound();
-            const newestApt = latestData.appointments.find(a => a.status === 'pending');
-            const aptInfo = newestApt ? `${newestApt.customerName} - ${newestApt.date} ${newestApt.time}` : 'Yeni randevu';
-            triggerLockScreenNotification("EZO STİLE - VIP Berber 💇‍♂️", `⚠️ Randevu onayı bekliyor! (${aptInfo})`);
-          }
-        }
-
-        // Check if Customer's pending appointment was approved or rejected
-        if (state.currentUser && latestData.appointments) {
-          const myOldPending = (state.appointments || []).filter(a => a.customerPhone === state.currentUser.phone && a.status === 'pending');
-          myOldPending.forEach(oldApt => {
-            const updated = latestData.appointments.find(a => a.id === oldApt.id);
-            if (updated && updated.status === 'approved') {
-              playNotificationSound(true);
-              triggerLockScreenNotification("EZO STİLE - Randevu Onaylandı! ✅", `Randevunuz onaylandı: ${updated.serviceName} (${updated.date} ${updated.time})`);
-            } else if (updated && updated.status === 'rejected') {
-              playNotificationSound(false);
-              triggerLockScreenNotification("EZO STİLE - Randevu İptal/Red ❌", `Randevu talebiniz onaylanamadı. (${updated.date} ${updated.time})`);
-            }
-          });
-        }
-
-        lastCloudUpdateTimestamp = latestData.updatedAt;
-        localStorage.setItem('gc_last_cloud_ts', latestData.updatedAt.toString());
-
-        if (latestData.adminPassword) {
-          state.adminPassword = latestData.adminPassword;
-          localStorage.setItem('gc_admin_pwd', latestData.adminPassword);
-        }
-        if (latestData.staffList && Array.isArray(latestData.staffList) && latestData.staffList.length > 0) {
-          state.staffList = latestData.staffList;
-          state.managerPasswords = state.staffList.map(s => s.pin);
-          localStorage.setItem('gc_staff_list', JSON.stringify(state.staffList));
-          localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
-        } else if (latestData.managerPasswords && Array.isArray(latestData.managerPasswords)) {
-          state.managerPasswords = latestData.managerPasswords;
-          localStorage.setItem('gc_manager_pwds', JSON.stringify(state.managerPasswords));
-        }
-        if (latestData.appointments) {
-          state.appointments = Array.isArray(latestData.appointments) ? latestData.appointments : [];
-          pruneAppointmentsLimit();
-        }
-        if (latestData.dateSlotOverrides) {
-          state.dateSlotOverrides = Array.isArray(latestData.dateSlotOverrides) ? latestData.dateSlotOverrides : [];
-          localStorage.setItem('gc_date_slot_overrides', JSON.stringify(state.dateSlotOverrides));
-        }
-        if (latestData.weeklySchedule) {
-          state.weeklySchedule = latestData.weeklySchedule;
-          localStorage.setItem('gc_weekly_schedule', JSON.stringify(state.weeklySchedule));
-        }
-        if (latestData.services) {
-          state.services = Array.isArray(latestData.services) ? latestData.services : DEFAULT_SERVICES;
-          localStorage.setItem('gc_services', JSON.stringify(state.services));
-        }
-        if (latestData.adminPhone) {
-          state.adminPhone = latestData.adminPhone;
-          localStorage.setItem('gc_admin_phone', latestData.adminPhone);
-        }
-        if (latestData.notifications) {
-          state.notifications = Array.isArray(latestData.notifications) ? latestData.notifications : [];
-          localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
-        }
-
-        sanitizeState();
-        renderApp();
-      }
-    }
-
-    // Attach Realtime WebSocket Live Listener (<50ms Instant Sync)
-    if (appDataRef) {
-      try {
-        appDataRef.on('value', (snapshot) => {
-          const val = snapshot.val();
-          if (val) applyCloudData(val);
-        });
-      } catch(e) {}
-    }
-
-    async function fetchFromCloud() {
-      if (isSyncingCloud) return;
-      try {
-        isSyncingCloud = true;
-        let latestData = null;
-
-        for (const url of CLOUD_ENDPOINTS) {
-          try {
-            const res = await fetch(url, { cache: 'no-store' });
-            if (res.ok) {
-              const text = await res.text();
-              if (text && text.trim().startsWith('{')) {
-                const parsed = JSON.parse(text);
-                if (parsed && parsed.updatedAt) {
-                  if (!latestData || parsed.updatedAt > latestData.updatedAt) {
-                    latestData = parsed;
-                  }
-                }
-              }
-            }
-          } catch (e) {}
-        }
-
-        if (latestData) {
-          applyCloudData(latestData);
-        } else if (lastLocalUpdateTimestamp === 0) {
-          syncToCloud();
-        }
-      } catch (err) {
-      } finally {
-        isSyncingCloud = false;
-      }
-    }
-
-    // Auto poll cloud DB every 1.5 seconds for instant multi-device sync
-    fetchFromCloud();
-    setInterval(fetchFromCloud, 1500);
-
-    // Sync on tab focus or visibility change
-    window.addEventListener('focus', fetchFromCloud);
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) fetchFromCloud();
-    });
-
-    // --- USER INTERACTIONS ---
-    function selectService(id) {
-      state.selectedServiceId = id;
-      renderApp();
-    }
-
-    function selectDate(date) {
-      state.selectedDate = date;
-      state.selectedTime = '';
-      renderApp();
-    }
-
-    function selectTomorrow() {
-      const tom = new Date();
-      tom.setDate(tom.getDate() + 1);
-      state.selectedDate = getLocalDateStr(tom);
-      state.selectedTime = '';
-      renderApp();
-    }
-
-    function setCustomerTab(tab) {
-      state.customerTab = tab;
-      renderApp();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function setAccordionStep(step) {
-      state.accordionStep = step;
-      renderApp();
-    }
-
-    function selectServiceAccordion(id) {
-      state.selectedServiceId = id;
-      state.accordionStep = 2; // Auto collapse Service and open Date
-      renderApp();
-    }
-
-    function selectDateAccordion(date) {
-      state.selectedDate = date;
-      state.selectedTime = '';
-      state.accordionStep = 3; // Auto collapse Date and open Time
-      renderApp();
-    }
-
-    
-    function selectStaffAccordion(staffId) {
-      if (typeof state === 'undefined') return;
-      state.selectedStaffId = staffId;
-      state.selectedTime = null; // Reset selected time when staff changes
-      renderApp();
-    }
-
-    function getStaffNameById(staffId) {
-      if (!state || !state.staffList) return 'Fark Etmez';
-      const s = state.staffList.find(x => x.id === staffId);
-      return s ? s.name : 'Fark Etmez';
-    }
-
-    function selectTimeAccordion(time) {
-      state.selectedTime = time;
-      state.accordionStep = 4; // Auto collapse Time to show Big Confirm Button
-      renderApp();
-      setTimeout(() => {
-        const bar = document.getElementById('booking-confirm-bar');
-        if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 50);
-    }
-
-    function openServiceSelectionModal() {
-      const root = document.getElementById('modal-root');
-      if (!root) return;
-      
-      const activeSelectedService = state.selectedServiceId ? state.services.find(s => s.id === state.selectedServiceId) : null;
-      
-      root.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; border-color: var(--gold-primary); padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
-              <div>
-                <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin: 0;">✂️ ${t('servicesTitle')}</h3>
-                <span style="font-size: 11px; color: var(--text-muted);">${t('selectServicePrompt')}</span>
-              </div>
-              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: 32px; height: 32px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto; padding-right: 4px;">
-              ${state.services.map(s => {
-                const displayName = getServiceName(s);
-                const isSel = activeSelectedService && activeSelectedService.id === s.id;
-                return `
-                  <div onclick="selectServiceFromModal('${s.id}')" style="padding: 14px 16px; border-radius: 14px; border: 2px solid ${isSel ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${isSel ? 'rgba(245,158,11,0.2)' : '#070c1a'}; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s ease;">
-                    <div>
-                      <div style="font-weight: 900; font-size: 14px; color: ${isSel ? 'var(--gold-light)' : '#fff'};">${isSel ? '✓ ' : ''}${displayName}</div>
-                      <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">⏱️ ${s.duration}</div>
-                    </div>
-                    <div style="font-size: 14px; font-weight: 900; color: var(--gold-primary); background: rgba(245,158,11,0.15); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.3); flex-shrink: 0;">
-                      ${s.price} TL
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function selectServiceFromModal(serviceId) {
-      state.selectedServiceId = serviceId;
-      state.accordionStep = 2;
-      closeModal();
-      renderApp();
-      setTimeout(() => {
-        const step2 = document.getElementById('step-2-container');
-        if (step2) step2.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 50);
-    }
-
-    function requestCancelOrChange(aptId, type) {
-      const apt = state.appointments.find(a => a.id === aptId);
-      if (!apt) return;
-
-      const isCancel = type === 'cancel';
-      const root = document.getElementById('modal-root');
-      if (!root) return;
-
-      let msgText = '';
-      let modalTitle = '';
-      let modalDesc = '';
-      let btnLabel = '';
-
-      if (state.language === 'en') {
-        modalTitle = isCancel ? '📲 Request Appointment Cancellation' : '✏️ Request Appointment Change';
-        modalDesc = 'You cannot directly cancel or reschedule an approved appointment. Your request will be sent directly to the salon owner via WhatsApp.';
-        btnLabel = isCancel ? '📲 Send Cancellation Request via WhatsApp' : '📲 Send Reschedule Request via WhatsApp';
-        msgText = isCancel 
-          ? `Hello Ezo Stile! 💇‍♂️ I am ${apt.customerName} (${apt.customerPhone}). I request to CANCEL my appointment for ${apt.serviceName} on ${apt.date} at ${apt.time}. Please cancel it so I can book again!`
-          : `Hello Ezo Stile! 💇‍♂️ I am ${apt.customerName} (${apt.customerPhone}). I request to RESCHEDULE my appointment for ${apt.serviceName} on ${apt.date} at ${apt.time}. Can you please assist?`;
-      } else if (state.language === 'ru') {
-        modalTitle = isCancel ? '📲 Запрос на отмену записи' : '✏️ Запрос на изменение времени';
-        modalDesc = 'Вы не можете отменить или изменить подтвержденную запись напрямую. Ваш запрос будет отправлен администратору в WhatsApp.';
-        btnLabel = isCancel ? '📲 Отправить запрос на отмену в WhatsApp' : '📲 Отправить запрос на изменение в WhatsApp';
-        msgText = isCancel 
-          ? `Здравствуйте Ezo Stile! 💇‍♂️ Я ${apt.customerName} (${apt.customerPhone}). Я хочу ОТМЕНИТЬ запись на ${apt.serviceName} на ${apt.date} в ${apt.time}. Пожалуйста, отмените ее!`
-          : `Здравствуйте Ezo Stile! 💇‍♂️ Я ${apt.customerName} (${apt.customerPhone}). Я хочу ИЗМЕНИТЬ запись на ${apt.serviceName} на ${apt.date} в ${apt.time}. Помогите, пожалуйста!`;
-      } else if (state.language === 'tk') {
-        modalTitle = isCancel ? '📲 Brony Ýatyrmak Haýyşy' : '✏️ Bron Wagtyny Üýtgetmek Haýyşy';
-        modalDesc = 'Tassyklanan brony gönüden-göni ýatyryp bilmezsiňiz. Ýatyrmak haýyşyňyz salonyň WhatsApp belgisine ugradylar.';
-        btnLabel = isCancel ? '📲 WhatsApp Bilen Ýatyrmak Haýyşy Ugrat' : '📲 WhatsApp Bilen Üýtgetmek Haýyşy Ugrat';
-        msgText = isCancel 
-          ? `Salam Ezo Stile! 💇‍♂️ Men ${apt.customerName} (${apt.customerPhone}). ${apt.date} sagat ${apt.time} tarihindäki ${apt.serviceName} bronymy ÝATYRMAK İSTEYÄRİN. Haýyş edýäris bronymy ýatyryň!`
-          : `Salam Ezo Stile! 💇‍♂️ Men ${apt.customerName} (${apt.customerPhone}). ${apt.date} sagat ${apt.time} tarihindäki ${apt.serviceName} bronymyň SAGADYNY ÜÝTGETMEK İSTEYÄRİN. Kömək edip bilersiňizmi?`;
-      } else {
-        modalTitle = isCancel ? '📲 Randevu İptal Talebi' : '✏️ Randevu Tarih / Saat Değiştirme Talebi';
-        modalDesc = 'Tarih seçip onayladığınız randevuyu doğrudan değiştiremez veya iptal edemezsiniz. İptal / Değişiklik talebiniz Admin WhatsApp hattına yönlendirilecektir.';
-        btnLabel = isCancel ? '📲 WhatsApp İle İptal Talebi Gönder' : '📲 WhatsApp İle Değişiklik Talebi Gönder';
-        msgText = isCancel 
-          ? `Merhaba Ezo Stile! 💇‍♂️ BEN ${apt.customerName} (${apt.customerPhone}). ${apt.date} saat ${apt.time} tarihindeki ${apt.serviceName} randevumu İPTAL EDİP YENİDEN SEÇMEK İSTİYORUM. Lütfen randevumu iptal ediniz!`
-          : `Merhaba Ezo Stile! 💇‍♂️ BEN ${apt.customerName} (${apt.customerPhone}). ${apt.date} saat ${apt.time} tarihindeki ${apt.serviceName} randevumun SAATİNİ / TARİHİNİ DEĞİŞTİRMEK İSTİYORUM. Yardımcı olur musunuz?`;
-      }
-
-      root.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; text-align: center; border-color: ${isCancel ? 'var(--rose)' : 'var(--gold-primary)'}; padding: 22px;">
-            <div style="width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 18px; background: ${isCancel ? 'rgba(244,63,94,0.15)' : 'rgba(245,158,11,0.15)'}; border: 1px solid ${isCancel ? 'rgba(244,63,94,0.4)' : 'rgba(245,158,11,0.4)'}; display: flex; align-items: center; justify-content: center; font-size: 26px;">
-              ${isCancel ? '🚫' : '✏️'}
-            </div>
-            <h3 style="font-size: 16px; font-weight: 900; color: ${isCancel ? '#fb7185' : 'var(--gold-primary)'}; margin-bottom: 8px;">${modalTitle}</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
-              ${modalDesc}
-            </p>
-
-            <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; font-size: 11px; color: #fff; margin-bottom: 18px; text-align: left; border: 1px solid var(--border-color);">
-              <strong style="color: var(--gold-primary);">📌 ${t('sampleMessage')}:</strong><br/>
-              <em style="display: block; margin-top: 4px; line-height: 1.4;">"${msgText}"</em>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button onclick="sendCustomerWhatsApp('${state.adminPhone || '05338000000'}', '${msgText.replace(/'/g, "\\'")}'); closeModal();" class="gold-btn" style="background: #25D366; color: #fff; border: none; padding: 14px; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                ${btnLabel}
-              </button>
-              <button onclick="closeModal()" style="padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer;">
-                ${t('closeBtn')}
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function openAdminPhoneModal() {
-      const root = document.getElementById('modal-root');
-      if (!root) return;
-      root.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 400px; text-align: center; border-color: var(--gold-primary);">
-            <div style="width: 54px; height: 54px; margin: 0 auto 12px; border-radius: 16px; background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); display: flex; align-items: center; justify-content: center; font-size: 26px;">
-              📱
-            </div>
-            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">${t('adminPhoneModalTitle')}</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
-              ${t('adminPhoneModalDesc')}
-            </p>
-
-            <input id="admin-phone-input-modal" type="text" value="${state.adminPhone || '05338000000'}" class="input-field" style="padding: 12px; font-size: 15px; font-weight: 800; color: var(--gold-primary); text-align: center; margin-bottom: 16px;">
-
-            <div style="display: flex; gap: 8px;">
-              <button onclick="closeModal()" style="flex: 1; padding: 12px; border-radius: 12px; background: #070c1a; border: 1px solid var(--border-color); color: #fff; font-weight: 700; cursor: pointer;">
-                ${t('cancel')}
-              </button>
-              <button onclick="saveAdminPhone(document.getElementById('admin-phone-input-modal').value); closeModal();" class="gold-btn" style="flex: 1.5; padding: 12px; font-size: 13px; font-weight: 900;">
-                💾 ${t('savePhoneBtn')}
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function saveAdminPhone(phone) {
-      if (!phone || phone.trim() === '') {
-        alert('Lütfen geçerli bir telefon numarası giriniz.');
-        return;
-      }
-      state.adminPhone = phone.trim();
-      localStorage.setItem('gc_admin_phone', state.adminPhone);
-      syncToCloud();
-      alert(`✅ WhatsApp & SMS randevu bildirim numarası "${state.adminPhone}" olarak başarıyla kaydedildi!`);
-      renderApp();
-    }
-
-    function submitBooking() {
-      if (!state.currentUser) {
-        alert('Lütfen önce adınızı ve telefon numaranızı girerek kaydolunuz.');
-        return;
-      }
-      if (!state.selectedServiceId) {
-        alert('Lütfen önce bir hizmet seçiniz.');
-        state.accordionStep = 1;
-        renderApp();
-        return;
-      }
-      if (!state.selectedTime) {
-        alert('Lütfen bir randevu saati seçiniz.');
-        return;
-      }
-
-      const activeSvc = state.services.find(s => s.id === state.selectedServiceId) || state.services[0];
-      const activeSvcName = getServiceName(activeSvc);
-
-      // Duration & Slot bounds validation
-      const occupiedSlotsSet = getOccupiedSlotsForDate(state.selectedDate);
-      const neededSlots = activeSvc ? getServiceSlotCount(activeSvc.duration) : 1;
-      
-      let hasEnoughConsecutiveTime = true;
-      const [startH, startM] = state.selectedTime.split(':').map(Number);
-      let checkMinTotal = startH * 60 + startM;
-
-      const sched = state.weeklySchedule[new Date(state.selectedDate).getDay()] || { isOpen: true, start: '09:00', end: '21:00' };
-      const startHour = parseInt((sched.start || '09:00').split(':')[0]);
-      const endHour = parseInt((sched.end || '21:00').split(':')[0]);
-      const availableSlots = [];
-      if (sched.isOpen) {
-        for (let h = startHour; h <= endHour; h++) {
-          const hh = h.toString().padStart(2, '0');
-          availableSlots.push(`${hh}:00`);
-          if (h !== endHour) availableSlots.push(`${hh}:30`);
-        }
-      }
-
-      for (let i = 0; i < neededSlots; i++) {
-        const hh = Math.floor(checkMinTotal / 60).toString().padStart(2, '0');
-        const mm = (checkMinTotal % 60).toString().padStart(2, '0');
-        const checkTimeStr = `${hh}:${mm}`;
-
-        const checkOverride = state.dateSlotOverrides.find(b => b.date === state.selectedDate && b.time === checkTimeStr);
-        const isCheckBlocked = (checkOverride ? checkOverride.status === 'blocked' : false) || occupiedSlotsSet.has(checkTimeStr);
-
-        if (isCheckBlocked || !availableSlots.includes(checkTimeStr)) {
-          hasEnoughConsecutiveTime = false;
-          break;
-        }
-        checkMinTotal += 30;
-      }
-
-      if (!hasEnoughConsecutiveTime) {
-        alert(`⚠️ Hizmetinizin Saati Yüzünden Randevu Alamadınız!\n\nSeçtiğiniz "${activeSvcName}" (${activeSvc.duration}) hizmetinin süresi salon kapanış saatini veya sonraki randevuyu aştığı için ${state.selectedTime} saatine randevu oluşturulamadı.\n\nLütfen daha erken bir randevu saati seçiniz.`);
-        state.selectedTime = '';
-        state.accordionStep = 3;
-        renderApp();
-        return;
-      }
-
-      const selectedStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { id: 'staff-any', name: 'Fark Etmez' };
-      const aiModelInfo = state.selectedAiModel ? { aiModelName: state.selectedAiModel.name, aiRecipe: state.selectedAiModel.recipe } : {};
-      const newApt = {
-        ...aiModelInfo,
-        staffId: selectedStaffObj.id,
-        staffName: selectedStaffObj.name,
-        id: Date.now().toString(),
-        customerName: state.currentUser.name,
-        customerPhone: state.currentUser.phone,
-        serviceName: activeSvcName,
-        date: state.selectedDate,
-        time: state.selectedTime,
-        price: activeSvc.price,
-        status: 'pending'
-      };
-
-      state.appointments.unshift(newApt);
-      pruneAppointmentsLimit();
-      syncToCloud();
-      window.dispatchEvent(new Event('storage'));
-
-      state.selectedServiceId = null;
-      state.selectedTime = '';
-      state.accordionStep = 0;
-
-      // Trigger Lock Screen System Notification
-      triggerLockScreenNotification('EZO STİLE 💇‍♂️', `🎉 Randevunuz oluşturuldu! Randevu onayı bekliyor (${newApt.date} ${newApt.time})`);
-
-      // Show rich modal with WhatsApp action
-      openBookingSuccessModal(newApt);
-      renderApp();
-    }
-
-    function openBookingSuccessModal(apt) {
-      const root = document.getElementById('modal-root');
-      const adminPhone = state.adminPhone || '05338000000';
-      
-      let msgText = '';
-      if (state.language === 'en') {
-        msgText = `Hello Ezo Stile! 💇‍♂️ I am ${apt.customerName} (${apt.customerPhone}). I booked ${apt.serviceName} on ${apt.date} at ${apt.time}. Awaiting confirmation. Please approve!`;
-      } else if (state.language === 'ru') {
-        msgText = `Здравствуйте Ezo Stile! 💇‍♂️ Я ${apt.customerName} (${apt.customerPhone}). Я записался на ${apt.serviceName} на ${apt.date} в ${apt.time}. Жду подтверждения!`;
-      } else if (state.language === 'tk') {
-        msgText = `Salam Ezo Stile! 💇‍♂️ Men ${apt.customerName} (${apt.customerPhone}). ${apt.date} sagat ${apt.time} üçin ${apt.serviceName} bron aldym. Tassyklaýyş garaşýar. Haýyş tassyklaweriň!`;
-      } else {
-        msgText = `Merhaba Ezo Stile! 💇‍♂️ Ben ${apt.customerName} (${apt.customerPhone}). ${apt.date} saat ${apt.time} için ${apt.serviceName} randevusu aldım. Randevu onayı bekliyor. Lütfen onaylayınız!`;
-      }
-
-      root.innerHTML = `
-        <div class="modal-overlay">
-          <div class="modal-content" style="text-align: center; max-width: 440px; border: 1px solid var(--gold-primary); box-shadow: 0 15px 40px rgba(0,0,0,0.8);">
-            <div style="font-size: 44px; margin-bottom: 6px;">🎉</div>
-            <h3 style="font-size: 18px; font-weight: 900; color: var(--gold-primary); margin-bottom: 6px;">${t('bookingSuccessTitle')}</h3>
-            <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 14px;">${t('bookingSuccessDesc')}</p>
-
-            <div style="background: rgba(245,158,11,0.12); border: 1px dashed var(--gold-primary); border-radius: 14px; padding: 12px; margin-bottom: 16px; text-align: left;">
-              <div style="font-size: 12px; color: #fbbf24; font-weight: 800;">${t('aptDetailTitle')}</div>
-              <div style="font-size: 12px; color: #fff; margin-top: 4px;">👤 <strong>${apt.customerName}</strong> (${apt.customerPhone})</div>
-              <div style="font-size: 12px; color: #fff; margin-top: 2px;">✂️ ${apt.serviceName}</div>
-              <div style="font-size: 12px; color: #fbbf24; font-weight: 800; margin-top: 2px;">⏰ ${apt.date} — ${apt.time}</div>
-            </div>
-
-            <div style="font-size: 12px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">${t('chooseNotifyChannel')}</div>
-
             <div style="display: flex; flex-direction: column; gap: 10px;">
-              <button onclick="sendCustomerWhatsApp('${adminPhone}', '${msgText.replace(/'/g, "\\'")}'); closeModal();" class="gold-btn" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #fff; font-size: 14px; font-weight: 800; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);">
-                ${t('sendWaToBarber')}
-              </button>
-              
-              <button onclick="sendCustomerSms('${adminPhone}', '${msgText.replace(/'/g, "\\'")}'); closeModal();" class="gold-btn" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #fff; font-size: 14px; font-weight: 800; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
-                ${t('sendSmsToBarber')}
-              </button>
+              <div onclick="setAdminTab('weeklySchedule')" style="background: #070c1a; border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="font-size: 22px;">⏰</div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 700; color: #fff;">Çalışma Saatleri & Günleri</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Açılış/Kapanış saatlerini düzenle</div>
+                  </div>
+                </div>
+                <div style="color: var(--gold-primary); font-weight: 800;">→</div>
+              </div>
 
-              <button onclick="closeModal()" class="gold-btn" style="width: 100%; padding: 10px; font-size: 12px; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);">
-                ${t('okLater')}
-              </button>
+              <div onclick="setAdminTab('servicesAdmin')" style="background: #070c1a; border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="font-size: 22px;">✂️</div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 700; color: #fff;">Hizmetler & Fiyat Kataloğu</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Hizmet ekle, süre ve fiyat güncelle</div>
+                  </div>
+                </div>
+                <div style="color: var(--gold-primary); font-weight: 800;">→</div>
+              </div>
+
+              <div onclick="setAdminTab('staffManagement')" style="background: #070c1a; border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="font-size: 22px;">👥</div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 700; color: #fff;">Personel & Şifre Yönetimi</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Berber ekle ve giriş şifrelerini belirle</div>
+                  </div>
+                </div>
+                <div style="color: var(--gold-primary); font-weight: 800;">→</div>
+              </div>
+
+              <div onclick="setAdminTab('slotLocking')" style="background: #070c1a; border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="font-size: 22px;">🔒</div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 700; color: #fff;">Özel Saat Kilitleri</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">İstediğiniz saati randevuya kapatın</div>
+                  </div>
+                </div>
+                <div style="color: var(--gold-primary); font-weight: 800;">→</div>
+              </div>
+
+              <div onclick="setAdminTab('revenueDashboard')" style="background: #070c1a; border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="font-size: 22px;">💰</div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 700; color: #fff;">Ciro & Kasa Raporu</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Günlük/Aylık gelir istatistikleri</div>
+                  </div>
+                </div>
+                <div style="color: var(--gold-primary); font-weight: 800;">→</div>
+              </div>
+
+              <div onclick="openPlanComparisonModal()" style="background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.06)); border: 1px solid var(--border-gold); padding: 14px; border-radius: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="font-size: 22px;">👑</div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 700; color: var(--gold-primary);">Paketim & Abonelik (PRO)</div>
+                    <div style="font-size: 11px; color: var(--gold-light);">SaaS Paket Yönetimi</div>
+                  </div>
+                </div>
+                <div style="color: var(--gold-primary); font-weight: 800;">→</div>
+              </div>
             </div>
           </div>
+        `;
+      }
+
+      // TAB: MANUAL BOOKING / TAKVİM
+      else if (state.adminTab === 'manualBooking') {
+        html += renderAdminManualBookingSubmodule();
+      }
+      // TAB: WEEKLY SCHEDULE
+      else if (state.adminTab === 'weeklySchedule') {
+        html += renderAdminWeeklyScheduleSubmodule();
+      }
+      // TAB: SERVICES ADMIN
+      else if (state.adminTab === 'servicesAdmin') {
+        html += renderAdminServicesSubmodule();
+      }
+      // TAB: STAFF MANAGEMENT
+      else if (state.adminTab === 'staffManagement') {
+        html += renderAdminStaffSubmodule();
+      }
+      // TAB: SLOT LOCKING
+      else if (state.adminTab === 'slotLocking') {
+        html += renderAdminSlotLockingSubmodule();
+      }
+      // TAB: REVENUE DASHBOARD
+      else if (state.adminTab === 'revenueDashboard') {
+        html += renderAdminRevenueSubmodule();
+      }
+
+      // 4. FIXED BOTTOM NAVIGATION BAR FOR PATRON / ADMIN
+      html += `
+        <div style="height: 70px;"></div>
+        <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(7,12,26,0.96); backdrop-filter: blur(14px); border-top: 1px solid var(--border-gold); padding: 8px 12px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; box-shadow: 0 -4px 20px rgba(0,0,0,0.6);">
+          
+          <button onclick="setAdminTab('requests')" style="background: none; border: none; color: ${state.adminTab === 'requests' ? 'var(--gold-primary)' : 'var(--text-muted)'}; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; cursor: pointer;">
+            <span style="font-size: 18px;">🏠</span>
+            <span>Panel</span>
+          </button>
+
+          <button onclick="setAdminTab('manualBooking')" style="background: none; border: none; color: ${state.adminTab === 'manualBooking' ? 'var(--gold-primary)' : 'var(--text-muted)'}; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; cursor: pointer;">
+            <span style="font-size: 18px;">📅</span>
+            <span>Randevular</span>
+          </button>
+
+          <button onclick="setAdminTab('staffManagement')" style="background: none; border: none; color: ${state.adminTab === 'staffManagement' ? 'var(--gold-primary)' : 'var(--text-muted)'}; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; cursor: pointer;">
+            <span style="font-size: 18px;">👥</span>
+            <span>Müşteriler</span>
+          </button>
+
+          <button onclick="setAdminTab('managementSettings')" style="background: none; border: none; color: ${state.adminTab === 'managementSettings' ? 'var(--gold-primary)' : 'var(--text-muted)'}; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; cursor: pointer;">
+            <span style="font-size: 18px;">⚙️</span>
+            <span>Yönetim</span>
+          </button>
+
         </div>
       `;
-    }
 
-    // --- CUSTOMER CANCEL & RESCHEDULE ---
-    function cancelMyAppointment(aptId) {
-      if (confirm('Bu randevunuzu iptal etmek istediğinize emin misiniz?')) {
-        const apt = state.appointments.find(a => a.id === aptId);
-        if (apt) {
-          apt.status = 'cancelled';
-          localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
-          syncToCloud();
-          window.dispatchEvent(new Event('storage'));
-          alert('🚫 Randevunuz iptal edildi.');
-          renderApp();
-        }
-      }
-    }
-
-    function openRescheduleModal(aptId) {
-      const apt = state.appointments.find(a => a.id === aptId);
-      if (!apt) return;
-
-      const root = document.getElementById('modal-root');
-      root.innerHTML = `
-        <div class="modal-overlay">
-          <div class="modal-content">
-            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 8px;">${t('rescheduleTitle')}</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">📌 ${apt.serviceName}</p>
-
-            <div style="margin-bottom: 12px;">
-              <label style="font-size: 11px; font-weight: 700; color: #fff;">${t('selectDateLabel')}</label>
-              <input id="resched-date" type="date" value="${apt.date}" min="${new Date().toISOString().split('T')[0]}" class="input-field" style="margin-top: 4px;">
-            </div>
-
-            <div style="margin-bottom: 16px;">
-              <label style="font-size: 11px; font-weight: 700; color: #fff;">${t('selectTimeFirst')}:</label>
-              <input id="resched-time" type="text" value="${apt.time}" placeholder="15:30" class="input-field" style="margin-top: 4px;">
-            </div>
-
-            <div style="display: flex; gap: 8px;">
-              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #fff; flex: 1;">${t('cancel')}</button>
-              <button onclick="saveRescheduledAppointment('${apt.id}')" class="gold-btn" style="flex: 2;">${t('saveRescheduleBtn')}</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // --- WHATSAPP & SMS QUICK ACTION HELPERS ---
-    function formatPhoneForWa(phone) {
-      let clean = (phone || '').replace(/\D/g, '');
-      if (clean.startsWith('0')) clean = '90' + clean.substring(1);
-      else if (!clean.startsWith('90') && clean.length === 10) clean = '90' + clean;
-      return clean;
-    }
-
-    function sendCustomerWhatsApp(phone, text) {
-      const waPhone = formatPhoneForWa(phone);
-      const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`;
-      window.open(url, '_blank');
-    }
-
-    function sendCustomerSms(phone, text) {
-      const cleanPhone = (phone || '').replace(/\D/g, '');
-      const url = `sms:${cleanPhone}?body=${encodeURIComponent(text)}`;
-      window.open(url, '_self');
-    }
-
-    function saveRescheduledAppointment(aptId) {
-      const newDate = document.getElementById('resched-date').value;
-      const newTime = document.getElementById('resched-time').value;
-
-      if (!newDate || !newTime) {
-        alert('Lütfen yeni tarih ve saati eksiksiz giriniz.');
-        return;
-      }
-
-      const apt = state.appointments.find(a => a.id === aptId);
-      if (apt) {
-        apt.date = newDate;
-        apt.time = newTime;
-        apt.status = 'pending';
-        localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
-        syncToCloud();
-        window.dispatchEvent(new Event('storage'));
-        closeModal();
-        alert('🔄 Randevu saatiniz değiştirildi ve yönetici onayına gönderildi!');
-        renderApp();
-      }
-    }
-
-    function isValidTurkishGsm(phone) {
-      let clean = (phone || '').replace(/\D/g, '');
-      if (clean.startsWith('90')) clean = clean.substring(2);
-      if (clean.startsWith('0')) clean = clean.substring(1);
-      
-      if (clean.length !== 10 || !clean.startsWith('5')) return false;
-      if (/^(\d)\1{9}$/.test(clean)) return false;
-      if (clean === '1234567890' || clean === '5454646352' || clean === '5000000000') return false;
-
-      const prefix = parseInt(clean.substring(0, 3));
-      if ((prefix >= 501 && prefix <= 509) || 
-          (prefix >= 530 && prefix <= 539) || 
-          (prefix >= 540 && prefix <= 549) || 
-          (prefix >= 551 && prefix <= 559) || 
-          prefix === 561) {
-        return true;
-      }
-      return false;
+      container.innerHTML = html;
     }
 
     function handleCustomerRegister(e) {
@@ -4111,273 +2985,40 @@ appName: 'EZO STİLE',
       openAdminProfileModal();
     }
 
+    
     function openAdminProfileModal() {
       const root = document.getElementById('modal-root');
       if (!root) return;
-
-      if (typeof state !== 'undefined') {
-        state.adminProfileSubView = state.adminProfileSubView || 'main';
-      }
-      const currentSubView = (state && state.adminProfileSubView) ? state.adminProfileSubView : 'main';
-
-      const isAdminRole = state.role === 'admin';
-      const staffName = state.currentStaffName || (isAdminRole ? 'Patron (Ana Admin)' : 'Salon Görevlisi');
-      const adminPhone = state.adminPhone || '05338000000';
-      const todayStr = getLocalDateStr(new Date());
-      const todayApproved = (state.appointments || []).filter(a => a && a.status === 'approved' && a.date === todayStr);
-      const todayRevenue = todayApproved.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-      const staffCount = (state.staffList || []).length;
-
-      if (typeof state.soundEnabled === 'undefined') {
-        state.soundEnabled = localStorage.getItem('gc_sound_enabled') !== 'false';
-      }
-      const isSoundOn = state.soundEnabled !== false;
-
-      if (typeof state.lockScreenNotifEnabled === 'undefined') {
-        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true';
-      }
-      const isLockNotifOn = state.lockScreenNotifEnabled === true;
-
-      const currentLangObj = {
-        tr: '🇹🇷 Türkçe',
-        en: '🇬🇧 English',
-        ru: '🇷🇺 Русский',
-        tk: '🇹🇲 Türkmençe'
-      }[state.language || 'tr'] || '🇹🇷 Türkçe';
-
-      let bodyHTML = '';
-
-      // --- SUBVIEW 1: MAIN MENU (DERLİ TOPLU ANA MENÜ) ---
-      if (currentSubView === 'main') {
-        bodyHTML = `
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- 1. DİLLER BUTONU -->
-            <button onclick="openAdminProfileSubView('languages')" class="btn btn-secondary" style="justify-content: space-between; width: 100%; min-height: 48px; padding: 12px 16px;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 18px;">🌐</span>
-                <span style="font-size: 14px; font-weight: 700;">Diller</span>
-              </div>
-              <span class="badge" style="background: rgba(245,158,11,0.15); color: var(--gold-primary); font-size: 11px;">${currentLangObj} ›</span>
-            </button>
-
-            <!-- 2. AYARLAR BUTONU -->
-            <button onclick="openAdminProfileSubView('settings')" class="btn btn-secondary" style="justify-content: space-between; width: 100%; min-height: 48px; padding: 12px 16px;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 18px;">⚙️</span>
-                <span style="font-size: 14px; font-weight: 700;">Ayarlar</span>
-              </div>
-              <span style="color: var(--text-muted); font-size: 14px;">›</span>
-            </button>
-
-            <!-- 3. CİRO VE PERSONEL HIZLI ERİŞİM (ONLY ADMIN) -->
-            ${isAdminRole ? `
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 4px;">
-                <button onclick="closeModal(); setAdminTab('revenueDashboard');" class="btn btn-gold" style="flex-direction: column; align-items: flex-start; padding: 14px; height: auto; border-radius: 14px;">
-                  <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;">
-                    <span>💰</span> Ciro & Kasa
-                  </div>
-                  <span style="font-size: 11px; margin-top: 4px; opacity: 0.9;">Bugün: ${todayRevenue} TL</span>
-                </button>
-                <button onclick="closeModal(); setAdminTab('staffManagement');" class="btn btn-secondary" style="flex-direction: column; align-items: flex-start; padding: 14px; height: auto; border-radius: 14px;">
-                  <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;">
-                    <span>👥</span> Personel & Şifre
-                  </div>
-                  <span style="font-size: 11px; margin-top: 4px; color: var(--text-muted);">${staffCount} Görevli</span>
-                </button>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }
-
-      // --- SUBVIEW 2: DİLLER SUBVIEW ---
-      else if (currentSubView === 'languages') {
-        bodyHTML = `
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 0.5px;">Lütfen Bir Dil Seçiniz:</div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-              <button onclick="setLanguage('tr')" class="btn ${state.language === 'tr' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 44px; padding: 8px; font-size: 13px;">🇹🇷 Türkçe ${state.language === 'tr' ? '✓' : ''}</button>
-              <button onclick="setLanguage('en')" class="btn ${state.language === 'en' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 44px; padding: 8px; font-size: 13px;">🇬🇧 English ${state.language === 'en' ? '✓' : ''}</button>
-              <button onclick="setLanguage('ru')" class="btn ${state.language === 'ru' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 44px; padding: 8px; font-size: 13px;">🇷🇺 Русский ${state.language === 'ru' ? '✓' : ''}</button>
-              <button onclick="setLanguage('tk')" class="btn ${state.language === 'tk' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 44px; padding: 8px; font-size: 13px;">🇹🇲 Türkmençe ${state.language === 'tk' ? '✓' : ''}</button>
-            </div>
-            <button onclick="openAdminProfileSubView('main')" class="btn btn-outline-gold" style="width: 100%; margin-top: 8px; min-height: 42px;">
-              ← Ana Menüye Dön
-            </button>
-          </div>
-        `;
-      }
-
-      // --- SUBVIEW 3: AYARLAR SUBVIEW ---
-      else if (currentSubView === 'settings') {
-        bodyHTML = `
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- KİLİT EKRANI BİLDİRİMLERİ -->
-            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.3)' : 'var(--border-color)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-              <div>
-                <div style="font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
-                  <span>🔔</span>
-                  <span>Kilit Ekranı Bildirimleri</span>
-                </div>
-                <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 600; margin-top: 2px;">
-                  ${isLockNotifOn ? '🟢 Açık' : '🔴 Kapalı'}
-                </div>
-              </div>
-              <button type="button" onclick="toggleLockScreenNotifications()" class="btn" style="min-height: 32px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: ${isLockNotifOn ? '1px solid #10b981' : '1px solid #475569'}; background: ${isLockNotifOn ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
-                <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
-              </button>
-            </div>
-
-            <!-- BİLDİRİM SESİ -->
-            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'var(--border-color)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-              <div>
-                <div style="font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
-                  <span>${isSoundOn ? '🔊' : '🔇'}</span>
-                  <span>Bildirim Sesi & Uyarısı</span>
-                </div>
-                <div style="font-size: 10px; color: ${isSoundOn ? '#34d399' : 'var(--text-muted)'}; font-weight: 600; margin-top: 2px;">
-                  ${isSoundOn ? '🟢 Açık' : '🔴 Kapalı'}
-                </div>
-              </div>
-              <button type="button" onclick="toggleNotificationSound()" class="btn" style="min-height: 32px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: ${isSoundOn ? '1px solid #10b981' : '1px solid #475569'}; background: ${isSoundOn ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}; color: ${isSoundOn ? '#34d399' : '#94a3b8'};">
-                <span>${isSoundOn ? 'AÇIK' : 'KAPALI'}</span>
-              </button>
-            </div>
-
-            <!-- SALON NUMARASI -->
-            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-              <div>
-                <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">📱 Salon Numarası:</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--gold-primary); margin-top: 2px;">${adminPhone}</div>
-              </div>
-              ${isAdminRole ? `
-                <button onclick="closeModal(); openAdminPhoneModal();" class="btn btn-outline-gold" style="min-height: 32px; padding: 4px 10px; font-size: 11px;">✏️ Değiştir</button>
-              ` : ''}
-            </div>
-
-            <!-- CANLI BULUT BAĞLANTISI -->
-            <button onclick="closeModal(); runExecutiveCloudSync();" class="btn btn-secondary" style="justify-content: space-between; width: 100%; min-height: 42px; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); color: #34d399;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span>⚡</span>
-                <span>Bulut Bağlantısı</span>
-              </div>
-              <span class="badge" style="background: rgba(16,185,129,0.2); color: #34d399;">Aktif (Sub-50ms)</span>
-            </button>
-
-            <!-- OTURUMU KAPAT -->
-            <button onclick="confirmLogoutModal();" class="btn btn-danger" style="justify-content: space-between; width: 100%; min-height: 42px; margin-top: 4px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span>🚪</span>
-                <span>Admin Oturumunu Kapat</span>
-              </div>
-              <span>←</span>
-            </button>
-
-            <!-- GERİ BUTONU -->
-            <button onclick="openAdminProfileSubView('main')" class="btn btn-outline-gold" style="width: 100%; margin-top: 6px; min-height: 42px;">
-              ← Ana Menüye Dön
-            </button>
-          </div>
-        `;
-      }
-
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
-            
-            <!-- HEADER -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1.5px solid var(--border-color);">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #000; font-weight: 700; box-shadow: 0 4px 15px rgba(245,158,11,0.35);">
-                  ${currentSubView === 'languages' ? '🌐' : currentSubView === 'settings' ? '⚙️' : '👑'}
-                </div>
-                <div>
-                  <h3 style="font-size: 15px; font-weight: 700; color: #fff; margin: 0;">${currentSubView === 'languages' ? '🌐 Diller' : currentSubView === 'settings' ? '⚙️ Ayarlar' : staffName}</h3>
-                  <span style="font-size: 11px; color: var(--gold-primary); font-weight: 600;">${currentSubView === 'main' ? (isAdminRole ? '👑 Patron Yönetim Suite' : '🛠️ Salon Görevlisi') : 'EZO STİLE VIP Suite'}</span>
-                </div>
-              </div>
-              <button onclick="closeModal()" class="btn btn-secondary" style="min-height: 32px; width: 32px; padding: 0; border-radius: 10px; font-weight: 700;">✕</button>
-            </div>
-
-            ${bodyHTML}
-
-          </div>
-        </div>
-      `;
-    }
-
-    
-    function openNotificationSettingsModal() {
-      const root = document.getElementById('modal-root');
-      if (!root) return;
-
-      let isLockNotifOn = false;
-      try {
-        if (typeof state !== 'undefined' && state.lockScreenNotifEnabled !== undefined) {
-          isLockNotifOn = state.lockScreenNotifEnabled === true;
-        } else {
-          isLockNotifOn = localStorage.getItem('gc_lock_notif_enabled') === 'true';
-        }
-      } catch(e) {}
-
-      root.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; border-color: var(--gold-primary); padding: 22px; background: #040711; border-radius: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-                <span>🔔</span> Bildirim Merkezi & Ayarları
-              </h3>
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; border-color: var(--gold-primary); padding: 22px; background: #040711; border-radius: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">👤 Patron Profil & Ayarlar</h3>
               <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: none; color: #fff; width: 30px; height: 30px; border-radius: 8px; font-weight: 800; cursor: pointer;">✕</button>
             </div>
-
+            
             <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
-              <!-- 1. KİLİTLİ EKRAN & WEB PUSH -->
-              <div style="background: rgba(255,255,255,0.03); border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.4)' : 'var(--border-color)'}; padding: 14px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 13px; font-weight: 700; color: #fff;">📲 Kilitli Ekran & Web Push</div>
-                  <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--text-muted)'}; margin-top: 2px;">
-                    ${isLockNotifOn ? '🟢 Aktif (OneSignal & ServiceWorker)' : '🔴 Kapalı'}
-                  </div>
-                </div>
-                <button onclick="toggleLockScreenNotifications(); openNotificationSettingsModal();" class="btn ${isLockNotifOn ? 'btn-gold' : 'btn-outline-gold'}" style="min-height: 32px; padding: 4px 10px; font-size: 11px;">
-                  ${isLockNotifOn ? 'Değiştir' : 'Aç'}
-                </button>
+              <div style="background: #070c1a; border: 1px solid var(--border-color); padding: 14px; border-radius: 16px;">
+                <div style="font-size: 14px; font-weight: 800; color: #fff;">EZO STİLE VIP Salon</div>
+                <div style="font-size: 11px; color: var(--gold-primary); margin-top: 2px;">Paket: PRO SaaS Aboneliği (Aktif)</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Yetkili: ${state.currentStaffName || 'Patron / Yönetici'}</div>
               </div>
 
-              <!-- 2. RANDEVU ONAY UYARILARI -->
-              <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 13px; font-weight: 700; color: #fff;">📅 Randevu Onay Uyarısı</div>
-                  <div style="font-size: 10px; color: #34d399; margin-top: 2px;">🟢 Otomatik Aktif (SMS & WhatsApp)</div>
-                </div>
-                <span class="badge badge-approved">AKTİF</span>
-              </div>
-
-              <!-- 3. 1 SAAT KALA HATIRLATMA -->
-              <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 13px; font-weight: 700; color: #fff;">⏰ 1 Saat Kala Hatırlatma</div>
-                  <div style="font-size: 10px; color: #34d399; margin-top: 2px;">🟢 Sesli & Görsel Banner Uyarısı</div>
-                </div>
-                <span class="badge badge-approved">AKTİF</span>
-              </div>
-
-              <!-- 4. KAMPANYA & DUYURULAR -->
-              <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 13px; font-weight: 700; color: #fff;">📣 VIP Kampanyalar & Fırsatlar</div>
-                  <div style="font-size: 10px; color: #34d399; margin-top: 2px;">🟢 Özel İndirim Duyuruları</div>
-                </div>
-                <span class="badge badge-approved">AKTİF</span>
-              </div>
+              <button onclick="closeModal(); switchRole('customer');" class="btn btn-outline-gold" style="width: 100%; font-size: 12px;">
+                👁️ Müşteri Görünümüne Geç
+              </button>
+              <button onclick="closeModal(); openPlanComparisonModal();" class="btn btn-gold" style="width: 100%; font-size: 12px;">
+                👑 Abonelik Paketimi Yönet
+              </button>
+              <button onclick="closeModal(); logout();" class="btn btn-danger" style="width: 100%; font-size: 12px;">
+                🚪 Çıkış Yap
+              </button>
             </div>
-
-            <button onclick="closeModal()" class="btn btn-gold" style="width: 100%;">✓ Tamam</button>
           </div>
         </div>
       `;
     }
-  
+
     function openCustomerProfileModal() {
       const root = document.getElementById('modal-root');
       if (!root) return;
@@ -4570,59 +3211,42 @@ appName: 'EZO STİLE',
     // --- ADMIN APPROVE & REJECT WITH LIVE NOTIFICATION & SMS/WA ---
     function openNotificationActionModal(apt, type) {
       const isApprove = type === 'approved';
-      const title = isApprove ? t('aptApprovedTitle') : t('aptRejectedTitle');
-      
-      let msgText = '';
-      if (isApprove) {
-        if (state.language === 'en') {
-          msgText = `Dear ${apt.customerName}, your appointment at EZO STİLE on ${apt.date} at ${apt.time} (${apt.serviceName}) has been APPROVED. See you soon!`;
-        } else if (state.language === 'ru') {
-          msgText = `Уважаемый(ая) ${apt.customerName}, ваша запись в EZO STİLE на ${apt.date} в ${apt.time} (${apt.serviceName}) ОДОБРЕНА. Ждем вас!`;
-        } else if (state.language === 'tk') {
-          msgText = `Hormatly ${apt.customerName}, EZO STİLE üçin ${apt.date} sagat ${apt.time} (${apt.serviceName}) bronuňyz TASSYKLANYLDY. Garaşýarys!`;
-        } else {
-          msgText = `Sayın ${apt.customerName}, EZO STİLE için ${apt.date} saat ${apt.time} tarihindeki (${apt.serviceName}) randevunuz ONAYLANMIŞTIR. Bekliyoruz!`;
-        }
-      } else {
-        if (state.language === 'en') {
-          msgText = `Dear ${apt.customerName}, your appointment at EZO STİLE on ${apt.date} at ${apt.time} could unfortunately not be approved. Best regards.`;
-        } else if (state.language === 'ru') {
-          msgText = `Уважаемый(ая) ${apt.customerName}, к сожалению, ваша запись в EZO STİLE на ${apt.date} в ${apt.time} не подтверждена. С уважением.`;
-        } else if (state.language === 'tk') {
-          msgText = `Hormatly ${apt.customerName}, gynansak-da EZO STİLE üçin ${apt.date} sagat ${apt.time} bronuňyz tassyklanyp bilinmedi. Sylaşyk bilen.`;
-        } else {
-          msgText = `Sayın ${apt.customerName}, EZO STİLE için ${apt.date} saat ${apt.time} tarihindeki randevunuz maalesef onaylanamamıştır. Saygılarımızla.`;
-        }
-      }
-
       const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      const msgText = isApprove ?
+        `Sayın ${apt.customerName}, EZO STİLE için ${apt.date} saat ${apt.time} tarihindeki (${apt.serviceName}) randevunuz ONAYLANMIŞTIR. Bekliyoruz!` :
+        `Sayın ${apt.customerName}, EZO STİLE için ${apt.date} saat ${apt.time} tarihindeki randevunuz maalesef onaylanamamıştır. Saygılarımızla.`;
+
       root.innerHTML = `
-        <div class="modal-overlay">
-          <div class="modal-content" style="text-align: center;">
-            <h3 style="font-size: 16px; font-weight: 900; color: ${isApprove ? 'var(--emerald)' : 'var(--rose)'}; margin-bottom: 8px;">${title}</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">${t('notifyCustomerPrompt')}</p>
-            
-            <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; font-size: 11px; color: #fff; margin-bottom: 16px; text-align: left;">
-              <strong>${t('sampleMessage')}:</strong><br/>
-              <em>"${msgText}"</em>
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 400px; border-color: ${isApprove ? '#10b981' : '#f43f5e'}; padding: 24px; background: #040711; border-radius: 24px; text-align: center;">
+            <div style="width: 54px; height: 54px; border-radius: 16px; background: ${isApprove ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)'}; border: 1px solid ${isApprove ? '#10b981' : '#f43f5e'}; color: ${isApprove ? '#34d399' : '#fb7185'}; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;">
+              ${isApprove ? '✓' : '✕'}
+            </div>
+            <h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 4px;">${isApprove ? 'Randevu Onaylandı' : 'Randevu İptal Edildi'}</h3>
+            <p style="font-size: 12px; color: var(--gold-primary); font-weight: 600; margin-bottom: 16px;">Müşterinize bilgi bildirimini gönderebilirsiniz.</p>
+
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; text-align: left; margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 13px; font-weight: 700; color: #fff;">👤 ${apt.customerName} (${apt.customerPhone})</div>
+              <div style="font-size: 12px; color: var(--gold-light);">📅 ${apt.date} • ⏰ ${apt.time}</div>
+              <div style="font-size: 12px; color: #cbd5e1;">✂️ ${apt.serviceName} (${apt.price} TL)</div>
+              <div style="font-size: 11px; color: var(--text-muted);">💈 Berber: ${apt.staffName || 'Mustafa Usta'}</div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button onclick="sendCustomerWhatsApp('${apt.customerPhone}', '${msgText.replace(/'/g, "\\'")}'); closeModal();" class="gold-btn" style="background: #25D366; color: #fff; border: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                💬 ${t('sendWaInfo')}
+              <button onclick="window.open('https://wa.me/90${apt.customerPhone}?text=${encodeURIComponent(msgText)}', '_blank'); closeModal();" class="btn btn-gold" style="width: 100%; min-height: 42px; font-size: 12px; background: linear-gradient(135deg, #10b981, #059669); border: none;">
+                💬 WhatsApp ile Bilgilendir
               </button>
-              <button onclick="sendCustomerSms('${apt.customerPhone}', '${msgText.replace(/'/g, "\\'")}'); closeModal();" class="gold-btn" style="background: #3b82f6; color: #fff; border: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                📱 ${t('sendSmsInfo')}
+              <button onclick="window.open('sms:90${apt.customerPhone}?body=${encodeURIComponent(msgText)}', '_blank'); closeModal();" class="btn btn-outline-gold" style="width: 100%; min-height: 38px; font-size: 12px;">
+                📱 SMS ile Bilgilendir
               </button>
-              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #aaa;">
-                ${t('closeBtn')}
-              </button>
+              <button onclick="closeModal()" class="btn btn-secondary" style="width: 100%;">Tamam</button>
             </div>
           </div>
         </div>
       `;
     }
-
     function adminApproveApt(id) {
       const apt = state.appointments.find(a => a.id === id);
       if (apt) {
