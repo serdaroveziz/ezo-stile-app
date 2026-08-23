@@ -1304,8 +1304,11 @@ appName: 'EZO STİLE',
       renderApp();
     }
 
-    function runAiHairAnalysis() {
-      if (typeof useAiCredit === 'function' && !useAiCredit()) return;
+    async function runAiHairAnalysis() {
+      if (typeof useAiCreditServerless === 'function') {
+        const allowed = await useAiCreditServerless();
+        if (!allowed) return;
+      }
       if (!state.aiUserPhoto) {
         alert('⚠️ Lütfen önce kendi fotoğrafınızı yükleyiniz!');
         return;

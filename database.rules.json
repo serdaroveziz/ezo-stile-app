@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid && !newData.hasChild('aiCredits') && !newData.hasChild('aiCreditsUsed') && !newData.hasChild('role') && !newData.hasChild('subscription')",
+        "name": { ".validate": "newData.isString()" },
+        "phone": { ".validate": "newData.isString()" },
+        "language": { ".validate": "newData.isString()" }
+      }
+    },
+    "ezostile_v5": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}
