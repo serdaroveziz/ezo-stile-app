@@ -3473,9 +3473,21 @@ appName: 'EZO STİLE',
       }
     }
 
+    function openAdminProfileSubView(subView) {
+      if (typeof state !== 'undefined') {
+        state.adminProfileSubView = subView;
+      }
+      openAdminProfileModal();
+    }
+
     function openAdminProfileModal() {
       const root = document.getElementById('modal-root');
       if (!root) return;
+
+      if (typeof state !== 'undefined') {
+        state.adminProfileSubView = state.adminProfileSubView || 'main';
+      }
+      const currentSubView = (state && state.adminProfileSubView) ? state.adminProfileSubView : 'main';
 
       const isAdminRole = state.role === 'admin';
       const staffName = state.currentStaffName || (isAdminRole ? 'Patron (Ana Admin)' : 'Salon Görevlisi');
@@ -3495,129 +3507,169 @@ appName: 'EZO STİLE',
       }
       const isLockNotifOn = state.lockScreenNotifEnabled === true;
 
+      const currentLangObj = {
+        tr: '🇹🇷 Türkçe',
+        en: '🇬🇧 English',
+        ru: '🇷🇺 Русский',
+        tk: '🇹🇲 Türkmençe'
+      }[state.language || 'tr'] || '🇹🇷 Türkçe';
+
+      let bodyHTML = '';
+
+      // --- SUBVIEW 1: MAIN MENU (DERLİ TOPLU ANA MENÜ) ---
+      if (currentSubView === 'main') {
+        bodyHTML = `
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- 1. DİLLER BUTONU -->
+            <button onclick="openAdminProfileSubView('languages')" class="btn btn-secondary" style="justify-content: space-between; width: 100%; min-height: 48px; padding: 12px 16px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">🌐</span>
+                <span style="font-size: 14px; font-weight: 700;">Diller</span>
+              </div>
+              <span class="badge" style="background: rgba(245,158,11,0.15); color: var(--gold-primary); font-size: 11px;">${currentLangObj} ›</span>
+            </button>
+
+            <!-- 2. AYARLAR BUTONU -->
+            <button onclick="openAdminProfileSubView('settings')" class="btn btn-secondary" style="justify-content: space-between; width: 100%; min-height: 48px; padding: 12px 16px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">⚙️</span>
+                <span style="font-size: 14px; font-weight: 700;">Ayarlar</span>
+              </div>
+              <span style="color: var(--text-muted); font-size: 14px;">›</span>
+            </button>
+
+            <!-- 3. CİRO VE PERSONEL HIZLI ERİŞİM (ONLY ADMIN) -->
+            ${isAdminRole ? `
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 4px;">
+                <button onclick="closeModal(); setAdminTab('revenueDashboard');" class="btn btn-gold" style="flex-direction: column; align-items: flex-start; padding: 14px; height: auto; border-radius: 14px;">
+                  <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;">
+                    <span>💰</span> Ciro & Kasa
+                  </div>
+                  <span style="font-size: 11px; margin-top: 4px; opacity: 0.9;">Bugün: ${todayRevenue} TL</span>
+                </button>
+                <button onclick="closeModal(); setAdminTab('staffManagement');" class="btn btn-secondary" style="flex-direction: column; align-items: flex-start; padding: 14px; height: auto; border-radius: 14px;">
+                  <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;">
+                    <span>👥</span> Personel & Şifre
+                  </div>
+                  <span style="font-size: 11px; margin-top: 4px; color: var(--text-muted);">${staffCount} Görevli</span>
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      // --- SUBVIEW 2: DİLLER SUBVIEW ---
+      else if (currentSubView === 'languages') {
+        bodyHTML = `
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 0.5px;">Lütfen Bir Dil Seçiniz:</div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+              <button onclick="setLanguage('tr')" class="btn ${state.language === 'tr' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 44px; padding: 8px; font-size: 13px;">🇹🇷 Türkçe ${state.language === 'tr' ? '✓' : ''}</button>
+              <button onclick="setLanguage('en')" class="btn ${state.language === 'en' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 44px; padding: 8px; font-size: 13px;">🇬🇧 English ${state.language === 'en' ? '✓' : ''}</button>
+              <button onclick="setLanguage('ru')" class="btn ${state.language === 'ru' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 44px; padding: 8px; font-size: 13px;">🇷🇺 Русский ${state.language === 'ru' ? '✓' : ''}</button>
+              <button onclick="setLanguage('tk')" class="btn ${state.language === 'tk' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 44px; padding: 8px; font-size: 13px;">🇹🇲 Türkmençe ${state.language === 'tk' ? '✓' : ''}</button>
+            </div>
+            <button onclick="openAdminProfileSubView('main')" class="btn btn-outline-gold" style="width: 100%; margin-top: 8px; min-height: 42px;">
+              ← Ana Menüye Dön
+            </button>
+          </div>
+        `;
+      }
+
+      // --- SUBVIEW 3: AYARLAR SUBVIEW ---
+      else if (currentSubView === 'settings') {
+        bodyHTML = `
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- KİLİT EKRANI BİLDİRİMLERİ -->
+            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.3)' : 'var(--border-color)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <div>
+                <div style="font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+                  <span>🔔</span>
+                  <span>Kilit Ekranı Bildirimleri</span>
+                </div>
+                <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 600; margin-top: 2px;">
+                  ${isLockNotifOn ? '🟢 Açık' : '🔴 Kapalı'}
+                </div>
+              </div>
+              <button type="button" onclick="toggleLockScreenNotifications()" class="btn" style="min-height: 32px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: ${isLockNotifOn ? '1px solid #10b981' : '1px solid #475569'}; background: ${isLockNotifOn ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
+                <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
+              </button>
+            </div>
+
+            <!-- BİLDİRİM SESİ -->
+            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'var(--border-color)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <div>
+                <div style="font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+                  <span>${isSoundOn ? '🔊' : '🔇'}</span>
+                  <span>Bildirim Sesi & Uyarısı</span>
+                </div>
+                <div style="font-size: 10px; color: ${isSoundOn ? '#34d399' : 'var(--text-muted)'}; font-weight: 600; margin-top: 2px;">
+                  ${isSoundOn ? '🟢 Açık' : '🔴 Kapalı'}
+                </div>
+              </div>
+              <button type="button" onclick="toggleNotificationSound()" class="btn" style="min-height: 32px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: ${isSoundOn ? '1px solid #10b981' : '1px solid #475569'}; background: ${isSoundOn ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}; color: ${isSoundOn ? '#34d399' : '#94a3b8'};">
+                <span>${isSoundOn ? 'AÇIK' : 'KAPALI'}</span>
+              </button>
+            </div>
+
+            <!-- SALON NUMARASI -->
+            <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <div>
+                <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">📱 Salon Numarası:</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--gold-primary); margin-top: 2px;">${adminPhone}</div>
+              </div>
+              ${isAdminRole ? `
+                <button onclick="closeModal(); openAdminPhoneModal();" class="btn btn-outline-gold" style="min-height: 32px; padding: 4px 10px; font-size: 11px;">✏️ Değiştir</button>
+              ` : ''}
+            </div>
+
+            <!-- CANLI BULUT BAĞLANTISI -->
+            <button onclick="closeModal(); runExecutiveCloudSync();" class="btn btn-secondary" style="justify-content: space-between; width: 100%; min-height: 42px; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); color: #34d399;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span>⚡</span>
+                <span>Bulut Bağlantısı</span>
+              </div>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #34d399;">Aktif (Sub-50ms)</span>
+            </button>
+
+            <!-- OTURUMU KAPAT -->
+            <button onclick="confirmLogoutModal();" class="btn btn-danger" style="justify-content: space-between; width: 100%; min-height: 42px; margin-top: 4px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span>🚪</span>
+                <span>Admin Oturumunu Kapat</span>
+              </div>
+              <span>←</span>
+            </button>
+
+            <!-- GERİ BUTONU -->
+            <button onclick="openAdminProfileSubView('main')" class="btn btn-outline-gold" style="width: 100%; margin-top: 6px; min-height: 42px;">
+              ← Ana Menüye Dön
+            </button>
+          </div>
+        `;
+      }
+
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
             
-            <!-- EXECUTIVE HEADER -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1.5px solid var(--border-color);">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: 700; box-shadow: 0 4px 15px rgba(245,158,11,0.35);">
-                  👑
+            <!-- HEADER -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1.5px solid var(--border-color);">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #000; font-weight: 700; box-shadow: 0 4px 15px rgba(245,158,11,0.35);">
+                  ${currentSubView === 'languages' ? '🌐' : currentSubView === 'settings' ? '⚙️' : '👑'}
                 </div>
                 <div>
-                  <h3 style="font-size: 16px; font-weight: 700; color: #fff; margin: 0;">${staffName}</h3>
-                  <span style="font-size: 11px; color: var(--gold-primary); font-weight: 600; text-transform: uppercase;">${isAdminRole ? '👑 Patron Yönetim Suite' : '🛠️ Salon Görevlisi'}</span>
+                  <h3 style="font-size: 15px; font-weight: 700; color: #fff; margin: 0;">${currentSubView === 'languages' ? '🌐 Diller' : currentSubView === 'settings' ? '⚙️ Ayarlar' : staffName}</h3>
+                  <span style="font-size: 11px; color: var(--gold-primary); font-weight: 600;">${currentSubView === 'main' ? (isAdminRole ? '👑 Patron Yönetim Suite' : '🛠️ Salon Görevlisi') : 'EZO STİLE VIP Suite'}</span>
                 </div>
               </div>
               <button onclick="closeModal()" class="btn btn-secondary" style="min-height: 32px; width: 32px; padding: 0; border-radius: 10px; font-weight: 700;">✕</button>
             </div>
 
-            <!-- CONTROL MENU GROUPS -->
-            <div style="display: flex; flex-direction: column; gap: 14px;">
-              
-              <!-- 1. DİLLER -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color);">
-                <div style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                  <span>🌐</span>
-                  <span>Diller</span>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                  <button onclick="setLanguage('tr')" class="btn ${state.language === 'tr' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 38px; padding: 6px; font-size: 12px;">🇹🇷 Türkçe ${state.language === 'tr' ? '✓' : ''}</button>
-                  <button onclick="setLanguage('en')" class="btn ${state.language === 'en' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 38px; padding: 6px; font-size: 12px;">🇬🇧 English ${state.language === 'en' ? '✓' : ''}</button>
-                  <button onclick="setLanguage('ru')" class="btn ${state.language === 'ru' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 38px; padding: 6px; font-size: 12px;">🇷🇺 Русский ${state.language === 'ru' ? '✓' : ''}</button>
-                  <button onclick="setLanguage('tk')" class="btn ${state.language === 'tk' ? 'btn-gold' : 'btn-secondary'}" style="min-height: 38px; padding: 6px; font-size: 12px;">🇹🇲 Türkmençe ${state.language === 'tk' ? '✓' : ''}</button>
-                </div>
-              </div>
+            ${bodyHTML}
 
-              <!-- 2. AYARLAR SEKSİYONU (BİLDİRİMLER, TELEFON NO, BULUT BAĞLANTISI, OTURUMU KAPAT) -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
-                <div style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
-                  <span>⚙️</span>
-                  <span>Ayarlar</span>
-                </div>
-
-                <!-- A. KİLİT EKRANI BİLDİRİMLERİ -->
-                <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.3)' : 'var(--border-color)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                  <div>
-                    <div style="font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
-                      <span>🔔</span>
-                      <span>Kilit Ekranı Bildirimleri</span>
-                    </div>
-                    <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 600; margin-top: 2px;">
-                      ${isLockNotifOn ? '🟢 Açık' : '🔴 Kapalı'}
-                    </div>
-                  </div>
-                  <button type="button" onclick="toggleLockScreenNotifications()" class="btn" style="min-height: 32px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: ${isLockNotifOn ? '1px solid #10b981' : '1px solid #475569'}; background: ${isLockNotifOn ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
-                    <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
-                  </button>
-                </div>
-
-                <!-- B. BİLDİRİM SESİ -->
-                <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'var(--border-color)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                  <div>
-                    <div style="font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
-                      <span>${isSoundOn ? '🔊' : '🔇'}</span>
-                      <span>Bildirim Sesi & Uyarısı</span>
-                    </div>
-                    <div style="font-size: 10px; color: ${isSoundOn ? '#34d399' : 'var(--text-muted)'}; font-weight: 600; margin-top: 2px;">
-                      ${isSoundOn ? '🟢 Açık' : '🔴 Kapalı'}
-                    </div>
-                  </div>
-                  <button type="button" onclick="toggleNotificationSound()" class="btn" style="min-height: 32px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: ${isSoundOn ? '1px solid #10b981' : '1px solid #475569'}; background: ${isSoundOn ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}; color: ${isSoundOn ? '#34d399' : '#94a3b8'};">
-                    <span>${isSoundOn ? 'AÇIK' : 'KAPALI'}</span>
-                  </button>
-                </div>
-
-                <!-- C. SALON BİLDİRİM NUMARASI -->
-                <div style="background: #070c1a; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                  <div>
-                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">📱 Salon Numarası:</div>
-                    <div style="font-size: 14px; font-weight: 700; color: var(--gold-primary); margin-top: 2px;">${adminPhone}</div>
-                  </div>
-                  ${isAdminRole ? `
-                    <button onclick="closeModal(); openAdminPhoneModal();" class="btn btn-outline-gold" style="min-height: 32px; padding: 4px 10px; font-size: 11px;">✏️ Değiştir</button>
-                  ` : ''}
-                </div>
-
-                <!-- D. CANLI BULUT BAĞLANTISI -->
-                <button onclick="closeModal(); runExecutiveCloudSync();" class="btn btn-secondary" style="justify-content: space-between; width: 100%; min-height: 42px; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); color: #34d399;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span>⚡</span>
-                    <span>Bulut Bağlantısı</span>
-                  </div>
-                  <span class="badge" style="background: rgba(16,185,129,0.2); color: #34d399;">Aktif (Sub-50ms)</span>
-                </button>
-
-                <!-- E. OTURUMU KAPAT -->
-                <button onclick="confirmLogoutModal();" class="btn btn-danger" style="justify-content: space-between; width: 100%; min-height: 42px; margin-top: 4px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span>🚪</span>
-                    <span>Admin Oturumunu Kapat</span>
-                  </div>
-                  <span>←</span>
-                </button>
-              </div>
-
-              <!-- 3. CİRO & PERSONEL HIZLI ERİŞİM (ONLY ADMIN) -->
-              ${isAdminRole ? `
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                  <button onclick="closeModal(); setAdminTab('revenueDashboard');" class="btn btn-gold" style="flex-direction: column; align-items: flex-start; padding: 12px; height: auto;">
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;">
-                      <span>💰</span> Ciro & Kasa
-                    </div>
-                    <span style="font-size: 11px; margin-top: 4px; opacity: 0.9;">Bugün: ${todayRevenue} TL</span>
-                  </button>
-                  <button onclick="closeModal(); setAdminTab('staffManagement');" class="btn btn-secondary" style="flex-direction: column; align-items: flex-start; padding: 12px; height: auto;">
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;">
-                      <span>👥</span> Personel & Şifre
-                    </div>
-                    <span style="font-size: 11px; margin-top: 4px; color: var(--text-muted);">${staffCount} Görevli</span>
-                  </button>
-                </div>
-              ` : ''}
-
-            </div>
           </div>
         </div>
       `;
