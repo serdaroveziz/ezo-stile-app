@@ -23,21 +23,23 @@ function verifyUserToken(userId, token) {
   }
 }
 
-// Calculate OpenAI Total Estimated Cost (Input Vision Tokens + Text Prompt + Output Image)
+// Official OpenAI Pricing for gpt-image-1-mini and gpt-image-2
 function calculateOpenAiTotalCost(modelName, quality = 'medium') {
   if (modelName === 'gpt-image-2') {
-    // Quality Candidate: Input vision tokens ($0.005) + Text ($0.001) + Output Image ($0.040) = $0.046
     return '$0.046 (Input Token: $0.006 + Output: $0.040)';
   } else if (modelName === 'gpt-image-1-mini') {
     if (quality === 'high') {
-      // Mini High: Input ($0.003) + Output ($0.015) = $0.018
-      return '$0.018 (Input Token: $0.003 + Output: $0.015)';
+      // High Quality: Input Token ($0.003) + Output ($0.036) = $0.039
+      return '$0.039 (Input Token: $0.003 + Output: $0.036)';
+    } else if (quality === 'low') {
+      // Low Quality: Input Token ($0.002) + Output ($0.005) = $0.007
+      return '$0.007 (Input Token: $0.002 + Output: $0.005)';
     } else {
-      // Mini Medium: Input ($0.002) + Output ($0.008) = $0.010
-      return '$0.010 (Input Token: $0.002 + Output: $0.008)';
+      // Medium Quality: Input Token ($0.002) + Output ($0.011) = $0.013
+      return '$0.013 (Input Token: $0.002 + Output: $0.011)';
     }
   }
-  return '$0.020 (Tahmini)';
+  return '$0.013 (Tahmini)';
 }
 
 export default async function handler(req, res) {
@@ -68,17 +70,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required parameters (userId, userToken, image)' });
     }
 
-    // 1. Session Token Authentication
     if (!verifyUserToken(userId, userToken)) {
       return res.status(401).json({ error: 'Unauthorized session token signature' });
     }
 
     const openAiApiKey = process.env.OPENAI_API_KEY;
-    const selectedModel = modelName || 'gpt-image-2';
+    const selectedModel = modelName || 'gpt-image-1-mini';
     const selectedQuality = quality || 'medium';
     const estimatedTotalCostUsd = calculateOpenAiTotalCost(selectedModel, selectedQuality);
 
-    // 2. Fallback if OPENAI_API_KEY is not defined on Vercel
     if (!openAiApiKey) {
       const userWaitTimeSec = ((Date.now() - startTime) / 1000).toFixed(2);
       const telemetryFallback = {
@@ -105,7 +105,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3. Dispatch to OpenAI Images API
     const openAiRes = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
