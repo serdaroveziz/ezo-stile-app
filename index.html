@@ -45,9 +45,7 @@
 
     function triggerLockScreenNotification(title, message) {
       if (typeof state !== 'undefined') {
-        if (typeof state.lockScreenNotifEnabled === 'undefined') {
-          state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
-        }
+        if (typeof state.lockScreenNotifEnabled === 'undefined') { state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true'; }
         if (state.lockScreenNotifEnabled === false) return;
       }
 
@@ -75,38 +73,36 @@
     }
 
     function toggleLockScreenNotifications() {
-      if (typeof state !== 'undefined') {
-        if (typeof state.lockScreenNotifEnabled === 'undefined') {
-          state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
-        }
-        
-        // If turning ON and permission not granted yet:
-        if (!state.lockScreenNotifEnabled) {
-          if ('Notification' in window && Notification.permission !== 'granted') {
+      if (typeof state === 'undefined') return;
+
+      if (typeof state.lockScreenNotifEnabled === 'undefined') {
+        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true';
+      }
+
+      const willTurnOn = !state.lockScreenNotifEnabled;
+
+      if (willTurnOn) {
+        state.lockScreenNotifEnabled = true;
+        localStorage.setItem('gc_lock_notif_enabled', 'true');
+
+        if ('Notification' in window && Notification.permission !== 'granted') {
+          try {
             Notification.requestPermission().then(permission => {
-              if (permission === 'granted') {
-                state.lockScreenNotifEnabled = true;
-                localStorage.setItem('gc_lock_notif_enabled', 'true');
-              } else {
-                state.lockScreenNotifEnabled = false;
-                localStorage.setItem('gc_lock_notif_enabled', 'false');
+              if (permission === 'denied') {
+                alert('⚠️ Telefonunuzun tarayıcı ayarlarından EZO STİLE için bildirim iznini açmanız gerekmektedir.');
               }
               if (state.role === 'customer' && typeof openCustomerProfileModal === 'function') openCustomerProfileModal();
               else if (typeof openAdminProfileModal === 'function') openAdminProfileModal();
             }).catch(() => {});
-            return;
-          }
+          } catch(e) {}
         }
-
-        state.lockScreenNotifEnabled = !state.lockScreenNotifEnabled;
-        localStorage.setItem('gc_lock_notif_enabled', state.lockScreenNotifEnabled ? 'true' : 'false');
-
-        if (state.role === 'customer') {
-          if (typeof openCustomerProfileModal === 'function') openCustomerProfileModal();
-        } else {
-          if (typeof openAdminProfileModal === 'function') openAdminProfileModal();
-        }
+      } else {
+        state.lockScreenNotifEnabled = false;
+        localStorage.setItem('gc_lock_notif_enabled', 'false');
       }
+
+      if (state.role === 'customer' && typeof openCustomerProfileModal === 'function') openCustomerProfileModal();
+      else if (typeof openAdminProfileModal === 'function') openAdminProfileModal();
     }
 
     function requestLockScreenNotifications() {
@@ -848,10 +844,8 @@
       }
       const isSoundOn = state.soundEnabled !== false;
 
-      if (typeof state.lockScreenNotifEnabled === 'undefined') {
-        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
-      }
-      const isLockNotifOn = state.lockScreenNotifEnabled !== false && isNotifPermissionGranted;
+      if (typeof state.lockScreenNotifEnabled === 'undefined') { state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true'; }
+      const isLockNotifOn = state.lockScreenNotifEnabled === true;
 
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
@@ -1177,10 +1171,8 @@
       }
       const isSoundOn = state.soundEnabled !== false;
 
-      if (typeof state.lockScreenNotifEnabled === 'undefined') {
-        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
-      }
-      const isLockNotifOn = state.lockScreenNotifEnabled !== false && isNotifPermissionGranted;
+      if (typeof state.lockScreenNotifEnabled === 'undefined') { state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true'; }
+      const isLockNotifOn = state.lockScreenNotifEnabled === true;
 
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
@@ -3591,10 +3583,8 @@
       }
       const isSoundOn = state.soundEnabled !== false;
 
-      if (typeof state.lockScreenNotifEnabled === 'undefined') {
-        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
-      }
-      const isLockNotifOn = state.lockScreenNotifEnabled !== false && isNotifPermissionGranted;
+      if (typeof state.lockScreenNotifEnabled === 'undefined') { state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true'; }
+      const isLockNotifOn = state.lockScreenNotifEnabled === true;
 
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
@@ -3740,10 +3730,8 @@
       }
       const isSoundOn = state.soundEnabled !== false;
 
-      if (typeof state.lockScreenNotifEnabled === 'undefined') {
-        state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') !== 'false';
-      }
-      const isLockNotifOn = state.lockScreenNotifEnabled !== false && isNotifPermissionGranted;
+      if (typeof state.lockScreenNotifEnabled === 'undefined') { state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true'; }
+      const isLockNotifOn = state.lockScreenNotifEnabled === true;
 
       root.innerHTML = `
         <div class="modal-overlay" onclick="closeModal()">
