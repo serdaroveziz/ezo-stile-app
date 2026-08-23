@@ -39,7 +39,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.0.47').catch(e => console.log('SW Load:', e));
+        navigator.serviceWorker.register('./sw.js?v=1.0.48').catch(e => console.log('SW Load:', e));
       });
     }
 
@@ -1137,7 +1137,7 @@ appName: 'EZO STİLE',
     // --- APP STATE ---
     let state = {
       language: localStorage.getItem('gc_lang') || 'tr',
-      role: 'customer', // 'customer' | 'admin' | 'manager'
+      role: localStorage.getItem('gc_role') || 'customer', // 'customer' | 'admin' | 'manager'
       currentUser: JSON.parse(localStorage.getItem('gc_user') || 'null'),
       smsCode: null,
       adminPhone: localStorage.getItem('gc_admin_phone') || '05338000000',
