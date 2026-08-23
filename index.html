@@ -131,68 +131,179 @@
     }
   </script>
   <style>
-    /* VIP EZO STİLE DESIGN SYSTEM & CSS TOKENS */
+/* VIP EZO STİLE DESIGN SYSTEM & CSS TOKENS */
     :root {
-      --bg-dark: #070c1a;
-      --bg-card: #0f172a;
-      --bg-card-hover: #1e293b;
+      --bg-dark: #090d16;
+      --bg-card: #111827;
+      --bg-card-hover: #1f2937;
       --gold-primary: #f59e0b;
+      --gold-hover: #d97706;
       --gold-light: #fbbf24;
-      --gold-dark: #d97706;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --border-color: #1e293b;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-gold: rgba(245, 158, 11, 0.3);
       --emerald: #10b981;
       --rose: #f43f5e;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; line-height: 1.5; font-size: 14px; }
 
-    /* Utility Classes */
-    .container { width: 100%; max-width: 920px; margin: 0 auto; padding: 16px; }
-    .gold-gradient-text { background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .gold-btn { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); color: #070c1a; font-weight: 800; border: none; padding: 10px 16px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25); text-decoration: none; font-size: 12px; }
-    .gold-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); }
-    .gold-btn:active { transform: translateY(0); }
-    
-    .card { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .input-field { width: 100%; background: #070c1a; border: 1px solid #334155; color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px; outline: none; transition: border-color 0.2s; }
-    .input-field:focus { border-color: var(--gold-primary); }
+    /* Layout Container */
+    .container { width: 100%; max-width: 880px; margin: 0 auto; padding: 20px 16px; }
 
-    /* Logo sharp styling */
-    .logo-box { width: 54px; height: 54px; border-radius: 14px; overflow: hidden; background: #070c1a; border: 2px solid var(--gold-primary); box-shadow: 0 0 15px rgba(245,158,11,0.35); flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 1px; }
+    /* Typography Hierarchy */
+    h1, h2, h3, h4 { font-weight: 700; color: var(--text-main); letter-spacing: -0.01em; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 16px; }
+    h4 { font-size: 14px; }
+    p, span { font-weight: 400; }
+    .text-muted { color: var(--text-muted); font-size: 12px; }
+    .text-gold { color: var(--gold-primary); font-weight: 600; }
+
+    .gold-gradient-text { 
+      background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+    }
+
+    /* Standard Button Design System */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+      user-select: none;
+      outline: none;
+    }
+    .btn:focus-visible { ring: 2px solid var(--gold-primary); }
+    .btn:active { transform: scale(0.98); }
+    .btn-disabled, .btn:disabled { opacity: 0.4; cursor: not-allowed !important; transform: none !important; }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      color: #070c1a;
+      border: none;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+    }
+    .btn-gold:hover { box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35); filter: brightness(1.05); }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255,255,255,0.15); }
+
+    .btn-outline-gold {
+      background: rgba(245, 158, 11, 0.08);
+      color: var(--gold-primary);
+      border: 1px solid var(--border-gold);
+    }
+    .btn-outline-gold:hover { background: rgba(245, 158, 11, 0.15); border-color: var(--gold-primary); }
+
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.12);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+    .btn-danger:hover { background: rgba(244, 63, 94, 0.2); }
+
+    /* Card System */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.12); }
+    .card-gold { border-color: var(--border-gold); }
+
+    .input-field {
+      width: 100%;
+      background: #070c1a;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-field:focus { border-color: var(--gold-primary); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); }
+
+    /* Logo Box */
+    .logo-box {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #070c1a;
+      border: 1.5px solid var(--gold-primary);
+      box-shadow: 0 0 12px rgba(245,158,11,0.25);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+    }
     .logo-box img { width: 100%; height: 100%; object-fit: contain; }
 
     /* Header & Footer */
-    header { background: rgba(7, 12, 26, 0.95); border-bottom: 1px solid var(--border-color); padding: 14px 20px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
-    .header-content { max-width: 920px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    footer { margin-top: auto; border-top: 1px solid var(--border-color); padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; background: #040711; }
-
-    /* Animations */
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    header { background: rgba(9, 13, 22, 0.95); border-bottom: 1px solid var(--border-color); padding: 12px 16px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); }
+    .header-content { max-width: 880px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    footer { margin-top: auto; border-top: 1px solid var(--border-color); padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 12px; background: #040711; }
 
     /* Badges */
-    .badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
-    .badge-approved { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .badge-rejected { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-approved { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+    .badge-pending { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+    .badge-rejected { background: rgba(244, 63, 94, 0.12); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.25); }
 
     /* Slot Grid */
-    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; margin-top: 12px; }
-    .slot-btn { padding: 10px 4px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid var(--border-color); background: #070c1a; color: var(--text-main); cursor: pointer; text-align: center; transition: all 0.15s; }
-    .slot-btn.selected { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; border-color: #f59e0b; transform: scale(1.05); }
-    .slot-btn.disabled, .slot-btn.past { opacity: 0.3; cursor: not-allowed !important; text-decoration: line-through; border-color: #1e293b; background: rgba(15, 23, 42, 0.4); pointer-events: none; }
-    .slot-btn.blocked { background: rgba(244, 63, 94, 0.2); color: #fb7185; border-color: rgba(244, 63, 94, 0.4); }
-    .slot-btn.opened { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.4); }
+    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; margin-top: 12px; }
+    .slot-btn { min-height: 44px; padding: 10px 4px; border-radius: 12px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-color); background: #070c1a; color: var(--text-main); cursor: pointer; text-align: center; transition: all 0.15s; }
+    .slot-btn.selected { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; border-color: #f59e0b; font-weight: 700; transform: scale(1.02); box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+    .slot-btn.disabled, .slot-btn.past { opacity: 0.35; cursor: not-allowed !important; text-decoration: line-through; border-color: #1e293b; background: rgba(15, 23, 42, 0.4); pointer-events: none; }
+    .slot-btn.blocked { background: rgba(244, 63, 94, 0.15); color: #fb7185; border-color: rgba(244, 63, 94, 0.3); }
+    .slot-btn.opened { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
 
-    /* Modal */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
-    .modal-content { background: #0f172a; border: 1px solid var(--gold-primary); border-radius: 24px; padding: 24px; width: 100%; max-width: 440px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+    /* Modals */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-card { background: #0b1120; border: 1px solid var(--border-gold); border-radius: 20px; padding: 22px; width: 100%; max-width: 440px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); }
 
-    /* Notification Toast */
-    .notif-box { background: rgba(15, 23, 42, 0.95); border: 1px solid var(--gold-primary); padding: 12px 16px; border-radius: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+    /* Admin Section Headers */
+    .admin-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Subtle Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade { animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
   </style>
 </head>
 <body>
@@ -258,29 +369,29 @@
     // --- MULTILINGUAL DICTIONARIES (TR, EN, RU, TK) ---
     const TRANSLATIONS = {
       tr: {
-        appName: 'EZO STİLE',
-        subtitle: 'VIP Berber & Kuaför Salonu',
-        staffLogin: '🔒 Yetkili Girişi (Admin / Yönetici)',
+appName: 'EZO STİLE',
+        subtitle: 'VIP Berber & Kuaför',
+        staffLogin: 'Yetkili Girişi (Admin / Yönetici)',
         backToCustomer: '← Müşteri Ekranına Dön',
-        enterStaffPwdTitle: '🔒 Yetkili Girişi',
-        enterStaffPwdDesc: 'Lütfen devam etmek için yetkili şifrenizi giriniz.',
-        reminderTitle: '⏰ EZO STİLE Randevu Hatırlatması',
+        enterStaffPwdTitle: 'Yetkili Girişi',
+        enterStaffPwdDesc: 'Lütfen devam etmek için şifrenizi giriniz.',
+        reminderTitle: 'Randevu Hatırlatması',
         reminderDesc: 'Randevunuza 1 saatten az zaman kaldı! Lütfen zamanında salonda olunuz.',
-        reminderBadge: '🔔 RANDEVU SAATİ YAKLAŞTI (1 Saat Kaldı)',
-        enableNotifications: '🔔 Bildirimleri Aç (1 Saat Önce Hatırlatıcı)',
-        confirmScheduleBtn: '✅ SAAT VE DEĞİŞİKLİKLERİ ONAYLA VE KAYDET',
-        scheduleConfirmedToast: '✅ Çalışma saatleri ve değişiklikler onaylandı! Müşteri ekranı anında güncellendi.',
-        custLoginTitle: '👤 EZO STİLE Müşteri Girişi / Kaydı',
+        reminderBadge: 'Randevu Saati Yaklaştı (1 Saat)',
+        enableNotifications: 'Bildirimleri Aç',
+        confirmScheduleBtn: 'Çalışma Saatlerini Kaydet',
+        scheduleConfirmedToast: 'Çalışma saatleri başarıyla kaydedildi.',
+        custLoginTitle: 'Müşteri Girişi / Kayıt',
         custLoginDesc: 'Online randevu alabilmek için lütfen adınızı ve telefon numaranızı bir defaya mahsus giriniz.',
-        custLoginBtn: '📱 SMS Kodu Gönder & Kaydol',
+        custLoginBtn: 'SMS Kodu Gönder & Kaydol',
         servicesTitle: '1. İŞLEM SEÇİMİ',
-        selectServicePrompt: '👆 Lütfen bir hizmet seçiniz (Tıklayın)',
+        selectServicePrompt: 'Lütfen bir hizmet seçiniz',
         dateTitle: '2. TARİH SEÇİMİ',
         timeTitle: '3. SAAT SEÇİMİ',
-        bookBtn: '📅 RANDEVUYU ONAYLA (ŞİMDİ TIKLAYIN)',
-        myAppointments: '📋 Randevularım & Bildirimler',
-        myAppointmentsTab: '📋 Randevularım',
-        tabBook: '📅 Randevu Al',
+        bookBtn: 'RANDEVUYU ONAYLA',
+        myAppointments: 'Randevularım',
+        myAppointmentsTab: 'Randevularım',
+        tabBook: 'Randevu Al',
         today: 'Bugün',
         tomorrow: 'Yarın',
         selectDate: 'Tarih Seçin',
@@ -290,17 +401,17 @@
         slotOpened: 'AÇIK',
         slotNormal: 'NORM',
         selectTimeFirst: 'Lütfen Saat Seçiniz',
-        selectTimeWarning: '⚠️ Saat Seçilmedi',
-        salonClosedToday: '⚠️ Bu tarihte salonumuz kapalıdır.',
-        workHoursFinishedToday: 'ℹ️ Bugünün mesai saatleri tamamlanmıştır.',
-        showTomorrowHours: '📅 Yarınki Saatleri Göster',
+        selectTimeWarning: 'Saat Seçilmedi',
+        salonClosedToday: 'Bu tarihte salonumuz kapalıdır.',
+        workHoursFinishedToday: 'Bugünün mesai saatleri tamamlanmıştır.',
+        showTomorrowHours: 'Yarınki Saatleri Göster',
         logout: 'Çıkış',
         noAppointments: 'Henüz verilmiş bir randevunuz bulunmamaktadır.',
         bookNowBtn: 'Hemen Randevu Al',
         changeDateBtn: 'Saati / Tarihi Değiştir',
         cancelAptBtn: 'Randevuyu İptal Et',
-        patronPanel: '👑 Patron Paneli (Tam Yetkili)',
-        staffPanel: '👔 Çalışan Paneli (Personel)',
+        patronPanel: 'Patron Paneli',
+        staffPanel: 'Çalışan Paneli',
         adminPhoneBtn: 'Tel No',
         refreshBtn: 'Yenile',
         backToCustomerShort: 'Müşteri',
@@ -311,56 +422,56 @@
         saveServicesBtn: 'HİZMET VE FİYATLARI KAYDET',
         namePlaceholder: 'Adınız Soyadınız',
         phonePlaceholder: 'Telefon Numaranız (05XX...)',
-        quickVerifyTitle: 'Hızlı Doğrulama Şifreniz',
+        quickVerifyTitle: 'Doğrulama Şifreniz',
         quickVerifyDesc: 'numaralı hattınız için doğrulama şifreniz hazırlandı.',
-        instantCodeBadge: '⚡ Otomatik Onay Kodu (Aşağıdaki Butona Basın):',
+        instantCodeBadge: 'Otomatik Onay Kodu:',
         sixDigitCodePlaceholder: '6 Haneli Şifre',
-        verifyAndLoginBtn: '✅ Şifreyi Doğrula ve Anında Giriş Yap',
+        verifyAndLoginBtn: 'Şifreyi Doğrula ve Giriş Yap',
         cancel: 'İptal',
-        copyright: '© 2026 EZO STİLE VIP Berber Studio. Tüm Hakları Saklıdır.',
+        copyright: '© 2026 EZO STİLE VIP Berber & Kuaför. Tüm Hakları Saklıdır.',
         closeStep: 'Kapat',
         changeStep: 'Değiştir',
         approveBtn: '✓ RANDEVUYU ONAYLA',
-        rejectBtn: '✕ REDDET / İPTAL',
-        smsTitle: '📱 Telefon Doğrulama (SMS Kodu)',
+        rejectBtn: '✕ İPTAL / RET',
+        smsTitle: 'Telefon Doğrulama (SMS Kodu)',
         smsDesc: 'Lütfen telefonunuza gelen 6 haneli doğrulama kodunu giriniz.',
-        autoFillBtn: '⚡ Kodu Otomatik Doldur',
+        autoFillBtn: 'Kodu Otomatik Doldur',
         verifyBtn: 'Kodu Doğrula & Giriş Yap',
-        adminPanel: '👑 Admin / Yönetici Paneli',
-        weeklySchedule: '⏰ Çalışma Saatleri',
-        weeklyScheduleTitle: '📅 Haftalık Çalışma Saatleri',
-        saveWeeklyScheduleBtn: '💾 Çalışma Saatlerini Kaydet',
-        slotLocking: '🔒 Özel Saat Kilit',
-        slotLockingTitle: '🔒 Özel Saat Açma / Kilitleme',
+        adminPanel: 'Yönetim Paneli',
+        weeklySchedule: 'Çalışma Saatleri',
+        weeklyScheduleTitle: 'Haftalık Çalışma Saatleri',
+        saveWeeklyScheduleBtn: 'Çalışma Saatlerini Kaydet',
+        slotLocking: 'Özel Saat Kilit',
+        slotLockingTitle: 'Özel Saat Açma / Kilitleme',
         slotLockingDesc: 'Tarih seçip saatlere tıklayarak sadece o gün için özel saat kilitleyebilirsiniz.',
         selectDateLabel: 'Tarih Seçiniz:',
-        saveSlotLockBtn: '💾 Saat Kilitlerini Kaydet',
-        servicesAdmin: '✂️ Hizmet & Fiyat',
-        servicesAdminDesc: 'Müşteri ekranında görünen tüm hizmetlerin adını ve fiyatını buradan istediğiniz gibi değiştirebilirsiniz.',
-        requests: '📋 Talepler',
+        saveSlotLockBtn: 'Saat Kilitlerini Kaydet',
+        servicesAdmin: 'Hizmet & Fiyat',
+        servicesAdminDesc: 'Müşteri ekranında görünen tüm hizmetlerin adını ve fiyatını buradan yönetebilirsiniz.',
+        requests: 'Talepler',
         dayMonday: 'Pazartesi', dayTuesday: 'Salı', dayWednesday: 'Çarşamba', dayThursday: 'Perşembe', dayFriday: 'Cuma', daySaturday: 'Cumartesi', daySunday: 'Pazar',
-        dayIsOpen: '✅ AÇIK', dayIsClosed: '❌ KAPALI',
+        dayIsOpen: 'AÇIK', dayIsClosed: 'KAPALI',
         openingTime: 'Açılış', closingTime: 'Kapanış',
-        statusApprovedText: '✅ ONAYLANDI',
-        statusPendingText: '⏳ ONAY BEKLİYOR',
-        statusRejectedText: '❌ REDDEDİLDİ',
-        statusCancelledText: '🚫 MÜŞTERİ İPTAL ETTİ',
-        tabPending: '⏳ Bekleyen',
-        tabApproved: '✅ Onaylanan',
-        tabRejected: '❌ İptal/Red',
+        statusApprovedText: 'ONAYLANDI',
+        statusPendingText: 'ONAY BEKLİYOR',
+        statusRejectedText: 'İPTAL / RET',
+        statusCancelledText: 'MÜŞTERİ İPTAL ETTİ',
+        tabPending: 'Bekleyen',
+        tabApproved: 'Onaylanan',
+        tabRejected: 'İptal / Ret',
         bookingSuccessTitle: 'Randevu Talebiniz Alındı!',
-        bookingSuccessDesc: 'Randevunuz oluşturuldu! Berberinize bildirimi hangi kanaldan göndermek istersiniz?',
-        aptDetailTitle: '📌 Randevu Detayı:',
+        bookingSuccessDesc: 'Randevunuz oluşturuldu. Berberinize bildirimi hangi kanaldan göndermek istersiniz?',
+        aptDetailTitle: 'Randevu Detayı:',
         chooseNotifyChannel: 'Lütfen Bildirim Kanalını Seçiniz:',
-        sendWaToBarber: '📲 WhatsApp İle Berber\'e Gönder',
-        sendSmsToBarber: '💬 Normal SMS İle Berber\'e Gönder',
+        sendWaToBarber: 'WhatsApp İle Berber\'e Gönder',
+        sendSmsToBarber: 'Normal SMS İle Berber\'e Gönder',
         okLater: 'Tamam (Daha Sonra Gönder)',
-        aptApprovedTitle: '🎉 Randevu Onaylandı',
-        aptRejectedTitle: '❌ Randevu İptal/Reddedildi',
+        aptApprovedTitle: 'Randevu Onaylandı',
+        aptRejectedTitle: 'Randevu İptal / Ret',
         notifyCustomerPrompt: 'Müşteriye anında bilgi vermek ister misiniz?',
         sampleMessage: 'Örnek Mesaj Metni',
-        sendWaInfo: '💬 WhatsApp İle Bilgi Gönder',
-        sendSmsInfo: '📱 Normal SMS İle Gönder',
+        sendWaInfo: 'WhatsApp İle Bilgi Gönder',
+        sendSmsInfo: 'Normal SMS İle Gönder',
         closeBtn: 'Kapat',
         adminPhoneModalTitle: 'WhatsApp & SMS Bildirim Numarası',
         adminPhoneModalDesc: 'Müşterilerin randevu onay mesajı göndereceği dükkan telefon numaranız:',
@@ -371,15 +482,15 @@
         serviceNameLabel: 'Hizmet Adı',
         durationLabel: 'Süre',
         noAppointmentsInCategory: 'Bu kategoride randevu bulunmamaktadır.',
-        rescheduleTitle: '✏️ Randevu Saatini / Tarihini Güncelle',
+        rescheduleTitle: 'Randevu Saatini / Tarihini Güncelle',
         rescheduleDesc: 'Yeni tarih ve saati seçip kaydediniz:',
-        saveRescheduleBtn: '✅ Değişikliği Onaya Gönder',
-        custProfileTitle: '👤 Müşteri Profil & Ayarlar',
-        appLangTitle: '🌐 Uygulama Dili / Language:',
-        lockScreenNotifPerm: '🔔 Kilit Ekranı Bildirim İzni',
+        saveRescheduleBtn: 'Değişikliği Onaya Gönder',
+        custProfileTitle: 'Müşteri Profil & Ayarlar',
+        appLangTitle: 'Uygulama Dili / Language:',
+        lockScreenNotifPerm: 'Kilit Ekranı Bildirimleri',
         testSoundBtnText: 'Bildirim Sesi & Titreşimi Test Et',
         logoutAccountBtn: 'Hesabımdan Çıkış Yap',
-        profileSettingsBtn: '⚙️ Profil & Ayarlar',
+        profileSettingsBtn: 'Profil & Ayarlar',
         services: {
           '1': 'Saç Kesimi & Yıkama & Şekillendirme',
           '2': 'Sakal Tıraşı & Buharlı İtalyan Bakımı',
@@ -796,183 +907,28 @@
         const isSel = curLang === l.code;
         return `
           <button type="button" onclick="setLanguage('${l.code}')" style="
-            padding: 12px 8px;
-            border-radius: 14px;
+            padding: 10px 8px;
+            border-radius: 12px;
             font-size: 12px;
-            font-weight: 900;
-            border: ${isSel ? '2px solid #fbbf24' : '1px solid rgba(255,255,255,0.15)'};
-            background: ${isSel ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' : '#070c1a'};
-            color: ${isSel ? '#000000' : '#cbd5e1'};
+            font-weight: 600;
+            border: ${isSel ? '1.5px solid var(--gold-primary)' : '1px solid var(--border-color)'};
+            background: ${isSel ? 'rgba(245, 158, 11, 0.15)' : '#070c1a'};
+            color: ${isSel ? 'var(--gold-primary)' : 'var(--text-muted)'};
             cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: ${isSel ? '0 0 20px rgba(251, 191, 36, 0.65), inset 0 1px 0 rgba(255,255,255,0.5)' : 'none'};
-            transform: ${isSel ? 'scale(1.04)' : 'scale(1)'};
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            position: relative;
           ">
             <span>${l.flag} ${l.name}</span>
-            ${isSel ? '<span style="background:#000000; color:#fbbf24; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; box-shadow:0 2px 6px rgba(0,0,0,0.5);">✓ SEÇİLDİ</span>' : ''}
+            ${isSel ? '<span style="font-size:10px; font-weight:700;">✓</span>' : ''}
           </button>
         `;
       }).join('');
     }
 
-    function openAdminProfileModal() {
-      const root = document.getElementById('modal-root');
-      if (!root) return;
-
-      const isAdminRole = state.role === 'admin';
-      const staffName = state.currentStaffName || (isAdminRole ? 'Patron (Ana Admin)' : 'Salon Görevlisi');
-      const adminPhone = state.adminPhone || '05338000000';
-      const todayStr = getLocalDateStr(new Date());
-      const todayApproved = (state.appointments || []).filter(a => a.status === 'approved' && a.date === todayStr);
-      const todayRevenue = todayApproved.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-      const staffCount = (state.staffList || []).length;
-
-      let isNotifPermissionGranted = false;
-      try {
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          isNotifPermissionGranted = true;
-        }
-      } catch(e) {}
-
-      if (typeof state.soundEnabled === 'undefined') {
-        state.soundEnabled = localStorage.getItem('gc_sound_enabled') !== 'false';
-      }
-      const isSoundOn = state.soundEnabled !== false;
-
-      if (typeof state.lockScreenNotifEnabled === 'undefined') { state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true'; }
-      const isLockNotifOn = state.lockScreenNotifEnabled === true;
-
-      root.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
-            
-            <!-- EXECUTIVE HEADER -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1.5px solid var(--border-color);">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; font-weight: 900; box-shadow: 0 6px 20px rgba(245,158,11,0.4);">
-                  👑
-                </div>
-                <div>
-                  <h3 style="font-size: 17px; font-weight: 900; color: #fff; margin: 0; letter-spacing: 0.5px;">${staffName}</h3>
-                  <span style="font-size: 11px; color: var(--gold-primary); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">${isAdminRole ? '👑 VIP Admin Suite' : '🛠️ Salon Görevlisi'}</span>
-                </div>
-              </div>
-              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: 34px; height: 34px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
-            </div>
-
-            <!-- EXECUTIVE CONTROL MENU -->
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-              
-              <!-- 1. DİL SEÇENEKLERİ -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color);">
-                <div style="font-size: 11px; font-weight: 800; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 10px;">${t('appLangTitle')}</div>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                  <button onclick="setLanguage('tr')" style="padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'tr' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tr' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'tr' ? '#000' : '#fff'}; cursor: pointer;">🇹🇷 Türkçe ${state.language === 'tr' ? '✓' : ''}</button>
-                  <button onclick="setLanguage('en')" style="padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'en' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'en' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'en' ? '#000' : '#fff'}; cursor: pointer;">🇬🇧 English ${state.language === 'en' ? '✓' : ''}</button>
-                  <button onclick="setLanguage('ru')" style="padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'ru' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'ru' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'ru' ? '#000' : '#fff'}; cursor: pointer;">🇷🇺 Русский ${state.language === 'ru' ? '✓' : ''}</button>
-                  <button onclick="setLanguage('tk')" style="padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'tk' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tk' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'tk' ? '#000' : '#fff'}; cursor: pointer;">🇹🇲 Türkmençe ${state.language === 'tk' ? '✓' : ''}</button>
-                </div>
-              </div>
-
-              <!-- 2. KİLİT EKRANI BİLDİRİM AÇ / KAPAT TOGGLE -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <div>
-                  <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
-                    <span>🔔</span>
-                    <span>${t('lockScreenNotifPerm')}</span>
-                  </div>
-                  <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
-                    ${isLockNotifOn ? '🟢 Açık (Kilitli Ekrana Bildirim Gelir)' : '🔴 Kapalı (Bildirim Gönderilmez)'}
-                  </div>
-                </div>
-                <button type="button" onclick="toggleLockScreenNotifications()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.25s; border: ${isLockNotifOn ? '1.5px solid #10b981' : '1.5px solid #475569'}; background: ${isLockNotifOn ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15))' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
-                  <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
-                  <div style="width: 24px; height: 14px; border-radius: 10px; background: ${isLockNotifOn ? '#10b981' : '#475569'}; position: relative; transition: all 0.2s;">
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: ${isLockNotifOn ? '12px' : '2px'}; transition: all 0.2s;"></div>
-                  </div>
-                </button>
-              </div>
-
-              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
-                    <span>${isSoundOn ? '🔊' : '🔇'}</span>
-                    <span>Bildirim Sesi & Uyarısı</span>
-                  </div>
-                  <div style="font-size: 10px; color: ${isSoundOn ? '#34d399' : 'var(--text-muted)'}; font-weight: 800; margin-top: 2px;">
-                    ${isSoundOn ? '🟢 Açık (Sesli Randevu Uyarısı)' : '🔴 Kapalı (Sessiz Mod)'}
-                  </div>
-                </div>
-                <button type="button" onclick="toggleNotificationSound()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.25s; border: ${isSoundOn ? '1.5px solid #10b981' : '1.5px solid #475569'}; background: ${isSoundOn ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15))' : 'rgba(255,255,255,0.05)'}; color: ${isSoundOn ? '#34d399' : '#94a3b8'};">
-                  <span>${isSoundOn ? 'AÇIK' : 'KAPALI'}</span>
-                  <div style="width: 24px; height: 14px; border-radius: 10px; background: ${isSoundOn ? '#10b981' : '#475569'}; position: relative; transition: all 0.2s;">
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: ${isSoundOn ? '12px' : '2px'}; transition: all 0.2s;"></div>
-                  </div>
-                </button>
-              </div>
-
-              <!-- 4. TELEFON NO (WHATSAPP & SMS BILDIRIM HATTI) -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📱 Salon İletişim / WhatsApp Bildirim Hattı:</div>
-                  <div style="font-size: 15px; font-weight: 900; color: var(--gold-primary); margin-top: 2px; letter-spacing: 1px;">${adminPhone}</div>
-                </div>
-                ${isAdminRole ? `
-                  <button onclick="closeModal(); openAdminPhoneModal();" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); color: var(--gold-primary); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 900; cursor: pointer;">✏️ Değiştir</button>
-                ` : ''}
-              </div>
-
-              <!-- 5. CANLI BULUT SENKRONİZASYON TEŞHİSİ -->
-              <button onclick="closeModal(); runExecutiveCloudSync();" style="background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08)); border: 1.5px solid rgba(16,185,129,0.4); padding: 14px; border-radius: 16px; color: #34d399; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.15);">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 18px;">⚡</span>
-                  <span>Canlı Bulut Senkronizasyon Teşhisi</span>
-                </div>
-                <span style="background: rgba(16,185,129,0.2); color: #34d399; padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 900;">Sub-50ms</span>
-              </button>
-
-              <!-- 6. CİRO & KASA RAPORU (ONLY ADMIN) -->
-              ${isAdminRole ? `
-                <button onclick="closeModal(); setAdminTab('revenueDashboard');" style="background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(217,119,6,0.1)); border: 1.5px solid rgba(245,158,11,0.5); padding: 14px; border-radius: 16px; color: var(--gold-primary); font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(245,158,11,0.2);">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 18px;">💰</span>
-                    <span>Admin Ciro & Kasa Analiz Raporu</span>
-                  </div>
-                  <span style="background: rgba(245,158,11,0.25); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900;">Bugün: ${todayRevenue} TL</span>
-                </button>
-              ` : ''}
-
-              <!-- 7. YETKİLİ & ŞİFRE YÖNETİMİ (ONLY ADMIN) -->
-              ${isAdminRole ? `
-                <button onclick="closeModal(); setAdminTab('staffManagement');" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; color: #fff; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 18px;">👥</span>
-                    <span>Personel & Güvenlik Şifreleri</span>
-                  </div>
-                  <span style="background: rgba(255,255,255,0.08); color: var(--gold-primary); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900;">${staffCount} Personel</span>
-                </button>
-              ` : ''}
-
-              <!-- 8. ÇIKIŞ YAP (ONAY MODALI AÇAR) -->
-              <button onclick="confirmLogoutModal();" style="background: rgba(244,63,94,0.15); border: 1.5px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 18px;">🚪</span>
-                  <span>Admin Oturumunu Kapat</span>
-                </div>
-                <span style="font-size: 14px;">←</span>
-              </button>
-
-            </div>
-          </div>
-        </div>
-      `;
-    }
+    
 
     // --- DEFAULT SERVICES LIST ---
     const DEFAULT_SERVICES = [
@@ -984,19 +940,7 @@
       { id: '6', name: 'Saç Boyama / Beyaz Kapatma', duration: '45 dk', price: 350 }
     ];
 
-    function setLanguage(lang) {
-      state.language = lang;
-      localStorage.setItem('gc_lang', lang);
-      syncToCloud();
-      renderApp();
-      
-      // Re-render open profile modal instantly in new language!
-      if (state.role === 'customer') {
-        openCustomerProfileModal();
-      } else {
-        openAdminProfileModal();
-      }
-    }
+    
 
     
     let globalAudioCtx = null;
@@ -1154,117 +1098,7 @@
       `;
     }
 
-    function openCustomerProfileModal() {
-      const root = document.getElementById('modal-root');
-      if (!root) return;
-
-      const user = state.currentUser || { name: 'Müşteri', phone: '' };
-      let isNotifPermissionGranted = false;
-      try {
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          isNotifPermissionGranted = true;
-        }
-      } catch(e) {}
-
-      if (typeof state.soundEnabled === 'undefined') {
-        state.soundEnabled = localStorage.getItem('gc_sound_enabled') !== 'false';
-      }
-      const isSoundOn = state.soundEnabled !== false;
-
-      if (typeof state.lockScreenNotifEnabled === 'undefined') { state.lockScreenNotifEnabled = localStorage.getItem('gc_lock_notif_enabled') === 'true'; }
-      const isLockNotifOn = state.lockScreenNotifEnabled === true;
-
-      root.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 420px; width: 92%; border-color: var(--gold-primary); padding: 22px; background: #040711; box-shadow: 0 20px 50px rgba(0,0,0,0.9); border-radius: 24px;">
-            
-            <!-- HEADER -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1.5px solid var(--border-color);">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 46px; height: 46px; border-radius: 16px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
-                  👤
-                </div>
-                <div>
-                  <h3 style="font-size: 16px; font-weight: 900; color: #fff; margin: 0;">${user.name}</h3>
-                  <span style="font-size: 12px; color: var(--gold-primary); font-weight: 800;">📞 ${user.phone}</span>
-                </div>
-              </div>
-              <button onclick="closeModal()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: 34px; height: 34px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 14px;">
-              
-              <!-- 1. DİL SEÇENEKLERİ (LANGUAGES) -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color);">
-                <div style="font-size: 11px; font-weight: 800; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 10px;">${t('appLangTitle')}</div>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                  <button onclick="setLanguage('tr')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'tr' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tr' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'tr' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
-                    🇹🇷 Türkçe ${state.language === 'tr' ? '✓' : ''}
-                  </button>
-                  <button onclick="setLanguage('en')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'en' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'en' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'en' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
-                    🇬🇧 English ${state.language === 'en' ? '✓' : ''}
-                  </button>
-                  <button onclick="setLanguage('ru')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'ru' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'ru' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'ru' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
-                    🇷🇺 Русский ${state.language === 'ru' ? '✓' : ''}
-                  </button>
-                  <button onclick="setLanguage('tk')" style="padding: 12px 8px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1.5px solid ${state.language === 'tk' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.language === 'tk' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#070c1a'}; color: ${state.language === 'tk' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s;">
-                    🇹🇲 Türkmençe ${state.language === 'tk' ? '✓' : ''}
-                  </button>
-                </div>
-              </div>
-
-              <!-- 2. KİLİT EKRANI BİLDİRİM AÇ / KAPAT TOGGLE -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isLockNotifOn ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <div>
-                  <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
-                    <span>🔔</span>
-                    <span>Kilit Ekranı Bildirimi</span>
-                  </div>
-                  <div style="font-size: 10px; color: ${isLockNotifOn ? '#34d399' : 'var(--rose)'}; font-weight: 800; margin-top: 2px;">
-                    ${isLockNotifOn ? '🟢 Açık (Kilitli Ekrana Bildirim Gelir)' : '🔴 Kapalı (Bildirim Gönderilmez)'}
-                  </div>
-                </div>
-                <button type="button" onclick="toggleLockScreenNotifications()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.25s; border: ${isLockNotifOn ? '1.5px solid #10b981' : '1.5px solid #475569'}; background: ${isLockNotifOn ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15))' : 'rgba(255,255,255,0.05)'}; color: ${isLockNotifOn ? '#34d399' : '#94a3b8'};">
-                  <span>${isLockNotifOn ? 'AÇIK' : 'KAPALI'}</span>
-                  <div style="width: 24px; height: 14px; border-radius: 10px; background: ${isLockNotifOn ? '#10b981' : '#475569'}; position: relative; transition: all 0.2s;">
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: ${isLockNotifOn ? '12px' : '2px'}; transition: all 0.2s;"></div>
-                  </div>
-                </button>
-              </div>
-
-              <!-- 3. BİLDİRİM SESİ AÇ / KAPAT TOGGLE -->
-              <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 16px; border: 1px solid ${isSoundOn ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 12px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
-                    <span>${isSoundOn ? '🔊' : '🔇'}</span>
-                    <span>Bildirim Sesi & Uyarısı</span>
-                  </div>
-                  <div style="font-size: 10px; color: ${isSoundOn ? '#34d399' : 'var(--text-muted)'}; font-weight: 800; margin-top: 2px;">
-                    ${isSoundOn ? '🟢 Açık (Sesli Randevu Uyarısı)' : '🔴 Kapalı (Sessiz Mod)'}
-                  </div>
-                </div>
-                <button type="button" onclick="toggleNotificationSound()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; cursor: pointer; transition: all 0.25s; border: ${isSoundOn ? '1.5px solid #10b981' : '1.5px solid #475569'}; background: ${isSoundOn ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15))' : 'rgba(255,255,255,0.05)'}; color: ${isSoundOn ? '#34d399' : '#94a3b8'};">
-                  <span>${isSoundOn ? 'AÇIK' : 'KAPALI'}</span>
-                  <div style="width: 24px; height: 14px; border-radius: 10px; background: ${isSoundOn ? '#10b981' : '#475569'}; position: relative; transition: all 0.2s;">
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: ${isSoundOn ? '12px' : '2px'}; transition: all 0.2s;"></div>
-                  </div>
-                </button>
-              </div>
-
-              <!-- 4. HESAPTAN ÇIKIŞ YAP (ONAY MODALI AÇAR) -->
-              <button onclick="confirmLogoutModal();" style="background: rgba(244,63,94,0.15); border: 1.5px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 16px; color: #fb7185; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 4px; transition: all 0.2s;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 18px;">🚪</span>
-                  <span>${t('logoutAccountBtn')}</span>
-                </div>
-                <span style="font-size: 14px; font-weight: 900;">←</span>
-              </button>
-
-            </div>
-          </div>
-        </div>
-      `;
-    }
+    
 
     function getLocalDateStr(d = new Date()) {
       const y = d.getFullYear();
@@ -1506,18 +1340,18 @@
       // IF CUSTOMER IS NOT REGISTERED YET: SHOW ONLY REGISTRATION CARD
       if (!state.currentUser) {
         container.innerHTML = `
-          <div class="card" style="border-color: var(--gold-primary); max-width: 480px; margin: 40px auto; text-align: center; padding: 30px;">
-            <div style="max-width: 240px; width: 85%; margin: 0 auto 20px; text-align: center;">
-              <img src="./logo.png" onerror="this.onerror=null; this.src='logo.png';" style="width: 100%; height: auto; max-height: 130px; object-fit: contain; filter: drop-shadow(0 6px 15px rgba(0,0,0,0.8));" alt="EZO STİLE Logo">
+          <div class="card card-gold" style="max-width: 460px; margin: 40px auto; text-align: center; padding: 28px;">
+            <div style="max-width: 220px; width: 85%; margin: 0 auto 18px; text-align: center;">
+              <img src="./logo.png" onerror="this.onerror=null; this.src='logo.png';" style="width: 100%; height: auto; max-height: 120px; object-fit: contain; filter: drop-shadow(0 6px 15px rgba(0,0,0,0.8));" alt="EZO STİLE Logo">
             </div>
-            <h2 style="font-size: 20px; font-weight: 900; color: var(--gold-primary); margin-bottom: 8px;">${t('custLoginTitle')}</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">${t('custLoginDesc')}</p>
+            <h2 style="font-size: 18px; font-weight: 700; color: var(--gold-primary); margin-bottom: 6px;">${t('custLoginTitle')}</h2>
+            <p class="text-muted" style="margin-bottom: 20px;">${t('custLoginDesc')}</p>
             
             <form onsubmit="handleCustomerRegister(event)" style="display: flex; flex-direction: column; gap: 12px;">
-              <input id="reg-name" required type="text" placeholder="${t('namePlaceholder')}" class="input-field" style="padding: 14px; font-size: 14px;">
-              <input id="reg-phone" required type="tel" placeholder="${t('phonePlaceholder')}" class="input-field" style="padding: 14px; font-size: 14px;">
-              <button type="submit" class="gold-btn" style="padding: 16px; font-size: 14px; margin-top: 4px;">
-                ${t('custLoginBtn')}
+              <input id="reg-name" required type="text" placeholder="${t('namePlaceholder')}" class="input-field">
+              <input id="reg-phone" required type="tel" placeholder="${t('phonePlaceholder')}" class="input-field">
+              <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 4px;">
+                📱 ${t('custLoginBtn')}
               </button>
             </form>
           </div>
@@ -1525,12 +1359,12 @@
         return;
       }
 
-      // REGISTERED CUSTOMER VIEW: SADE & KOLAY TASARIM
+      // REGISTERED CUSTOMER VIEW
       state.customerTab = state.customerTab || 'booking';
       pruneAppointmentsLimit();
 
       const myApts = state.appointments.filter(a => a && a.customerPhone === state.currentUser.phone);
-      const myNotifs = state.notifications.filter(n => n.phone === state.currentUser.phone);
+      const myNotifs = state.notifications.filter(n => n && n.phone === state.currentUser.phone);
       const upcoming1h = myApts.find(check1HourReminder);
 
       // Check weekly schedule for selected date
@@ -1561,52 +1395,43 @@
       const tomorrowObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
       const tomorrowStr = getLocalDateStr(tomorrowObj);
       const isToday = state.selectedDate === todayStr;
-      const isPastDate = state.selectedDate < todayStr;
       const currentHour = now.getHours();
       const currentMin = now.getMinutes();
-
-      let allPastForToday = false;
-      if (isToday && availableSlots.length > 0) {
-        allPastForToday = availableSlots.every(time => {
-          const [sHour, sMin] = time.split(':').map(Number);
-          return sHour < currentHour || (sHour === currentHour && sMin <= currentMin);
-        });
-      }
 
       const activeSelectedService = state.selectedServiceId ? state.services.find(s => s.id === state.selectedServiceId) : null;
 
       let html = '';
 
-      // 1. CLEAN LOGGED IN USER PROFILE BAR (TOP RIGHT SETTINGS BUTTON)
+      // 1. LOGGED IN USER PROFILE BAR
       html += `
-        <div class="card" style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; background: #070c1a;">
+        <div class="card" style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: #070c1a;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #fbbf24, #d97706); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(245,158,11,0.25);">
+            <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #fbbf24, #d97706); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #000; font-weight: 700; box-shadow: 0 4px 12px rgba(245,158,11,0.25);">
               👤
             </div>
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #fff;">${state.currentUser.name}</div>
-              <div style="font-size: 11px; color: var(--gold-primary); font-weight: 700;">📞 ${state.currentUser.phone}</div>
+              <div style="font-size: 13px; font-weight: 700; color: #fff;">${state.currentUser.name}</div>
+              <div style="font-size: 11px; color: var(--gold-primary); font-weight: 600;">📞 ${state.currentUser.phone}</div>
             </div>
           </div>
-          <button onclick="openCustomerProfileModal()" class="gold-btn" style="padding: 8px 14px; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(245,158,11,0.25);">
+          <button onclick="openCustomerProfileModal()" class="btn btn-gold" style="min-height: 38px; padding: 6px 14px; font-size: 12px;">
             ⚙️ Profil & Ayarlar
           </button>
         </div>
       `;
 
-      // NOTIFICATIONS TOASTS (TAP TO DISMISS IMMEDIATELY & AUTO DELETE > 30 MINS)
+      // NOTIFICATIONS TOASTS
       if (myNotifs.length > 0) {
         html += `<div style="margin-bottom: 14px;">`;
         myNotifs.forEach(n => {
           html += `
-            <div onclick="dismissNotif('${n.id}')" style="cursor: pointer; background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(251,191,36,0.1)); border: 1.5px solid var(--gold-primary); padding: 12px 14px; border-radius: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(245,158,11,0.2); transition: all 0.2s;">
+            <div onclick="dismissNotif('${n.id}')" style="cursor: pointer; background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08)); border: 1px solid var(--border-gold); padding: 12px 14px; border-radius: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; transition: all 0.2s;">
               <div>
-                <strong style="color: var(--gold-primary); font-size: 13px; font-weight: 900; display: block;">${n.title}</strong>
-                <div style="color: #fff; font-size: 12px; margin-top: 2px; font-weight: 700; line-height: 1.3;">${n.message}</div>
-                <span style="font-size: 9px; color: var(--text-muted); display: block; margin-top: 4px;">🕒 ${n.date} (Gizlemek için dokunun)</span>
+                <strong style="color: var(--gold-primary); font-size: 13px; font-weight: 700; display: block;">${n.title}</strong>
+                <div style="color: #fff; font-size: 12px; margin-top: 2px;">${n.message}</div>
+                <span style="font-size: 10px; color: var(--text-muted); display: block; margin-top: 4px;">🕒 ${n.date} (Gizlemek için dokunun)</span>
               </div>
-              <button onclick="event.stopPropagation(); dismissNotif('${n.id}')" style="background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 8px; font-weight: 900; cursor: pointer; flex-shrink: 0;">✕</button>
+              <button onclick="event.stopPropagation(); dismissNotif('${n.id}')" style="background: rgba(255,255,255,0.1); border: none; color: #fff; width: 26px; height: 26px; border-radius: 8px; font-weight: 700; cursor: pointer; flex-shrink: 0;">✕</button>
             </div>
           `;
         });
@@ -1616,102 +1441,102 @@
       // 1-HOUR REMINDER BANNER
       if (upcoming1h) {
         html += `
-          <div class="reminder-banner animate-pulse" onclick="this.remove()" style="background: linear-gradient(135deg, rgba(245,158,11,0.22), rgba(217,119,6,0.12)); border: 1.5px solid var(--gold-primary); padding: 14px 18px; border-radius: 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 20px rgba(245,158,11,0.25); transition: all 0.2s;">
+          <div class="reminder-banner" onclick="this.remove()" style="background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(217,119,6,0.1)); border: 1px solid var(--border-gold); padding: 14px 16px; border-radius: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(245,158,11,0.2); transition: all 0.2s;">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="font-size: 26px;">⏰</div>
+              <div style="font-size: 24px;">⏰</div>
               <div>
-                <div style="font-weight: 900; font-size: 13px; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">${t('reminderTitle')}</div>
-                <div style="font-size: 12px; color: #fff; margin-top: 3px; font-weight: 700;">✂️ ${upcoming1h.serviceName} — 📅 ${upcoming1h.date} ⏰ ${upcoming1h.time}</div>
-                <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">👆 Ekrandan kaldırmak için tıklayınız</div>
+                <div style="font-weight: 700; font-size: 13px; color: #fbbf24;">${t('reminderTitle')}</div>
+                <div style="font-size: 12px; color: #fff; margin-top: 2px;">✂️ ${upcoming1h.serviceName} — 📅 ${upcoming1h.date} ⏰ ${upcoming1h.time}</div>
+                <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Ekrandan kaldırmak için tıklayınız</div>
               </div>
             </div>
-            <button onclick="event.stopPropagation(); this.parentElement.remove();" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap;">✕ Kapat</button>
+            <button onclick="event.stopPropagation(); this.parentElement.remove();" class="btn btn-secondary" style="min-height: 32px; padding: 4px 10px; font-size: 11px;">✕ Kapat</button>
           </div>
         `;
       }
 
-      // 2. CLEAN TAB SWITCHER (Randevu Al | Randevularım)
+      // 2. TAB SWITCHER (Randevu Al | Randevularım)
       html += `
         <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-          <button onclick="setCustomerTab('booking')" style="flex: 1; padding: 14px; border-radius: 14px; font-size: 13px; font-weight: 900; border: 1px solid ${state.customerTab === 'booking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.customerTab === 'booking' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#0f172a'}; color: ${state.customerTab === 'booking' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; box-shadow: ${state.customerTab === 'booking' ? '0 4px 15px rgba(245,158,11,0.3)' : 'none'};">
-            ${t('tabBook')}
+          <button onclick="setCustomerTab('booking')" class="btn ${state.customerTab === 'booking' ? 'btn-gold' : 'btn-secondary'}" style="flex: 1;">
+            📅 ${t('tabBook')}
           </button>
-          <button onclick="setCustomerTab('myAppointments')" style="flex: 1; padding: 14px; border-radius: 14px; font-size: 13px; font-weight: 900; border: 1px solid ${state.customerTab === 'myAppointments' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.customerTab === 'myAppointments' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#0f172a'}; color: ${state.customerTab === 'myAppointments' ? '#000' : '#fff'}; cursor: pointer; transition: all 0.2s; box-shadow: ${state.customerTab === 'myAppointments' ? '0 4px 15px rgba(245,158,11,0.3)' : 'none'};">
-            ${t('myAppointmentsTab')} (${myApts.length})
+          <button onclick="setCustomerTab('myAppointments')" class="btn ${state.customerTab === 'myAppointments' ? 'btn-gold' : 'btn-secondary'}" style="flex: 1;">
+            📋 ${t('myAppointmentsTab')} (${myApts.length})
           </button>
         </div>
       `;
 
-      // 3. BOOKING TAB CONTENT (AKILLI KATLANABİLİR ADIM SİSTEMİ - SMART ACCORDION FLOW)
+      // 3. BOOKING TAB CONTENT
       if (state.customerTab === 'booking') {
-        html += `<div class="card" style="padding: 16px 14px;">`;
+        html += `<div class="card" style="padding: 16px;">`;
 
-        // STEP 1: HİZMET SEÇİMİ (KAPALI BAŞLAR - TIKLAYINCA PENCERE AÇILIR)
+        // STEP 1: HİZMET SEÇİMİ
         html += `
           <div onclick="openServiceSelectionModal()" style="background: #070c1a; border-radius: 14px; border: 1px solid ${activeSelectedService ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 14px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary);">${t('servicesTitle')}</span>
-                <div style="font-size: 13px; font-weight: 800; color: #fff; margin-top: 2px;">
-                  ${activeSelectedService ? `✓ ${getServiceName(activeSelectedService)} (${activeSelectedService.price} TL)` : `<span style="color: var(--gold-light); font-weight: 800;" class="animate-pulse">${t('selectServicePrompt')}</span>`}
+                <span style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">${t('servicesTitle')}</span>
+                <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 2px;">
+                  ${activeSelectedService ? `✓ ${getServiceName(activeSelectedService)} (${activeSelectedService.price} TL)` : `<span style="color: var(--gold-light);">${t('selectServicePrompt')}</span>`}
                 </div>
               </div>
-              <button onclick="event.stopPropagation(); openServiceSelectionModal();" class="gold-btn" style="padding: 6px 14px; font-size: 11px; font-weight: 800;">
+              <button onclick="event.stopPropagation(); openServiceSelectionModal();" class="btn btn-gold" style="min-height: 34px; padding: 4px 12px; font-size: 11px;">
                 ${activeSelectedService ? '✏️ ' + t('changeStep') : '✂️ Hizmet Seç'}
               </button>
             </div>
           </div>
         `;
 
-        // STEP 2: TARİH SEÇİMİ (KATLANABİLİR)
+        // STEP 2: TARİH SEÇİMİ
         const isStep2Open = state.accordionStep === 2;
         html += `
           <div id="step-2-container" style="background: #070c1a; border-radius: 14px; border: 1px solid ${isStep2Open ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 12px; margin-bottom: 12px; transition: all 0.2s;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary);">${t('dateTitle')}</span>
-                <div style="font-size: 13px; font-weight: 800; color: #fff; margin-top: 2px;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">${t('dateTitle')}</span>
+                <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 2px;">
                   📅 ${state.selectedDate === todayStr ? t('today') + ' (' + state.selectedDate + ')' : state.selectedDate === tomorrowStr ? t('tomorrow') + ' (' + state.selectedDate + ')' : state.selectedDate}
                 </div>
               </div>
-              <button onclick="setAccordionStep(${isStep2Open ? 0 : 2})" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
+              <button onclick="setAccordionStep(${isStep2Open ? 0 : 2})" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 11px;">
                 ${isStep2Open ? '▲ ' + t('closeStep') : '✏️ ' + t('changeStep')}
               </button>
             </div>
 
             ${isStep2Open ? `
-              <div style="display: flex; gap: 6px; margin-top: 12px;">
-                <button onclick="selectDateAccordion('${todayStr}')" style="flex: 1; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; border: 1px solid ${state.selectedDate === todayStr ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.selectedDate === todayStr ? 'var(--gold-primary)' : '#0f172a'}; color: ${state.selectedDate === todayStr ? '#000' : '#fff'}; cursor: pointer;">
+              <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+                <button onclick="selectDateAccordion('${todayStr}')" class="btn ${state.selectedDate === todayStr ? 'btn-gold' : 'btn-secondary'}" style="flex: 1; min-height: 38px; padding: 6px; font-size: 12px;">
                   📅 ${t('today')}
                 </button>
-                <button onclick="selectDateAccordion('${tomorrowStr}')" style="flex: 1; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 800; border: 1px solid ${state.selectedDate === tomorrowStr ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.selectedDate === tomorrowStr ? 'var(--gold-primary)' : '#0f172a'}; color: ${state.selectedDate === tomorrowStr ? '#000' : '#fff'}; cursor: pointer;">
+                <button onclick="selectDateAccordion('${tomorrowStr}')" class="btn ${state.selectedDate === tomorrowStr ? 'btn-gold' : 'btn-secondary'}" style="flex: 1; min-height: 38px; padding: 6px; font-size: 12px;">
                   📅 ${t('tomorrow')}
                 </button>
-                <input type="date" value="${state.selectedDate}" min="${todayStr}" onchange="selectDateAccordion(this.value)" class="input-field" style="flex: 1.2; padding: 8px; font-size: 11px; font-weight: 700;">
+                <input type="date" value="${state.selectedDate}" min="${todayStr}" onchange="selectDateAccordion(this.value)" class="input-field" style="flex: 1.2; padding: 8px; font-size: 11px;">
               </div>
             ` : ''}
           </div>
         `;
 
-        // STEP 3: SAAT SEÇİMİ (KATLANABİLİR)
+        // STEP 3: SAAT SEÇİMİ
         const isStep3Open = state.accordionStep === 3;
         html += `
           <div style="background: #070c1a; border-radius: 14px; border: 1px solid ${isStep3Open ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 12px; margin-bottom: 14px; transition: all 0.2s;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <span style="font-size: 11px; font-weight: 800; color: var(--gold-primary);">${t('timeTitle')}</span>
-                <div style="font-size: 13px; font-weight: 800; color: ${state.selectedTime ? '#fff' : '#fb7185'}; margin-top: 2px;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">${t('timeTitle')}</span>
+                <div style="font-size: 13px; font-weight: 700; color: ${state.selectedTime ? '#fff' : '#fb7185'}; margin-top: 2px;">
                   ${state.selectedTime ? '⏰ ' + state.selectedTime : t('selectTimeWarning')}
                 </div>
               </div>
-              <button onclick="setAccordionStep(${isStep3Open ? 0 : 3})" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--gold-primary); padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
+              <button onclick="setAccordionStep(${isStep3Open ? 0 : 3})" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 11px;">
                 ${isStep3Open ? '▲ ' + t('closeStep') : '✏️ ' + t('changeStep')}
               </button>
             </div>
 
             ${isStep3Open ? `
               ${!sched.isOpen ? `
-                <div style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center; margin-top: 10px;">
+                <div style="background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.25); color: #fb7185; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-align: center; margin-top: 10px;">
                   ${t('salonClosedToday')}
                 </div>
               ` : `
@@ -1720,7 +1545,6 @@
                     const occupiedSlotsSet = getOccupiedSlotsForDate(state.selectedDate);
                     const neededSlotsForActiveSvc = activeSelectedService ? getServiceSlotCount(activeSelectedService.duration) : 1;
 
-                    // Günü geçmiş saatleri tamamen kaldır / gizle
                     let displaySlotsCustomer = availableSlots;
                     if (isToday) {
                       displaySlotsCustomer = availableSlots.filter(time => {
@@ -1731,9 +1555,9 @@
 
                     if (displaySlotsCustomer.length === 0) {
                       return `
-                        <div style="grid-column: span 3; background: rgba(245,158,11,0.15); border: 1px solid var(--gold-primary); color: #fbbf24; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: center;">
+                        <div style="grid-column: span 3; background: rgba(245,158,11,0.12); border: 1px solid var(--border-gold); color: #fbbf24; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-align: center;">
                           ${t('workHoursFinishedToday')}
-                          <button onclick="selectDateAccordion('${tomorrowStr}')" class="gold-btn" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 900;">${t('showTomorrowHours')}</button>
+                          <button onclick="selectDateAccordion('${tomorrowStr}')" class="btn btn-gold" style="width: 100%; margin-top: 8px; min-height: 36px; font-size: 12px;">${t('showTomorrowHours')}</button>
                         </div>
                       `;
                     }
@@ -1743,7 +1567,6 @@
                     const isDirectlyBooked = occupiedSlotsSet.has(time);
                     const isDirectlyBlocked = override ? override.status === 'blocked' : false;
 
-                    // Check if there are enough consecutive free slots for the selected service duration
                     let hasEnoughConsecutiveTime = true;
                     const [startH, startM] = time.split(':').map(Number);
                     let checkMinTotal = startH * 60 + startM;
@@ -1767,32 +1590,32 @@
 
                     if (isDirectlyBooked) {
                       return `
-                        <button disabled class="slot-btn blocked" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                        <button disabled class="slot-btn blocked" style="padding: 6px 4px;">
                           ${time}
-                          <span style="display:block; font-size:7px; color:#fb7185;">🔴 ${t('slotBooked')}</span>
+                          <span style="display:block; font-size:8px; color:#fb7185;">🔴 ${t('slotBooked')}</span>
                         </button>
                       `;
                     } else if (isDirectlyBlocked) {
                       return `
-                        <button disabled class="slot-btn blocked" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                        <button disabled class="slot-btn blocked" style="padding: 6px 4px;">
                           ${time}
-                          <span style="display:block; font-size:7px; color:#94a3b8;">⚪ ${t('slotClosed')}</span>
+                          <span style="display:block; font-size:8px; color:#94a3b8;">⚪ ${t('slotClosed')}</span>
                         </button>
                       `;
                     } else if (!hasEnoughConsecutiveTime) {
                       const svcName = activeSelectedService ? getServiceName(activeSelectedService) : '';
                       const svcDur = activeSelectedService ? activeSelectedService.duration : '';
                       return `
-                        <button onclick="alert('⚠️ Hizmetinizin Saati Yüzünden Randevu Alamadınız!\\n\\nSeçtiğiniz ${svcName} (${svcDur}) hizmetinin süresi salon kapanış saatini veya sonraki randevuyu aştığı için ${time} saati yetersizdir.\\n\\nLütfen daha erken bir saat seçiniz!')" class="slot-btn blocked" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px; background: rgba(245,158,11,0.12); border: 1px dashed rgba(245,158,11,0.5); color: #fbbf24; cursor: pointer;">
+                        <button onclick="alert('⚠️ Hizmetinizin Süresi Yetersiz!\n\nSeçtiğiniz ${svcName} (${svcDur}) hizmetinin süresi salon kapanış saatini veya sonraki randevuyu aştığı için ${time} saati yetersizdir.\n\nLütfen daha erken bir saat seçiniz!')" class="slot-btn blocked" style="padding: 6px 4px; background: rgba(245,158,11,0.12); border: 1px dashed rgba(245,158,11,0.4); color: #fbbf24; cursor: pointer;">
                           ${time}
-                          <span style="display:block; font-size:7px; color:#fbbf24; font-weight: 800;">⚠️ Süre Yetersiz</span>
+                          <span style="display:block; font-size:8px; color:#fbbf24;">⚠️ Yetersiz</span>
                         </button>
                       `;
                     } else {
                       return `
-                        <button onclick="selectTimeAccordion('${time}')" class="slot-btn ${isSelected ? 'selected' : ''}" style="padding: 8px 4px; font-size: 12px; font-weight: 800; border-radius: 10px;">
+                        <button onclick="selectTimeAccordion('${time}')" class="slot-btn ${isSelected ? 'selected' : ''}" style="padding: 6px 4px;">
                           ${time}
-                          <span style="display:block; font-size:7px; color:#34d399;">🟢 Serbest</span>
+                          <span style="display:block; font-size:8px; color:${isSelected ? '#000' : '#34d399'};">🟢 Serbest</span>
                         </button>
                       `;
                     }
@@ -1804,18 +1627,18 @@
           </div>
         `;
 
-        // STEP 4: BIG DEV CONFIRMATION BUTTON
+        // CONFIRMATION BAR
         html += `
-          <div id="booking-confirm-bar" style="background: ${state.selectedTime && activeSelectedService ? 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(251,191,36,0.15))' : '#070c1a'}; border: 2px solid ${state.selectedTime && activeSelectedService ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 16px; padding: 16px; text-align: center; transition: all 0.3s ease; box-shadow: ${state.selectedTime && activeSelectedService ? '0 0 25px rgba(245,158,11,0.35)' : 'none'};">
-            <div style="font-size: 14px; font-weight: 900; color: #fff;">
-              📋 ${activeSelectedService ? getServiceName(activeSelectedService) : `<span style="color: var(--gold-light);">${t('selectServicePrompt')}</span>`} ${activeSelectedService ? '— <span style="color: var(--gold-primary); font-size: 16px;">' + activeSelectedService.price + ' TL</span>' : ''}
+          <div id="booking-confirm-bar" style="background: ${state.selectedTime && activeSelectedService ? 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))' : '#070c1a'}; border: 1.5px solid ${state.selectedTime && activeSelectedService ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 16px; padding: 16px; text-align: center; transition: all 0.2s;">
+            <div style="font-size: 13px; font-weight: 700; color: #fff;">
+              📋 ${activeSelectedService ? getServiceName(activeSelectedService) : `<span style="color: var(--gold-light);">${t('selectServicePrompt')}</span>`} ${activeSelectedService ? '— <span style="color: var(--gold-primary);">' + activeSelectedService.price + ' TL</span>' : ''}
             </div>
-            <div style="font-size: 13px; font-weight: 800; color: ${state.selectedTime ? 'var(--gold-primary)' : 'var(--text-muted)'}; margin-top: 4px;">
+            <div style="font-size: 12px; font-weight: 600; color: ${state.selectedTime ? 'var(--gold-primary)' : 'var(--text-muted)'}; margin-top: 4px;">
               📅 ${state.selectedDate} — ⏰ ${state.selectedTime ? state.selectedTime : t('selectTimeFirst')}
             </div>
 
-            <button onclick="submitBooking()" class="gold-btn ${state.selectedTime && activeSelectedService ? 'animate-pulse' : ''}" style="width: 100%; margin-top: 12px; padding: 16px; font-size: 16px; font-weight: 900; background: ${state.selectedTime && activeSelectedService ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#1e293b'}; color: ${state.selectedTime && activeSelectedService ? '#000' : 'var(--text-muted)'}; border: 1px solid ${state.selectedTime && activeSelectedService ? 'var(--gold-primary)' : 'var(--border-color)'}; border-radius: 12px;">
-              ${state.selectedTime && activeSelectedService ? t('bookBtn') : '⏰ ' + (activeSelectedService ? t('selectTimeFirst') : t('selectServicePrompt'))}
+            <button onclick="submitBooking()" class="btn ${state.selectedTime && activeSelectedService ? 'btn-gold' : 'btn-secondary'}" style="width: 100%; margin-top: 12px; font-size: 15px;">
+              ${state.selectedTime && activeSelectedService ? t('bookBtn') : (activeSelectedService ? t('selectTimeFirst') : t('selectServicePrompt'))}
             </button>
           </div>
         `;
@@ -1827,11 +1650,13 @@
       else if (state.customerTab === 'myAppointments') {
         html += `
           <div class="card">
-            <h3 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 14px;">${t('myAppointments')} (${myApts.length})</h3>
+            <h3 style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 14px;">${t('myAppointments')} (${myApts.length})</h3>
             ${myApts.length === 0 ? `
-              <div style="text-align: center; padding: 30px 10px;">
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">${t('noAppointments')}</p>
-                <button onclick="setCustomerTab('booking')" class="gold-btn" style="padding: 12px 20px; font-size: 13px;">📅 ${t('bookNowBtn')}</button>
+              <div style="text-align: center; padding: 36px 16px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border-color);">
+                <div style="font-size: 32px; margin-bottom: 8px;">📅</div>
+                <h4 style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px;">${t('noAppointments')}</h4>
+                <p class="text-muted" style="margin-bottom: 16px;">İstediğiniz zaman ve saat için online randevu alabilirsiniz.</p>
+                <button onclick="setCustomerTab('booking')" class="btn btn-gold">📅 ${t('bookNowBtn')}</button>
               </div>
             ` : `
               <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -1844,9 +1669,9 @@
                     <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid ${is1h ? 'var(--gold-primary)' : 'var(--border-color)'}; display: flex; flex-direction: column; gap: 10px;">
                       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div>
-                          <div style="font-weight: 800; font-size: 14px; color: #fff;">${a.serviceName}</div>
-                          <div style="font-size: 12px; color: var(--gold-primary); font-weight: 700; margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
-                          ${is1h ? `<span class="badge badge-pending animate-pulse" style="margin-top: 4px;">${t('reminderBadge')}</span>` : ''}
+                          <div style="font-weight: 700; font-size: 14px; color: #fff;">${a.serviceName}</div>
+                          <div style="font-size: 12px; color: var(--gold-primary); font-weight: 600; margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
+                          ${is1h ? `<span class="badge badge-pending" style="margin-top: 4px;">${t('reminderBadge')}</span>` : ''}
                         </div>
                         <div>
                           <span class="badge ${a.status === 'approved' ? 'badge-approved' : a.status === 'rejected' || a.status === 'cancelled' ? 'badge-rejected' : 'badge-pending'}">
@@ -1857,8 +1682,8 @@
 
                       ${canModify ? `
                         <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 2px;">
-                          <button onclick="requestCancelOrChange('${a.id}', 'reschedule')" class="gold-btn" style="padding: 8px 12px; font-size: 11px; background: rgba(245,158,11,0.15); color: var(--gold-primary); border: 1px solid rgba(245,158,11,0.3); flex: 1;">✏️ Saati / Tarihi Değiştir</button>
-                          <button onclick="requestCancelOrChange('${a.id}', 'cancel')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer; flex: 1;">❌ Randevuyu İptal Et</button>
+                          <button onclick="requestCancelOrChange('${a.id}', 'reschedule')" class="btn btn-outline-gold" style="flex: 1; min-height: 36px; padding: 4px; font-size: 11px;">✏️ Saati / Tarihi Değiştir</button>
+                          <button onclick="requestCancelOrChange('${a.id}', 'cancel')" class="btn btn-danger" style="flex: 1; min-height: 36px; padding: 4px; font-size: 11px;">❌ Randevuyu İptal Et</button>
                         </div>
                       ` : ''}
                     </div>
@@ -1875,13 +1700,13 @@
 
     // --- ADMIN VIEW (SADE VE KOLAY YÖNETİCİ PANELİ) ---
     function renderAdminView(container) {
-      const pendingApts = state.appointments.filter(a => a.status === 'pending');
-      const approvedApts = state.appointments.filter(a => a.status === 'approved');
-      const rejectedApts = state.appointments.filter(a => a.status === 'rejected' || a.status === 'cancelled');
+      const pendingApts = state.appointments.filter(a => a && a.status === 'pending');
+      const approvedApts = state.appointments.filter(a => a && a.status === 'approved');
+      const rejectedApts = state.appointments.filter(a => a && (a.status === 'rejected' || a.status === 'cancelled'));
 
       const isAdminRole = state.role === 'admin';
       const staffName = state.currentStaffName || localStorage.getItem('gc_staff_name') || 'Personel';
-      const panelTitle = isAdminRole ? '👑 Patron / Ana Admin Paneli' : `👤 ${staffName} Paneli`;
+      const panelTitle = isAdminRole ? 'Patron Yönetim Paneli' : `${staffName} Paneli`;
 
       // Security check: restrict manager role from sensitive tabs
       if (!isAdminRole && (state.adminTab === 'revenueDashboard' || state.adminTab === 'staffManagement' || state.adminTab === 'servicesAdmin' || state.adminTab === 'weeklySchedule')) {
@@ -1889,56 +1714,89 @@
       }
 
       let html = `
-        <div class="card" style="border-color: var(--gold-primary);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div class="card card-gold">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
             <div>
-              <h2 style="font-size: 17px; font-weight: 900; color: var(--gold-primary); margin: 0;">${panelTitle}</h2>
-              <span style="font-size: 11px; color: var(--text-muted);">EZO STİLE VIP Barber</span>
+              <h2 style="font-size: 18px; font-weight: 700; color: var(--gold-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>👑</span> ${panelTitle}
+              </h2>
+              <p class="text-muted" style="margin-top: 2px;">EZO STİLE VIP Berber & Kuaför</p>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-              <button onclick="openAdminProfileModal()" class="gold-btn" style="padding: 8px 14px; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(245,158,11,0.25);">
-                👤 ${state.currentStaffName || 'Patron / Admin Profil'}
+              <button onclick="openAdminProfileModal()" class="btn btn-gold" style="min-height: 38px; padding: 6px 14px; font-size: 12px;">
+                <span>👤</span> ${state.currentStaffName || 'Profil & Ayarlar'}
               </button>
-              <button onclick="switchRole('customer')" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #aaa; padding: 8px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer;">← ${t('backToCustomerShort')}</button>
+              <button onclick="switchRole('customer')" class="btn btn-secondary" style="min-height: 38px; padding: 6px 12px; font-size: 12px;">
+                ← Müşteri
+              </button>
             </div>
           </div>
 
-          <!-- MAIN NAVIGATION TABS GRID -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
-            <button onclick="setAdminTab('requests')" style="padding: 12px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'requests' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'requests' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'requests' ? '#000' : '#fff'}; cursor: pointer;">
-              📋 Randevu Talepleri (${pendingApts.length})
-            </button>
-            <button onclick="setAdminTab('manualBooking')" style="padding: 12px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'manualBooking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'manualBooking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'manualBooking' ? '#000' : '#fff'}; cursor: pointer;">
-              📅 Manuel Randevu & Takvim
-            </button>
-
-            <button onclick="setAdminTab('slotLocking')" style="padding: 12px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'slotLocking' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'slotLocking' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'slotLocking' ? '#000' : '#fff'}; cursor: pointer; ${!isAdminRole ? 'grid-column: span 2;' : ''}">
-              🔒 ${t('slotLocking')}
-            </button>
+          <!-- GROUPED ADMIN NAVIGATION PANELS -->
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
             
+            <!-- 1. RANDEVU YÖNETİMİ -->
+            <div>
+              <div class="admin-group-title">📅 Randevu Yönetimi</div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
+                <button onclick="setAdminTab('requests')" class="btn ${state.adminTab === 'requests' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: space-between;">
+                  <span>📋 Randevu Talepleri</span>
+                  <span class="badge" style="background: rgba(0,0,0,0.2); color: inherit;">${pendingApts.length}</span>
+                </button>
+                <button onclick="setAdminTab('manualBooking')" class="btn ${state.adminTab === 'manualBooking' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
+                  <span>📅 Manuel Randevu & Takvim</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. SALON YÖNETİMİ -->
+            <div>
+              <div class="admin-group-title">✂️ Salon Yönetimi</div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
+                <button onclick="setAdminTab('slotLocking')" class="btn ${state.adminTab === 'slotLocking' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
+                  <span>🔒 Özel Saat Kilitleri</span>
+                </button>
+                ${isAdminRole ? `
+                  <button onclick="setAdminTab('weeklySchedule')" class="btn ${state.adminTab === 'weeklySchedule' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
+                    <span>⏰ Çalışma Saatleri</span>
+                  </button>
+                  <button onclick="setAdminTab('servicesAdmin')" class="btn ${state.adminTab === 'servicesAdmin' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
+                    <span>✂️ Hizmetler & Fiyatlar</span>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- 3. PERSONEL VE ŞİFRELER & RAPORLAR (ONLY ADMIN) -->
             ${isAdminRole ? `
-              <button onclick="setAdminTab('weeklySchedule')" style="padding: 12px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'weeklySchedule' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'weeklySchedule' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'weeklySchedule' ? '#000' : '#fff'}; cursor: pointer;">
-                ⏰ ${t('weeklySchedule')}
-              </button>
-              <button onclick="setAdminTab('servicesAdmin')" style="padding: 12px 4px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid ${state.adminTab === 'servicesAdmin' ? 'var(--gold-primary)' : 'var(--border-color)'}; background: ${state.adminTab === 'servicesAdmin' ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#070c1a'}; color: ${state.adminTab === 'servicesAdmin' ? '#000' : '#fff'}; cursor: pointer; grid-column: span 2;">
-                ✂️ ${t('servicesAdmin')}
-              </button>
+              <div>
+                <div class="admin-group-title">👥 Personel & Raporlar</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
+                  <button onclick="setAdminTab('staffManagement')" class="btn ${state.adminTab === 'staffManagement' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
+                    <span>👥 Personel & Şifreler</span>
+                  </button>
+                  <button onclick="setAdminTab('revenueDashboard')" class="btn ${state.adminTab === 'revenueDashboard' ? 'btn-gold' : 'btn-secondary'}" style="justify-content: center;">
+                    <span>💰 Ciro & Kasa Raporu</span>
+                  </button>
+                </div>
+              </div>
             ` : ''}
+
           </div>
       `;
 
-      // 1. REQUESTS TAB (BEKLEYENLER / ONAYLANANLAR / REDDEDİLENLER)
+      // 1. REQUESTS TAB
       if (state.adminTab === 'requests') {
         html += `
           <div>
-            <div style="display: flex; gap: 6px; margin-bottom: 16px; background: #070c1a; padding: 4px; border-radius: 14px; border: 1px solid var(--border-color);">
-              <button onclick="setRequestsSubTab('pending')" style="flex: 1; padding: 10px 2px; border-radius: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'pending' ? 'var(--gold-primary)' : 'transparent'}; color: ${state.requestsSubTab === 'pending' ? '#000' : '#94a3b8'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <div style="display: flex; gap: 6px; margin-bottom: 16px; background: #070c1a; padding: 4px; border-radius: 12px; border: 1px solid var(--border-color);">
+              <button onclick="setRequestsSubTab('pending')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 12px; border: none; background: ${state.requestsSubTab === 'pending' ? 'var(--gold-primary)' : 'transparent'}; color: ${state.requestsSubTab === 'pending' ? '#000' : 'var(--text-muted)'}; font-weight: 700;">
                 ${t('tabPending')} (${pendingApts.length})
               </button>
-              <button onclick="setRequestsSubTab('approved')" style="flex: 1; padding: 10px 2px; border-radius: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'approved' ? '#10b981' : 'transparent'}; color: ${state.requestsSubTab === 'approved' ? '#000' : '#94a3b8'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <button onclick="setRequestsSubTab('approved')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 12px; border: none; background: ${state.requestsSubTab === 'approved' ? '#10b981' : 'transparent'}; color: ${state.requestsSubTab === 'approved' ? '#000' : 'var(--text-muted)'}; font-weight: 700;">
                 ${t('tabApproved')} (${approvedApts.length})
               </button>
-              <button onclick="setRequestsSubTab('rejected')" style="flex: 1; padding: 10px 2px; border-radius: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: ${state.requestsSubTab === 'rejected' ? '#f43f5e' : 'transparent'}; color: ${state.requestsSubTab === 'rejected' ? '#fff' : '#94a3b8'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <button onclick="setRequestsSubTab('rejected')" class="btn" style="flex: 1; min-height: 36px; padding: 6px; font-size: 12px; border: none; background: ${state.requestsSubTab === 'rejected' ? '#f43f5e' : 'transparent'}; color: ${state.requestsSubTab === 'rejected' ? '#fff' : 'var(--text-muted)'}; font-weight: 700;">
                 ${t('tabRejected')} (${rejectedApts.length})
               </button>
             </div>
@@ -1947,25 +1805,31 @@
         const activeList = state.requestsSubTab === 'pending' ? pendingApts : state.requestsSubTab === 'approved' ? approvedApts : rejectedApts;
 
         if (activeList.length === 0) {
-          html += `<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 30px;">${t('noAppointmentsInCategory')}</p>`;
+          html += `
+            <div style="text-align: center; padding: 40px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border-color); margin-top: 10px;">
+              <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
+              <h4 style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px;">Şu anda bu kategoride randevu bulunmuyor</h4>
+              <p style="font-size: 12px; color: var(--text-muted);">Yeni bir randevu kaydı oluştuğunda burada listelenecektir.</p>
+            </div>
+          `;
         } else {
           html += `<div style="display: flex; flex-direction: column; gap: 12px;">`;
           activeList.forEach(a => {
             html += `
-              <div style="background: #070c1a; padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div style="background: #070c1a; padding: 16px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div>
-                  <div style="font-weight: 900; font-size: 15px; color: #fff;">👤 ${a.customerName}</div>
-                  <div style="font-size: 12px; color: var(--gold-primary); font-weight: 700; margin-top: 2px;">📞 ${a.customerPhone}</div>
-                  <div style="font-size: 13px; color: #fff; margin-top: 6px; font-weight: 800;">📌 ${a.serviceName}</div>
-                  <div style="font-size: 12px; color: var(--gold-primary); font-weight: 700; margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
+                  <div style="font-weight: 700; font-size: 14px; color: #fff;">👤 ${a.customerName}</div>
+                  <div style="font-size: 12px; color: var(--gold-primary); font-weight: 600; margin-top: 2px;">📞 ${a.customerPhone}</div>
+                  <div style="font-size: 13px; color: #fff; margin-top: 6px; font-weight: 600;">📌 ${a.serviceName}</div>
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">📅 ${a.date} — ⏰ ${a.time} (${a.price} TL)</div>
                 </div>
 
                 <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
                   ${a.status !== 'approved' ? `
-                    <button onclick="adminApproveApt('${a.id}')" class="gold-btn" style="padding: 10px 16px; font-size: 12px; font-weight: 900; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #10b981;">${t('approveBtn')}</button>
+                    <button onclick="adminApproveApt('${a.id}')" class="btn btn-gold" style="min-height: 38px; padding: 6px 14px; font-size: 12px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #10b981;">${t('approveBtn')}</button>
                   ` : ''}
                   ${a.status !== 'rejected' ? `
-                    <button onclick="adminRejectApt('${a.id}')" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fb7185; padding: 10px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer;">${t('rejectBtn')}</button>
+                    <button onclick="adminRejectApt('${a.id}')" class="btn btn-danger" style="min-height: 38px; padding: 6px 14px; font-size: 12px;">${t('rejectBtn')}</button>
                   ` : ''}
                 </div>
               </div>
@@ -3896,41 +3760,9 @@
       `;
     }
 
-    function openAdminPhoneModal() {
-      const currentPhone = state.adminPhone || '05338000000';
-      const root = document.getElementById('modal-root');
-      if (!root) return;
+    
 
-      root.innerHTML = `
-        <div class="modal-overlay">
-          <div class="modal-content" style="max-width: 400px; padding: 20px;">
-            <h3 style="font-size: 16px; font-weight: 900; color: var(--gold-primary); margin-bottom: 8px;">📱 Salon Telefon Numarasını Güncelle</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Müşterilerin randevu onay mesajlarını yönlendireceği WhatsApp / İletişim numarasını giriniz.</p>
-            
-            <input id="admin-phone-input" type="tel" value="${currentPhone}" placeholder="Örn: 0533XXXXXXX" class="input-field" style="padding: 12px; font-size: 14px; font-weight: 800; color: var(--gold-primary); margin-bottom: 16px;">
-
-            <div style="display: flex; gap: 8px;">
-              <button onclick="closeModal()" class="gold-btn" style="background: #1e293b; color: #fff; flex: 1; padding: 10px;">İptal</button>
-              <button onclick="saveAdminPhone()" class="gold-btn" style="flex: 2; padding: 10px;">💾 Kaydet</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function saveAdminPhone() {
-      const val = (document.getElementById('admin-phone-input')?.value || '').trim();
-      if (!val || val.length < 10) {
-        alert('Lütfen geçerli bir telefon numarası giriniz (Örn: 0533XXXXXXX).');
-        return;
-      }
-      state.adminPhone = val;
-      localStorage.setItem('gc_admin_phone', val);
-      syncToCloud();
-      closeModal();
-      alert(`✅ Salon iletişim numarası "${val}" olarak kaydedildi!`);
-      renderApp();
-    }
+    
 
     function setAdminTab(tab) {
       state.adminTab = tab;
