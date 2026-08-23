@@ -52,24 +52,36 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Unauthorized session token signature' });
     }
 
-    // Read Product Info from Server Catalog (Never trust client prices)
-    const productCatalog = {
-      'pkg_economy_10': { productId: 'pkg_economy_10', title: '✨ AI Deneme (10 Hak)', creditType: 'economyCredits', creditAmount: 10, priceTRY: 29.99 },
-      'pkg_economy_30': { productId: 'pkg_economy_30', title: '✨ AI Deneme (30 Hak)', creditType: 'economyCredits', creditAmount: 30, priceTRY: 69.99 },
-      'pkg_premium_10': { productId: 'pkg_premium_10', title: '👑 AI Studio VIP (10 Hak)', creditType: 'premiumCredits', creditAmount: 10, priceTRY: 79.99 },
-      'pkg_premium_30': { productId: 'pkg_premium_30', title: '👑 AI Studio VIP (30 Hak)', creditType: 'premiumCredits', creditAmount: 30, priceTRY: 199.99 }
+    // 1. Fetch Dynamic Product Catalog from Firebase /system_config/products
+    const catalogRes = await fetch(`${firebaseDatabaseUrl}/system_config/products.json`);
+    const dynamicCatalog = (await catalogRes.json()) || {
+      'pkg_economy_10': { productId: 'pkg_economy_10', title: '✨ AI Deneme (10 Hak)', creditType: 'economyCredits', creditAmount: 10, priceTRY: 29.99, active: true },
+      'pkg_economy_30': { productId: 'pkg_economy_30', title: '✨ AI Deneme (30 Hak)', creditType: 'economyCredits', creditAmount: 30, priceTRY: 69.99, active: true },
+      'pkg_premium_10': { productId: 'pkg_premium_10', title: '👑 AI Studio VIP (10 Hak)', creditType: 'premiumCredits', creditAmount: 10, priceTRY: 79.99, active: true },
+      'pkg_premium_30': { productId: 'pkg_premium_30', title: '👑 AI Studio VIP (30 Hak)', creditType: 'premiumCredits', creditAmount: 30, priceTRY: 199.99, active: true }
     };
 
-    const product = productCatalog[productId];
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found in official catalog' });
+    const product = dynamicCatalog[productId];
+    if (!product || !product.active) {
+      return res.status(404).json({ error: 'Product not available or inactive in catalog' });
     }
 
-    const merchantId = process.env.PAYTR_MERCHANT_ID || '123456';
-    const merchantKey = process.env.PAYTR_MERCHANT_KEY || 'paytr_test_key_secret';
-    const merchantSalt = process.env.PAYTR_MERCHANT_SALT || 'paytr_test_salt_secret';
+    // 2. Production vs Sandbox Environment Keys Separation
+    const isProduction = process.env.PAYTR_ENV === 'production';
 
-    const merchantOid = 'pay_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const merchantId = isProduction
+      ? process.env.PAYTR_PROD_MERCHANT_ID
+      : (process.env.PAYTR_TEST_MERCHANT_ID || '123456');
+
+    const merchantKey = isProduction
+      ? process.env.PAYTR_PROD_MERCHANT_KEY
+      : (process.env.PAYTR_TEST_MERCHANT_KEY || 'paytr_test_key_secret');
+
+    const merchantSalt = isProduction
+      ? process.env.PAYTR_PROD_MERCHANT_SALT
+      : (process.env.PAYTR_TEST_MERCHANT_SALT || 'paytr_test_salt_secret');
+
+    const merchantOid = 'pay_' + (isProduction ? 'prod_' : 'test_') + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const paymentAmountKurus = Math.round(product.priceTRY * 100);
 
     const userIp = (req.headers && req.headers['x-forwarded-for']) || (req.socket && req.socket.remoteAddress) || '127.0.0.1';
@@ -79,10 +91,12 @@ export default async function handler(req, res) {
     const hashStr = `${merchantId}${userIp}${merchantOid}${email}${paymentAmountKurus}${userBasket}001TRY${merchantSalt}`;
     const token = crypto.createHmac('sha256', merchantKey).update(hashStr).digest('base64');
 
+    // 3. Immutable Historical Payment Record Snapshot
     const paymentRecord = {
       paymentId: merchantOid,
       merchantOid,
       provider: 'paytr',
+      environment: isProduction ? 'production' : 'sandbox',
       userId,
       productId: product.productId,
       title: product.title,
@@ -90,12 +104,14 @@ export default async function handler(req, res) {
       creditAmount: product.creditAmount,
       amount: product.priceTRY,
       currency: 'TRY',
-      status: 'pending',
+      status: 'pending', // State Machine: pending -> success | failed
       createdAt: Date.now(),
       completedAt: null,
+      refundedAt: null,
+      disputedAt: null,
       providerTransactionId: null,
       creditsGranted: false,
-      isTest: true
+      isTest: !isProduction
     };
 
     await fetch(`${firebaseDatabaseUrl}/payments/${merchantOid}.json`, {
@@ -115,6 +131,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       paymentId: merchantOid,
+      environment: isProduction ? 'production' : 'sandbox',
       iframeToken: token,
       iframeUrl: `https://www.paytr.com/iframe/token/${token}`,
       product
