@@ -1264,6 +1264,19 @@ appName: 'EZO STİLE',
     // Run 1-hour check loop every 15 seconds
     setInterval(checkCustomer1HourNotifications, 15000);
 
+    
+    // DEFAULT STAFF LIST INITIALIZATION
+    const DEFAULT_STAFF_LIST = [
+      { id: 'staff-any', name: 'Fark Etmez (Müsait Çalışan)', roleTitle: 'Hızlı Randevu', photo: '', serviceIds: ['all'], isAny: true },
+      { id: 'staff-1', name: 'Ahmet Usta', roleTitle: 'VIP Saç & Sakal Uzmanı', photo: '', serviceIds: ['1', '2', '3', '4', '5', '6'] },
+      { id: 'staff-2', name: 'Mehmet Usta', roleTitle: 'Cilt & Sakal Bakımı', photo: '', serviceIds: ['1', '2', '3', '5'] }
+    ];
+
+    if (!state.staffList || !Array.isArray(state.staffList) || state.staffList.length === 0) {
+      state.staffList = JSON.parse(localStorage.getItem('gc_staffList') || 'null') || DEFAULT_STAFF_LIST;
+    }
+    state.selectedStaffId = state.selectedStaffId || 'staff-any';
+
     function sanitizeState() {
       if (!state.adminPassword) state.adminPassword = localStorage.getItem('gc_admin_pwd') || '1405';
       if (!Array.isArray(state.managerPasswords) || state.managerPasswords.length === 0) {
@@ -1485,6 +1498,40 @@ appName: 'EZO STİLE',
                 ${activeSelectedService ? '✏️ ' + t('changeStep') : '✂️ Hizmet Seç'}
               </button>
             </div>
+          </div>
+        `;
+
+        
+        // STEP 1.5: ÇALIŞAN SEÇİMİ (STYLISH STAFF SELECTION GRID)
+        const activeStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { name: 'Fark Etmez (Müsait Çalışan)' };
+        const isStepStaffOpen = state.accordionStep === 1.5;
+
+        html += `
+          <div style="background: #070c1a; border-radius: 14px; border: 1px solid ${isStepStaffOpen ? 'var(--gold-primary)' : 'var(--border-color)'}; padding: 12px; margin-bottom: 12px; transition: all 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">2. TERZİ / BERBER SEÇİMİ</span>
+                <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 2px;">
+                  💈 ${activeStaffObj.name}
+                </div>
+              </div>
+              <button onclick="setAccordionStep(${isStepStaffOpen ? 0 : 1.5})" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 11px;">
+                ${isStepStaffOpen ? '▲ ' + t('closeStep') : '✏️ ' + t('changeStep')}
+              </button>
+            </div>
+
+            ${isStepStaffOpen ? `
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 12px;">
+                ${(state.staffList || []).map(st => `
+                  <button onclick="selectStaffAccordion('${st.id}')" class="btn ${state.selectedStaffId === st.id ? 'btn-gold' : 'btn-secondary'}" style="flex-direction: column; align-items: flex-start; padding: 10px; height: auto;">
+                    <div style="font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                      <span>💈</span> <span>${st.name}</span>
+                    </div>
+                    <span style="font-size: 10px; opacity: 0.8; margin-top: 2px;">${st.roleTitle || 'Berber Uzmanı'}</span>
+                  </button>
+                `).join('')}
+              </div>
+            ` : ''}
           </div>
         `;
 
@@ -1785,6 +1832,10 @@ appName: 'EZO STİLE',
           </div>
       `;
 
+      
+      // 4. STAFF MANAGEMENT TAB (PERSONEL & ŞİFRELER YÖNETİMİ)
+      
+      // 4. STAFF MANAGEMENT TAB (PERSONEL & ŞİFRELER YÖNETİMİ)
       // 1. REQUESTS TAB
       if (state.adminTab === 'requests') {
         html += `
@@ -2451,33 +2502,34 @@ appName: 'EZO STİLE',
       return 1;
     }
 
-    function getOccupiedSlotsForDate(dateStr) {
-      const occupied = new Set();
-      const dateApts = (state.appointments || []).filter(a => a && a.date === dateStr && a.status !== 'cancelled' && a.status !== 'rejected');
-
-      dateApts.forEach(apt => {
-        if (!apt.time) return;
-        let slotsNeeded = 1;
-        const svc = (state.services || []).find(s => s.name === apt.serviceName);
-        if (svc && svc.duration) {
-          slotsNeeded = getServiceSlotCount(svc.duration);
-        } else if (apt.serviceDuration) {
-          slotsNeeded = getServiceSlotCount(apt.serviceDuration);
+    function getOccupiedSlotsForDate(dateStr, targetStaffId = null) {
+      if (!state || !state.appointments) return new Set();
+      const validApts = state.appointments.filter(a => {
+        if (!a || a.date !== dateStr) return false;
+        if (a.status === 'rejected' || a.status === 'cancelled') return false;
+        
+        // If staff filtering is active:
+        if (targetStaffId && targetStaffId !== 'staff-any') {
+          return a.staffId === targetStaffId || !a.staffId;
         }
-
-        const [startH, startM] = apt.time.split(':').map(Number);
-        if (isNaN(startH) || isNaN(startM)) return;
-
-        let curMinTotal = startH * 60 + startM;
-        for (let i = 0; i < slotsNeeded; i++) {
-          const hh = Math.floor(curMinTotal / 60).toString().padStart(2, '0');
-          const mm = (curMinTotal % 60).toString().padStart(2, '0');
-          occupied.add(`${hh}:${mm}`);
-          curMinTotal += 30;
-        }
+        return true;
       });
 
-      return occupied;
+      const set = new Set();
+      validApts.forEach(a => {
+        if (!a.time) return;
+        const dur = a.duration || '30 dk';
+        const slotsCount = getServiceSlotCount(dur);
+        const [h, m] = a.time.split(':').map(Number);
+        let curMin = h * 60 + m;
+        for (let i = 0; i < slotsCount; i++) {
+          const hh = Math.floor(curMin / 60).toString().padStart(2, '0');
+          const mm = (curMin % 60).toString().padStart(2, '0');
+          set.add(`${hh}:${mm}`);
+          curMin += 30;
+        }
+      });
+      return set;
     }
 
     // --- AUTOMATIC CLEANUP ENGINE (7 GÜNDEN ESKİ RANDEVULARI SİL + MÜŞTERİ BAŞINA MAKSİMUM 5 RANDEVU KORU) ---
@@ -2751,6 +2803,20 @@ appName: 'EZO STİLE',
       renderApp();
     }
 
+    
+    function selectStaffAccordion(staffId) {
+      if (typeof state === 'undefined') return;
+      state.selectedStaffId = staffId;
+      state.selectedTime = null; // Reset selected time when staff changes
+      renderApp();
+    }
+
+    function getStaffNameById(staffId) {
+      if (!state || !state.staffList) return 'Fark Etmez';
+      const s = state.staffList.find(x => x.id === staffId);
+      return s ? s.name : 'Fark Etmez';
+    }
+
     function selectTimeAccordion(time) {
       state.selectedTime = time;
       state.accordionStep = 4; // Auto collapse Time to show Big Confirm Button
@@ -2986,7 +3052,10 @@ appName: 'EZO STİLE',
         return;
       }
 
+      const selectedStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { id: 'staff-any', name: 'Fark Etmez' };
       const newApt = {
+        staffId: selectedStaffObj.id,
+        staffName: selectedStaffObj.name,
         id: Date.now().toString(),
         customerName: state.currentUser.name,
         customerPhone: state.currentUser.phone,
@@ -3354,7 +3423,10 @@ appName: 'EZO STİLE',
       const svc = state.services.find(s => s.id === svcId) || state.services[0];
       const date = state.adminSelectedDate || state.selectedDate || getInitialBookingDate();
 
+      const selectedStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { id: 'staff-any', name: 'Fark Etmez' };
       const newApt = {
+        staffId: selectedStaffObj.id,
+        staffName: selectedStaffObj.name,
         id: Date.now().toString(),
         customerName: name,
         customerPhone: phone,
@@ -4014,6 +4086,37 @@ appName: 'EZO STİLE',
       }
       state.services = state.services.filter(s => s.id !== id);
       localStorage.setItem('gc_services', JSON.stringify(state.services));
+      syncToCloud();
+      renderApp();
+    }
+
+    
+    function handleAddNewStaff(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-staff-name').value;
+      const roleTitle = document.getElementById('new-staff-title').value || 'VIP Berber';
+      if (!name) return;
+
+      const newStaff = {
+        id: 'staff-' + Date.now(),
+        name,
+        roleTitle,
+        photo: '',
+        serviceIds: ['all']
+      };
+
+      state.staffList = state.staffList || [];
+      state.staffList.push(newStaff);
+      localStorage.setItem('gc_staffList', JSON.stringify(state.staffList));
+      syncToCloud();
+      alert(`✅ "${name}" başarıyla kadroya eklendi!`);
+      renderApp();
+    }
+
+    function deleteStaffMember(staffId) {
+      if (!confirm('Bu çalışanı kadrodan çıkarmak istediğinize emin misiniz?')) return;
+      state.staffList = (state.staffList || []).filter(s => s.id !== staffId);
+      localStorage.setItem('gc_staffList', JSON.stringify(state.staffList));
       syncToCloud();
       renderApp();
     }
