@@ -63,8 +63,11 @@ export default async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
-    // 4. Handle Chargeback / Dispute Notification (Status === 'disputed' or 'chargeback')
+    // 4. Handle Chargeback / Dispute Notification
     if (status === 'disputed' || status === 'chargeback') {
+      const userId = paymentData.userId;
+      const creditType = paymentData.creditType || 'economyCredits';
+
       await fetch(`${firebaseDatabaseUrl}/payments/${merchant_oid}.json`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -75,8 +78,22 @@ export default async function handler(req, res) {
         })
       });
 
+      // Write Ledger Freeze Reversal Entry
+      const ledgerId = 'led_disp_' + Date.now();
+      await fetch(`${firebaseDatabaseUrl}/users/${userId}/credit_ledger/${ledgerId}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ledgerId,
+          userId,
+          type: 'dispute_freeze',
+          paymentId: merchant_oid,
+          creditType,
+          timestamp: Date.now()
+        })
+      });
+
       // Flag user account for Risk Review without deleting data
-      const userId = paymentData.userId;
       await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -86,7 +103,7 @@ export default async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
-    // 5. Handle Refund Notification (Status === 'refunded')
+    // 5. Handle Refund Notification
     if (status === 'refunded') {
       const userId = paymentData.userId;
       const creditType = paymentData.creditType || 'economyCredits';
@@ -96,13 +113,28 @@ export default async function handler(req, res) {
       const userData = (await userRes.json()) || {};
       const currentBalance = userData[creditType] || 0;
 
-      // Safe Credit Deduction without dipping below zero (No negative balance!)
       const newBalance = Math.max(0, currentBalance - creditAmount);
 
       await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [creditType]: newBalance })
+      });
+
+      // Write Credit Ledger Refund Entry
+      const ledgerId = 'led_ref_' + Date.now();
+      await fetch(`${firebaseDatabaseUrl}/users/${userId}/credit_ledger/${ledgerId}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ledgerId,
+          userId,
+          type: 'refund',
+          paymentId: merchant_oid,
+          creditType,
+          creditsAmount: -creditAmount,
+          timestamp: Date.now()
+        })
       });
 
       await fetch(`${firebaseDatabaseUrl}/payments/${merchant_oid}.json`, {
@@ -118,7 +150,7 @@ export default async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
-    // 6. Handle Failed Payment Case (Status !== 'success')
+    // 6. Handle Failed Payment Case
     if (status !== 'success') {
       await fetch(`${firebaseDatabaseUrl}/payments/${merchant_oid}.json`, {
         method: 'PATCH',
@@ -130,18 +162,10 @@ export default async function handler(req, res) {
         })
       });
 
-      const telemetryRes = await fetch(`${firebaseDatabaseUrl}/ai_telemetry/payment_summary.json`);
-      const curMetrics = (await telemetryRes.json()) || {};
-      await fetch(`${firebaseDatabaseUrl}/ai_telemetry/payment_summary.json`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ failedPayments: (curMetrics.failedPayments || 0) + 1 })
-      });
-
       return res.status(200).send('OK');
     }
 
-    // 7. Handle Successful Payment Case (Status === 'success') -> Atomically Grant AI Credits
+    // 7. Handle Successful Payment Case -> Grant Credits & Write Credit Ledger Entry
     const userId = paymentData.userId;
     const creditType = paymentData.creditType || 'economyCredits';
     const creditAmount = paymentData.creditAmount || 10;
@@ -152,12 +176,37 @@ export default async function handler(req, res) {
     const currentCreditBalance = userData[creditType] || 0;
     const newCreditBalance = currentCreditBalance + creditAmount;
 
+    // Grant Credit Balance
     await fetch(`${firebaseDatabaseUrl}/users/${userId}.json`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [creditType]: newCreditBalance })
     });
 
+    // Write Immutable Credit Ledger Entry
+    const ledgerId = 'led_pur_' + Date.now();
+    const ledgerRecord = {
+      ledgerId,
+      userId,
+      type: 'purchase',
+      paymentId: merchant_oid,
+      creditType,
+      creditsAmount: creditAmount,
+      creditsConsumed: 0,
+      creditsRemaining: creditAmount,
+      priceTRY: paymentData.amount,
+      unitCostUsd: creditType === 'economyCredits' ? 0.013 : 0.040,
+      paymentEnvironment: paymentData.environment || (isProduction ? 'production' : 'sandbox'),
+      timestamp: Date.now()
+    };
+
+    await fetch(`${firebaseDatabaseUrl}/users/${userId}/credit_ledger/${ledgerId}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ledgerRecord)
+    });
+
+    // Mark Payment as Completed & Credits Granted
     await fetch(`${firebaseDatabaseUrl}/payments/${merchant_oid}.json`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -169,7 +218,7 @@ export default async function handler(req, res) {
       })
     });
 
-    // Update Telemetry Metrics (Separate Real vs Test Sales)
+    // Separate Real vs Test Gross Sales in Telemetry
     const telemetryRes = await fetch(`${firebaseDatabaseUrl}/ai_telemetry/payment_summary.json`);
     const curMetrics = (await telemetryRes.json()) || {};
     const isEconomy = creditType === 'economyCredits';
