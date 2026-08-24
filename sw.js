@@ -1,5 +1,5 @@
-// EZO STİLE Lock Screen & Background Push Service Worker v1.0.57
-const CACHE_NAME = 'ezo-stile-v1.0.57';
+// EZO STİLE Lock Screen & Background Push Service Worker v1.0.58
+const CACHE_NAME = 'ezo-stile-v1.0.58';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

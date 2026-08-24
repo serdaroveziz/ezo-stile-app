@@ -2,6 +2,16 @@
 
 let isAiGenerating = false;
 
+function getApiBaseUrl() {
+  if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) {
+    return window.APP_CONFIG.API_BASE_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    return 'https://ezo-stile-app.vercel.app';
+  }
+  return '';
+}
+
 async function executeProductionTryOn(idx) {
   if (isAiGenerating) {
     alert('⏳ Saç modeliniz hazırlanıyor, lütfen bekleyiniz...');
@@ -14,21 +24,33 @@ async function executeProductionTryOn(idx) {
     return;
   }
 
+  const currentCredits = typeof getCustomerAiCredits === 'function' ? getCustomerAiCredits() : (state.aiCredits || 3);
+  if (currentCredits < 1) {
+    alert('⚠️ AI Deneme Hakkınız Tükenmiştir!\n\n+1 Hak Kazanmak için reklam izleyebilir veya cüzdandan yükleme yapabilirsiniz.');
+    if (typeof openAiWalletModal === 'function') openAiWalletModal();
+    return;
+  }
+
   isAiGenerating = true;
   const modelObj = state.aiResults[idx];
 
-  // Show Loading Spinner UI
   const tryOnBtn = document.getElementById(`try-on-btn-${idx}`);
   if (tryOnBtn) {
     tryOnBtn.disabled = true;
-    tryOnBtn.innerHTML = '⏳ Saç Modeliniz Hazırlanıyor...';
+    tryOnBtn.innerHTML = '⏳ Modeliniz Hazırlanıyor...';
+  }
+
+  state.aiCredits = Math.max(0, currentCredits - 1);
+  if (state.currentUser) {
+    state.currentUser.economyCredits = Math.max(0, (state.currentUser.economyCredits || 3) - 1);
   }
 
   try {
     const uid = (typeof getUserUid === 'function' && state.currentUser) ? getUserUid(state.currentUser) : 'usr_guest';
     const token = (typeof getUserToken === 'function' && state.currentUser) ? getUserToken(state.currentUser) : 'ezostile-auth-verified';
 
-    const response = await fetch('/api/ai-hair-swap', {
+    const apiBase = getApiBaseUrl();
+    const response = await fetch(apiBase + '/api/ai-hair-swap', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -40,28 +62,29 @@ async function executeProductionTryOn(idx) {
       })
     });
 
-    const data = await response.json();
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        if (typeof data.newCredits === 'number') {
+          state.aiCredits = data.newCredits;
+        }
 
-    if (data.success) {
-      if (typeof data.newCredits === 'number') {
-        state.aiCredits = data.newCredits;
+        state.aiActivePreview = {
+          index: idx,
+          modelName: modelObj.name,
+          imageUrl: data.outputUrl || state.aiUserPhoto,
+          generationId: data.generationId || ('gen_' + Date.now()),
+          costUsd: data.costUsd || '$0.025',
+          durationSec: data.durationSec || '3.0s'
+        };
+
+        if (typeof renderApp === 'function') renderApp();
+        return;
       }
-
-      state.aiActivePreview = {
-        index: idx,
-        modelName: modelObj.name,
-        imageUrl: data.outputUrl || state.aiUserPhoto,
-        generationId: data.generationId,
-        costUsd: data.costUsd || '$0.025',
-        durationSec: data.durationSec || '3.0s'
-      };
-
-      renderApp();
-    } else {
-      alert('⚠️ AI Saç Deneme Hatası: ' + (data.error || 'İşlem gerçekleştirilemedi. Hakkınız iade edildi.'));
     }
+    throw new Error('API Fallback Required');
   } catch (err) {
-    console.warn('Production AI Fallback:', err);
+    console.warn('Production AI Fallback to Client Canvas Engine:', err);
     if (typeof processTryOnCanvas === 'function') {
       processTryOnCanvas(state.aiUserPhoto, modelObj, function(canvasUrl) {
         state.aiActivePreview = {
@@ -72,11 +95,18 @@ async function executeProductionTryOn(idx) {
           costUsd: '$0.00',
           durationSec: '0.5s'
         };
-        renderApp();
+        if (typeof renderApp === 'function') renderApp();
       });
+    } else {
+      state.aiCredits = (state.aiCredits || 0) + 1;
+      alert('⚠️ AI Saç Deneme Hatası: İşlem gerçekleştirilemedi. Hakkınız iade edildi.');
     }
   } finally {
     isAiGenerating = false;
+    if (tryOnBtn) {
+      tryOnBtn.disabled = false;
+      tryOnBtn.innerHTML = '📸 Üzerimde Dene';
+    }
   }
 }
 
