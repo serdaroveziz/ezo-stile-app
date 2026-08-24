@@ -11,7 +11,7 @@
       console.log('⚡ [' + marker + '] @ ' + new Date().toLocaleTimeString());
       var diagEl = document.getElementById('boot-diagnostic-badge');
       if (diagEl) {
-        diagEl.innerText = 'Build: 61f0cb9 | SW: v1.0.59 | ' + marker;
+        diagEl.innerText = 'Build: 61f0cb9 | SW: v1.0.60 | ' + marker;
       }
     }
 
@@ -21,7 +21,7 @@
         var mainEl = document.getElementById('main-app');
         if (mainEl && mainEl.innerText && mainEl.innerText.includes('Randevu Sistemi Yükleniyor')) {
           console.warn('[EARLY BOOT GUARD] App boot exceeded 8s timeout limit. Rendering Fallback Recovery Card.');
-          mainEl.innerHTML = '<div class="card card-gold text-center animate-fade" style="max-width: 440px; margin: 30px auto; padding: 26px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);"><div style="font-size: 44px; margin-bottom: 10px;">📡</div><h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px;">İşletme Bilgileri Yüklenemedi</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Sunucuyla bağlantı kurulurken zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p><div style="display: flex; flex-direction: column; gap: 10px;"><button onclick="location.reload()" class="btn btn-gold" style="width: 100%; min-height: 44px; font-size: 13px;">🔄 Yeniden Dene</button><button onclick="localStorage.setItem(\'gc_role\', \'customer\'); location.reload();" class="btn btn-outline-gold" style="width: 100%; min-height: 40px; font-size: 12px;">← Müşteri Ekranına Dön</button></div><div style="font-size: 10px; color: #64748b; margin-top: 14px;">Build: 61f0cb9 | SW: v1.0.59 | Last: ' + (window.EZO_LAST_MARKER || 'BOOT_TIMEOUT') + '</div></div>';
+          mainEl.innerHTML = '<div class="card card-gold text-center animate-fade" style="max-width: 440px; margin: 30px auto; padding: 26px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);"><div style="font-size: 44px; margin-bottom: 10px;">📡</div><h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px;">İşletme Bilgileri Yüklenemedi</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Sunucuyla bağlantı kurulurken zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p><div style="display: flex; flex-direction: column; gap: 10px;"><button onclick="location.reload()" class="btn btn-gold" style="width: 100%; min-height: 44px; font-size: 13px;">🔄 Yeniden Dene</button><button onclick="localStorage.setItem(\'gc_role\', \'customer\'); location.reload();" class="btn btn-outline-gold" style="width: 100%; min-height: 40px; font-size: 12px;">← Müşteri Ekranına Dön</button></div><div style="font-size: 10px; color: #64748b; margin-top: 14px;">Build: 61f0cb9 | SW: v1.0.60 | Last: ' + (window.EZO_LAST_MARKER || 'BOOT_TIMEOUT') + '</div></div>';
         }
       }, 8000);
     })();
@@ -69,7 +69,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=v1.0.59').catch(e => console.log('SW Load:', e));
+        navigator.serviceWorker.register('./sw.js?v=v1.0.60').catch(e => console.log('SW Load:', e));
       });
     }
 
@@ -381,7 +381,7 @@
       <h2 style="font-size: 22px; font-weight: 900; color: var(--gold-primary);">EZO STİLE VIP</h2>
       <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Randevu Sistemi Yükleniyor...</p>
       <div id="boot-diagnostic-badge" style="font-size: 10px; font-weight: 600; color: var(--gold-primary); margin-top: 10px; background: rgba(245,158,11,0.08); padding: 4px 10px; border-radius: 8px; display: inline-block; border: 1px solid var(--border-gold);">
-        Build: 61f0cb9 | SW: v1.0.59 | BOOT_00 Head Init
+        Build: 61f0cb9 | SW: v1.0.60 | BOOT_00 Head Init
       </div>
     </div>
   </main>
@@ -1645,15 +1645,24 @@ appName: 'EZO STİLE',
 
       let listHtml = '';
       staffList.forEach((s, idx) => {
+        const hasCustomSched = Boolean(s.weeklySchedule || s.schedule);
         listHtml += `
           <div style="background: #070c1a; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
             <div>
               <div style="font-size: 13px; font-weight: 700; color: #fff;">💈 ${s.name}</div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Durum: ${s.active !== false ? 'Aktif Berber' : 'Pasif Kadro'}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Durum: ${s.active !== false ? 'Aktif Berber' : 'Pasif Kadro'} • 
+                <span style="color: ${hasCustomSched ? 'var(--gold-primary)' : 'var(--text-muted)'}; font-weight: 600;">
+                  ${hasCustomSched ? 'Özel Saatler' : 'Salon Saatleri (Varsayılan)'}
+                </span>
+              </div>
             </div>
-            <div style="display: flex; gap: 8px;">
-              <button onclick="toggleStaffActiveState('${s.id}')" class="badge ${s.active !== false ? 'badge-approved' : 'badge-rejected'}" style="cursor: pointer; border: none; padding: 6px 12px;">
-                ${s.active !== false ? 'AKTİF' : 'PASİF'}
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button onclick="openStaffScheduleModal('${s.id}')" class="btn btn-outline-gold" style="min-height: 30px; padding: 4px 8px; font-size: 10px;">
+                ⏰ Saatler
+              </button>
+              <button onclick="toggleStaffActiveState('${s.id}')" class="badge ${s.active !== false ? 'badge-approved' : 'badge-rejected'}" style="cursor: pointer; border: none; padding: 6px 10px;">
+                ${s.active !== false ? 'AKTİF' : 'PASİF'}
               </button>
             </div>
           </div>
@@ -1673,7 +1682,7 @@ appName: 'EZO STİLE',
           </div>
 
           <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
-            Salonunuzda çalışan berber uzmanlarını yönetebilir, güvenli davet bağlantısı oluşturabilirsiniz.
+            Salonunuzda çalışan berber uzmanlarını yönetebilir, her berbere özel çalışma saatleri tanımlayabilirsiniz.
           </p>
 
           <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
@@ -1689,9 +1698,109 @@ appName: 'EZO STİLE',
       if (s) {
         s.active = !(s.active !== false);
         localStorage.setItem('gc_staffList', JSON.stringify(state.staffList));
+        localStorage.setItem('gc_staff_list', JSON.stringify(state.staffList));
         syncToCloud();
         renderApp();
       }
+    }
+
+    function openStaffScheduleModal(staffId) {
+      const staff = (state.staffList || []).find(s => s.id === staffId);
+      if (!staff) return;
+
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+
+      const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+      const currentSched = staff.weeklySchedule || staff.schedule || state.weeklySchedule || DEFAULT_WEEKLY_SCHEDULE;
+
+      let scheduleRowsHtml = days.map((dayName, dIdx) => {
+        const dayConfig = currentSched[dIdx] || { isOpen: true, start: '09:00', end: '21:00' };
+        return `
+          <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: #fff; width: 80px;">${dayName}</span>
+            <label style="font-size: 11px; color: var(--gold-light); display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" id="stf-sched-open-${dIdx}" ${dayConfig.isOpen ? 'checked' : ''}> Açık
+            </label>
+            <input type="time" id="stf-sched-start-${dIdx}" value="${dayConfig.start || '09:00'}" class="input-field" style="width: 80px; padding: 4px; font-size: 11px;">
+            <span style="font-size: 11px; color: var(--text-muted);">-</span>
+            <input type="time" id="stf-sched-end-${dIdx}" value="${dayConfig.end || '21:00'}" class="input-field" style="width: 80px; padding: 4px; font-size: 11px;">
+          </div>
+        `;
+      }).join('');
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 500px; width: 92%; border-color: var(--gold-primary); background: #040711; padding: 22px; border-radius: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">
+                ⏰ ${staff.name} — Özel Çalışma Saatleri
+              </h3>
+              <button onclick="closeModal()" class="btn btn-secondary" style="min-height: 28px; padding: 2px 8px;">✕</button>
+            </div>
+
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px;">
+              Çalışana özel haftalık çalışma ve izin günlerini ayarlayabilirsiniz. Özel program tanımlanmazsa salon saatleri geçerli olur.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; margin-bottom: 14px;">
+              ${scheduleRowsHtml}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button onclick="saveStaffSchedule('${staffId}')" class="btn btn-gold" style="width: 100%; min-height: 40px; font-size: 12px;">
+                💾 Özel Saatleri Kaydet
+              </button>
+              <button onclick="resetStaffScheduleToBusiness('${staffId}')" class="btn btn-outline-gold" style="width: 100%; min-height: 36px; font-size: 11px;">
+                🔄 Salon Saatlerini Kullan (Varsayılana Dön)
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function saveStaffSchedule(staffId) {
+      const staff = (state.staffList || []).find(s => s.id === staffId);
+      if (!staff) return;
+
+      const weeklySchedule = {};
+      for (let dIdx = 0; dIdx < 7; dIdx++) {
+        const openEl = document.getElementById(`stf-sched-open-${dIdx}`);
+        const startEl = document.getElementById(`stf-sched-start-${dIdx}`);
+        const endEl = document.getElementById(`stf-sched-end-${dIdx}`);
+
+        weeklySchedule[dIdx] = {
+          isOpen: openEl ? openEl.checked : true,
+          start: startEl ? startEl.value : '09:00',
+          end: endEl ? endEl.value : '21:00'
+        };
+      }
+
+      staff.weeklySchedule = weeklySchedule;
+      localStorage.setItem('gc_staffList', JSON.stringify(state.staffList));
+      localStorage.setItem('gc_staff_list', JSON.stringify(state.staffList));
+      syncToCloud();
+
+      alert(`✅ "${staff.name}" için özel çalışma saatleri kaydedildi!`);
+      closeModal();
+      renderApp();
+    }
+
+    function resetStaffScheduleToBusiness(staffId) {
+      const staff = (state.staffList || []).find(s => s.id === staffId);
+      if (!staff) return;
+
+      delete staff.weeklySchedule;
+      delete staff.schedule;
+
+      localStorage.setItem('gc_staffList', JSON.stringify(state.staffList));
+      localStorage.setItem('gc_staff_list', JSON.stringify(state.staffList));
+      syncToCloud();
+
+      alert(`🔄 "${staff.name}" için salonun genel çalışma saatleri varsayılan olarak ayarlandı.`);
+      closeModal();
+      renderApp();
     }
 
 
@@ -1955,6 +2064,21 @@ appName: 'EZO STİLE',
     function setAccordionStep(step) {
       state.accordionStep = step;
       renderApp();
+    }
+
+    function getEffectiveScheduleForStaff(staffObj, dayOfWeek) {
+      if (staffObj) {
+        if (staffObj.weeklySchedule && staffObj.weeklySchedule[dayOfWeek]) {
+          return { sched: staffObj.weeklySchedule[dayOfWeek], source: 'employeeSchedule' };
+        }
+        if (staffObj.schedule && staffObj.schedule[dayOfWeek]) {
+          return { sched: staffObj.schedule[dayOfWeek], source: 'employeeSchedule' };
+        }
+      }
+      if (state.weeklySchedule && state.weeklySchedule[dayOfWeek]) {
+        return { sched: state.weeklySchedule[dayOfWeek], source: 'businessSchedule' };
+      }
+      return { sched: null, source: 'none' };
     }
 
     function selectStaffAccordion(staffId) {
@@ -2582,15 +2706,21 @@ appName: 'EZO STİLE',
       // TAB 3: BOOKING TAB (RANDEVU AL)
       // -------------------------------------------------------------
       else if (state.customerTab === 'booking') {
+        const activeStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId);
         const parts = state.selectedDate.split('-');
-        const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        const dayOfWeek = dObj.getDay();
-        const sched = state.weeklySchedule[dayOfWeek] || { isOpen: true, start: '09:00', end: '21:00' };
+        const now = new Date();
+        const dObj = parts.length === 3 ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) : now;
+        const dayOfWeek = isNaN(dObj.getDay()) ? now.getDay() : dObj.getDay();
 
-        const startHour = parseInt((sched.start || '09:00').split(':')[0]);
-        const endHour = parseInt((sched.end || '21:00').split(':')[0]);
+        const { sched, source: schedSource } = getEffectiveScheduleForStaff(activeStaffObj, dayOfWeek);
+        console.log(`⚡ [STAFF_SCHED_LOG] Selected Staff ID: ${state.selectedStaffId || 'None (Any)'}`);
+        console.log(`⚡ [STAFF_SCHED_LOG] Staff Name: ${activeStaffObj ? activeStaffObj.name : 'Fark Etmez'}`);
+        console.log(`⚡ [STAFF_SCHED_LOG] Schedule Path Found: ${schedSource}`);
+
         const availableSlots = [];
-        if (sched.isOpen) {
+        if (sched && sched.isOpen) {
+          const startHour = parseInt((sched.start || '09:00').split(':')[0]);
+          const endHour = parseInt((sched.end || '21:00').split(':')[0]);
           for (let h = startHour; h <= endHour; h++) {
             const hh = h.toString().padStart(2, '0');
             availableSlots.push(`${hh}:00`);
@@ -2602,8 +2732,8 @@ appName: 'EZO STİLE',
           if (!availableSlots.includes(o.time)) availableSlots.push(o.time);
         });
         availableSlots.sort();
+        console.log(`⚡ [STAFF_SCHED_LOG] Rendered Slot Count: ${availableSlots.length}`);
 
-        const now = new Date();
         const todayStr = getLocalDateStr(now);
         const tomorrowObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
         const tomorrowStr = getLocalDateStr(tomorrowObj);
@@ -2633,7 +2763,7 @@ appName: 'EZO STİLE',
         `;
 
         // STEP 1.5: ÇALIŞAN SEÇİMİ
-        const activeStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { name: 'Fark Etmez (Müsait Çalışan)' };
+        const staffDisplayName = activeStaffObj ? activeStaffObj.name : 'Fark Etmez (Müsait Çalışan)';
         const isStepStaffOpen = state.accordionStep === 1.5;
 
         html += `
@@ -2642,7 +2772,7 @@ appName: 'EZO STİLE',
               <div>
                 <span style="font-size: 11px; font-weight: 700; color: var(--gold-primary); text-transform: uppercase;">2. TERZİ / BERBER SEÇİMİ</span>
                 <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 2px;">
-                  💈 ${activeStaffObj.name}
+                  💈 ${staffDisplayName}
                 </div>
               </div>
               <button onclick="setAccordionStep(${isStepStaffOpen ? 0 : 1.5})" class="btn btn-outline-gold" style="min-height: 34px; padding: 4px 12px; font-size: 11px;">
@@ -4405,6 +4535,10 @@ appName: 'EZO STİLE',
     window.dismissNotif = dismissNotif;
     window.getApiBaseUrl = getApiBaseUrl;
     window.getOccupiedSlotsForDate = getOccupiedSlotsForDate;
+    window.getEffectiveScheduleForStaff = getEffectiveScheduleForStaff;
+    window.openStaffScheduleModal = openStaffScheduleModal;
+    window.saveStaffSchedule = saveStaffSchedule;
+    window.resetStaffScheduleToBusiness = resetStaffScheduleToBusiness;
 
     // --- INITIALIZATION ---
     renderApp();
