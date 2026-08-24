@@ -4,7 +4,7 @@ const ADMOB_CONFIG = {
   isProduction: false, // Set to true for Google Play & App Store Release builds
   android: {
     testRewardedAdUnitId: 'ca-app-pub-3940256099942544/5224354917',
-    prodRewardedAdUnitId: process.env.ADMOB_REWARDED_AD_UNIT_ID || 'ca-app-pub-8910293847562810/9012345678'
+    prodRewardedAdUnitId: (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.ADMOB_REWARDED_AD_UNIT_ID) ? window.APP_CONFIG.ADMOB_REWARDED_AD_UNIT_ID : 'ca-app-pub-8910293847562810/9012345678'
   },
   ios: {
     testRewardedAdUnitId: 'ca-app-pub-3940256099942544/1712485313',
