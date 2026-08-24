@@ -33,6 +33,7 @@ async function executeProductionTryOn(idx) {
 
   isAiGenerating = true;
   const modelObj = state.aiResults[idx];
+  const originalInputPhoto = state.aiUserPhoto;
 
   const tryOnBtn = document.getElementById(`try-on-btn-${idx}`);
   if (tryOnBtn) {
@@ -45,48 +46,72 @@ async function executeProductionTryOn(idx) {
     state.currentUser.economyCredits = Math.max(0, (state.currentUser.economyCredits || 3) - 1);
   }
 
-  try {
-    const uid = (typeof getUserUid === 'function' && state.currentUser) ? getUserUid(state.currentUser) : 'usr_guest';
-    const token = (typeof getUserToken === 'function' && state.currentUser) ? getUserToken(state.currentUser) : 'ezostile-auth-verified';
+  const uid = (typeof getUserUid === 'function' && state.currentUser) ? getUserUid(state.currentUser) : 'usr_guest';
+  const token = (typeof getUserToken === 'function' && state.currentUser) ? getUserToken(state.currentUser) : 'ezostile-auth-verified';
+  const apiBase = getApiBaseUrl();
 
-    const apiBase = getApiBaseUrl();
+  console.log('⚡ [AI_TRY_ON] 1. Requesting endpoint:', apiBase + '/api/ai-hair-swap');
+  console.log('⚡ [AI_TRY_ON] 2. Model:', modelObj.name);
+
+  let successResult = false;
+
+  try {
     const response = await fetch(apiBase + '/api/ai-hair-swap', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId: uid,
         userToken: token,
-        image: state.aiUserPhoto,
+        image: originalInputPhoto,
         hairstyleName: modelObj.name,
         prompt: modelObj.barberRecipe || modelObj.name
       })
     });
 
+    console.log('⚡ [AI_TRY_ON] 3. HTTP Status:', response.status);
+
     if (response.ok) {
       const data = await response.json();
-      if (data.success) {
+      console.log('⚡ [AI_TRY_ON] 4. Response payload success:', data.success);
+
+      if (data.success && data.outputUrl && data.outputUrl !== originalInputPhoto && data.outputUrl.length > 50) {
         if (typeof data.newCredits === 'number') {
           state.aiCredits = data.newCredits;
         }
 
+        console.log('⚡ [AI_TRY_ON] 5. Provider Output URL:', data.outputUrl.substring(0, 80) + '...');
+        console.log('⚡ [AI_TRY_ON] 6. Original != Output: CONFIRMED TRUE');
+
         state.aiActivePreview = {
           index: idx,
           modelName: modelObj.name,
-          imageUrl: data.outputUrl || state.aiUserPhoto,
+          imageUrl: data.outputUrl,
           generationId: data.generationId || ('gen_' + Date.now()),
           costUsd: data.costUsd || '$0.025',
           durationSec: data.durationSec || '3.0s'
         };
-
+        successResult = true;
         if (typeof renderApp === 'function') renderApp();
         return;
       }
     }
-    throw new Error('API Fallback Required');
   } catch (err) {
-    console.warn('Production AI Fallback to Client Canvas Engine:', err);
-    if (typeof processTryOnCanvas === 'function') {
-      processTryOnCanvas(state.aiUserPhoto, modelObj, function(canvasUrl) {
+    console.warn('⚡ [AI_TRY_ON] API fetch error:', err);
+  } finally {
+    isAiGenerating = false;
+    if (tryOnBtn) {
+      tryOnBtn.disabled = false;
+      tryOnBtn.innerHTML = '📸 Üzerimde Dene';
+    }
+  }
+
+  // Fallback to client canvas generator if API unavailable or demo mode
+  if (!successResult && typeof processTryOnCanvas === 'function') {
+    processTryOnCanvas(originalInputPhoto, modelObj, function(canvasUrl) {
+      if (canvasUrl && canvasUrl !== originalInputPhoto && canvasUrl.length > 100) {
+        console.log('⚡ [AI_TRY_ON] Fallback Canvas Output generated:', canvasUrl.substring(0, 60) + '...');
+        console.log('⚡ [AI_TRY_ON] Original != Canvas Output: CONFIRMED TRUE');
+
         state.aiActivePreview = {
           index: idx,
           modelName: modelObj.name,
@@ -96,17 +121,16 @@ async function executeProductionTryOn(idx) {
           durationSec: '0.5s'
         };
         if (typeof renderApp === 'function') renderApp();
-      });
-    } else {
-      state.aiCredits = (state.aiCredits || 0) + 1;
-      alert('⚠️ AI Saç Deneme Hatası: İşlem gerçekleştirilemedi. Hakkınız iade edildi.');
-    }
-  } finally {
-    isAiGenerating = false;
-    if (tryOnBtn) {
-      tryOnBtn.disabled = false;
-      tryOnBtn.innerHTML = '📸 Üzerimde Dene';
-    }
+      } else {
+        state.aiCredits = (state.aiCredits || 0) + 1;
+        if (state.currentUser) state.currentUser.economyCredits = (state.currentUser.economyCredits || 0) + 1;
+        alert('⚠️ AI görseli oluşturulamadı. Hakkınız iade edildi.');
+      }
+    });
+  } else if (!successResult) {
+    state.aiCredits = (state.aiCredits || 0) + 1;
+    if (state.currentUser) state.currentUser.economyCredits = (state.currentUser.economyCredits || 0) + 1;
+    alert('⚠️ AI görseli oluşturulamadı. Hakkınız iade edildi.');
   }
 }
 

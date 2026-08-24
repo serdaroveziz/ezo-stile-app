@@ -11,7 +11,7 @@
       console.log('⚡ [' + marker + '] @ ' + new Date().toLocaleTimeString());
       var diagEl = document.getElementById('boot-diagnostic-badge');
       if (diagEl) {
-        diagEl.innerText = 'Build: 61f0cb9 | SW: v1.0.58 | ' + marker;
+        diagEl.innerText = 'Build: 61f0cb9 | SW: v1.0.59 | ' + marker;
       }
     }
 
@@ -21,7 +21,7 @@
         var mainEl = document.getElementById('main-app');
         if (mainEl && mainEl.innerText && mainEl.innerText.includes('Randevu Sistemi Yükleniyor')) {
           console.warn('[EARLY BOOT GUARD] App boot exceeded 8s timeout limit. Rendering Fallback Recovery Card.');
-          mainEl.innerHTML = '<div class="card card-gold text-center animate-fade" style="max-width: 440px; margin: 30px auto; padding: 26px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);"><div style="font-size: 44px; margin-bottom: 10px;">📡</div><h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px;">İşletme Bilgileri Yüklenemedi</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Sunucuyla bağlantı kurulurken zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p><div style="display: flex; flex-direction: column; gap: 10px;"><button onclick="location.reload()" class="btn btn-gold" style="width: 100%; min-height: 44px; font-size: 13px;">🔄 Yeniden Dene</button><button onclick="localStorage.setItem(\'gc_role\', \'customer\'); location.reload();" class="btn btn-outline-gold" style="width: 100%; min-height: 40px; font-size: 12px;">← Müşteri Ekranına Dön</button></div><div style="font-size: 10px; color: #64748b; margin-top: 14px;">Build: 61f0cb9 | SW: v1.0.58 | Last: ' + (window.EZO_LAST_MARKER || 'BOOT_TIMEOUT') + '</div></div>';
+          mainEl.innerHTML = '<div class="card card-gold text-center animate-fade" style="max-width: 440px; margin: 30px auto; padding: 26px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);"><div style="font-size: 44px; margin-bottom: 10px;">📡</div><h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px;">İşletme Bilgileri Yüklenemedi</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Sunucuyla bağlantı kurulurken zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p><div style="display: flex; flex-direction: column; gap: 10px;"><button onclick="location.reload()" class="btn btn-gold" style="width: 100%; min-height: 44px; font-size: 13px;">🔄 Yeniden Dene</button><button onclick="localStorage.setItem(\'gc_role\', \'customer\'); location.reload();" class="btn btn-outline-gold" style="width: 100%; min-height: 40px; font-size: 12px;">← Müşteri Ekranına Dön</button></div><div style="font-size: 10px; color: #64748b; margin-top: 14px;">Build: 61f0cb9 | SW: v1.0.59 | Last: ' + (window.EZO_LAST_MARKER || 'BOOT_TIMEOUT') + '</div></div>';
         }
       }, 8000);
     })();
@@ -69,7 +69,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=v1.0.58').catch(e => console.log('SW Load:', e));
+        navigator.serviceWorker.register('./sw.js?v=v1.0.59').catch(e => console.log('SW Load:', e));
       });
     }
 
@@ -381,7 +381,7 @@
       <h2 style="font-size: 22px; font-weight: 900; color: var(--gold-primary);">EZO STİLE VIP</h2>
       <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Randevu Sistemi Yükleniyor...</p>
       <div id="boot-diagnostic-badge" style="font-size: 10px; font-weight: 600; color: var(--gold-primary); margin-top: 10px; background: rgba(245,158,11,0.08); padding: 4px 10px; border-radius: 8px; display: inline-block; border: 1px solid var(--border-gold);">
-        Build: 61f0cb9 | SW: v1.0.58 | BOOT_00 Head Init
+        Build: 61f0cb9 | SW: v1.0.59 | BOOT_00 Head Init
       </div>
     </div>
   </main>
@@ -1963,10 +1963,64 @@ appName: 'EZO STİLE',
       renderApp();
     }
 
+    function getOccupiedSlotsForDate(dateStr) {
+      const occupiedSet = new Set();
+      if (!dateStr || typeof state === 'undefined' || !state.appointments) return occupiedSet;
+
+      state.appointments.forEach(apt => {
+        if (!apt || apt.status === 'cancelled' || apt.status === 'rejected') return;
+        if (apt.date !== dateStr) return;
+
+        if (state.selectedStaffId && state.selectedStaffId !== 'staff-any') {
+          if (apt.staffId && apt.staffId !== state.selectedStaffId && apt.barberId !== state.selectedStaffId) {
+            return;
+          }
+        }
+
+        if (apt.time) {
+          occupiedSet.add(apt.time);
+          const durationMin = parseInt(apt.duration) || 30;
+          const extraSlots = Math.ceil(durationMin / 30) - 1;
+          if (extraSlots > 0 && apt.time.includes(':')) {
+            const [h, m] = apt.time.split(':').map(Number);
+            let currentTotalMin = h * 60 + m;
+            for (let i = 1; i <= extraSlots; i++) {
+              currentTotalMin += 30;
+              const hh = Math.floor(currentTotalMin / 60).toString().padStart(2, '0');
+              const mm = (currentTotalMin % 60).toString().padStart(2, '0');
+              occupiedSet.add(`${hh}:${mm}`);
+            }
+          }
+        }
+      });
+
+      return occupiedSet;
+    }
+
     function selectDateAccordion(dateStr) {
+      console.log('⚡ [SLOT_CALC] 1. Date button clicked / selected:', dateStr);
+      if (!dateStr) return;
+
       state.selectedDate = dateStr;
       state.selectedTime = null;
       state.accordionStep = 3;
+
+      const now = new Date();
+      const parts = dateStr.split('-');
+      const dObj = parts.length === 3 ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) : now;
+      const dayOfWeek = isNaN(dObj.getDay()) ? now.getDay() : dObj.getDay();
+      const sched = (state.weeklySchedule && state.weeklySchedule[dayOfWeek]) || { isOpen: true, start: '09:00', end: '21:00' };
+      console.log('⚡ [SLOT_CALC] 2. Business working hours for date:', dateStr, 'Day:', dayOfWeek, sched);
+
+      const activeStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { id: 'staff-any', name: 'Fark Etmez' };
+      console.log('⚡ [SLOT_CALC] 3. Barber schedule selected:', activeStaffObj.name);
+
+      const occupiedSet = getOccupiedSlotsForDate(dateStr);
+      console.log('⚡ [SLOT_CALC] 4. Existing occupied slots loaded:', Array.from(occupiedSet));
+
+      const lockedSlots = (state.dateSlotOverrides || []).filter(o => o.date === dateStr && o.status === 'blocked');
+      console.log('⚡ [SLOT_CALC] 5. Locked slots loaded:', lockedSlots.map(l => l.time));
+
       renderApp();
     }
 
@@ -4350,6 +4404,7 @@ appName: 'EZO STİLE',
     window.closeModal = closeModal;
     window.dismissNotif = dismissNotif;
     window.getApiBaseUrl = getApiBaseUrl;
+    window.getOccupiedSlotsForDate = getOccupiedSlotsForDate;
 
     // --- INITIALIZATION ---
     renderApp();

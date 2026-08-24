@@ -105,10 +105,11 @@ export default async function handler(req, res) {
       });
 
       return res.status(200).json({
-        success: true,
-        ...telemetryFallback,
-        outputUrl: image,
-        newCredits
+        success: false,
+        isDemoFallback: true,
+        error: 'REPLICATE_API_TOKEN is not configured on Vercel environment. Client local generator required.',
+        outputUrl: null,
+        newCredits: currentCredits
       });
     }
 
