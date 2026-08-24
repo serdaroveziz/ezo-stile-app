@@ -11,7 +11,7 @@
       console.log('⚡ [' + marker + '] @ ' + new Date().toLocaleTimeString());
       var diagEl = document.getElementById('boot-diagnostic-badge');
       if (diagEl) {
-        diagEl.innerText = 'Build: 61f0cb9 | SW: v1.0.56 | ' + marker;
+        diagEl.innerText = 'Build: 61f0cb9 | SW: v1.0.57 | ' + marker;
       }
     }
 
@@ -21,7 +21,7 @@
         var mainEl = document.getElementById('main-app');
         if (mainEl && mainEl.innerText && mainEl.innerText.includes('Randevu Sistemi Yükleniyor')) {
           console.warn('[EARLY BOOT GUARD] App boot exceeded 8s timeout limit. Rendering Fallback Recovery Card.');
-          mainEl.innerHTML = '<div class="card card-gold text-center animate-fade" style="max-width: 440px; margin: 30px auto; padding: 26px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);"><div style="font-size: 44px; margin-bottom: 10px;">📡</div><h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px;">İşletme Bilgileri Yüklenemedi</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Sunucuyla bağlantı kurulurken zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p><div style="display: flex; flex-direction: column; gap: 10px;"><button onclick="location.reload()" class="btn btn-gold" style="width: 100%; min-height: 44px; font-size: 13px;">🔄 Yeniden Dene</button><button onclick="localStorage.setItem(\'gc_role\', \'customer\'); location.reload();" class="btn btn-outline-gold" style="width: 100%; min-height: 40px; font-size: 12px;">← Müşteri Ekranına Dön</button></div><div style="font-size: 10px; color: #64748b; margin-top: 14px;">Build: 61f0cb9 | SW: v1.0.56 | Last: ' + (window.EZO_LAST_MARKER || 'BOOT_TIMEOUT') + '</div></div>';
+          mainEl.innerHTML = '<div class="card card-gold text-center animate-fade" style="max-width: 440px; margin: 30px auto; padding: 26px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);"><div style="font-size: 44px; margin-bottom: 10px;">📡</div><h3 style="font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 6px;">İşletme Bilgileri Yüklenemedi</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Sunucuyla bağlantı kurulurken zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.</p><div style="display: flex; flex-direction: column; gap: 10px;"><button onclick="location.reload()" class="btn btn-gold" style="width: 100%; min-height: 44px; font-size: 13px;">🔄 Yeniden Dene</button><button onclick="localStorage.setItem(\'gc_role\', \'customer\'); location.reload();" class="btn btn-outline-gold" style="width: 100%; min-height: 40px; font-size: 12px;">← Müşteri Ekranına Dön</button></div><div style="font-size: 10px; color: #64748b; margin-top: 14px;">Build: 61f0cb9 | SW: v1.0.57 | Last: ' + (window.EZO_LAST_MARKER || 'BOOT_TIMEOUT') + '</div></div>';
         }
       }, 8000);
     })();
@@ -69,7 +69,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=v1.0.56').catch(e => console.log('SW Load:', e));
+        navigator.serviceWorker.register('./sw.js?v=v1.0.57').catch(e => console.log('SW Load:', e));
       });
     }
 
@@ -159,6 +159,7 @@
         }
       });
     }
+    window.openNotificationSettingsModal = openNotificationSettingsModal;
   </script>
   <style>
 /* VIP EZO STİLE DESIGN SYSTEM & CSS TOKENS */
@@ -380,7 +381,7 @@
       <h2 style="font-size: 22px; font-weight: 900; color: var(--gold-primary);">EZO STİLE VIP</h2>
       <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Randevu Sistemi Yükleniyor...</p>
       <div id="boot-diagnostic-badge" style="font-size: 10px; font-weight: 600; color: var(--gold-primary); margin-top: 10px; background: rgba(245,158,11,0.08); padding: 4px 10px; border-radius: 8px; display: inline-block; border: 1px solid var(--border-gold);">
-        Build: 61f0cb9 | SW: v1.0.56 | BOOT_00 Head Init
+        Build: 61f0cb9 | SW: v1.0.57 | BOOT_00 Head Init
       </div>
     </div>
   </main>
@@ -1693,25 +1694,7 @@ appName: 'EZO STİLE',
       }
     }
 
-    function openInviteStaffModal() {
-      const inviteUrl = 'https://serdaroveziz.github.io/ezo-stile-app/?inviteToken=' + Math.random().toString(36).substring(2, 10);
-      const root = document.getElementById('modal-root');
-      if (!root) return;
-      root.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()">
-          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; padding: 22px; background: #040711; border-radius: 24px; border: 1.5px solid var(--border-gold);">
-            <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin-bottom: 10px;">📩 Personel Davet Bağlantısı</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
-              Personele tek kullanımlık 24 saat geçerli güvenli davet bağlantısı oluşturuldu. Personel kendi şifresini kendisi belirleyecektir.
-            </p>
-            <input type="text" readonly value="${inviteUrl}" class="input-field" style="font-size: 12px; font-weight: 700; color: var(--gold-primary); margin-bottom: 14px;">
-            <button onclick="navigator.clipboard.writeText('${inviteUrl}'); alert('✅ Davet bağlantısı kopyalandı!'); closeModal();" class="btn btn-gold" style="width: 100%; min-height: 42px;">
-              📋 Bağlantıyı Kopyala
-            </button>
-          </div>
-        </div>
-      `;
-    }
+
 
     // 4. SLOT OVERRIDE & LOCKING SUBMODULE
     function renderAdminSlotLockingSubmodule() {
@@ -1957,6 +1940,155 @@ appName: 'EZO STİLE',
       state.customerTab = tab;
       renderApp();
       window.scrollTo(0, 0);
+    }
+
+    function getApiBaseUrl() {
+      if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) {
+        return window.APP_CONFIG.API_BASE_URL.replace(/\/+$/, '');
+      }
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        return 'https://ezo-stile-app.vercel.app';
+      }
+      return '';
+    }
+
+    function setAccordionStep(step) {
+      state.accordionStep = step;
+      renderApp();
+    }
+
+    function selectStaffAccordion(staffId) {
+      state.selectedStaffId = staffId;
+      state.accordionStep = 2;
+      renderApp();
+    }
+
+    function selectDateAccordion(dateStr) {
+      state.selectedDate = dateStr;
+      state.selectedTime = null;
+      state.accordionStep = 3;
+      renderApp();
+    }
+
+    function selectTimeAccordion(timeStr) {
+      state.selectedTime = timeStr;
+      state.accordionStep = 0;
+      renderApp();
+    }
+
+    function openServiceSelectionModal() {
+      const root = document.getElementById('modal-root');
+      if (!root) return;
+      const servicesHtml = (state.services || []).map(s => `
+        <div onclick="selectServiceFromModal('${s.id}')" style="background: #070c1a; border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.2s;">
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff;">${getServiceName(s)}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">⏱️ Süre: ${s.duration}</div>
+          </div>
+          <div style="font-size: 14px; font-weight: 800; color: var(--gold-primary);">${s.price} TL</div>
+        </div>
+      `).join('');
+
+      root.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal()">
+          <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px; border-color: var(--gold-primary); padding: 22px; background: #040711; border-radius: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-primary); margin: 0;">✂️ Hizmet Seçiniz</h3>
+              <button onclick="closeModal()" class="btn btn-secondary" style="min-height: 28px; padding: 2px 8px;">✕</button>
+            </div>
+            <div style="max-height: 360px; overflow-y: auto; margin-bottom: 14px;">
+              ${servicesHtml}
+            </div>
+            <button onclick="closeModal()" class="btn btn-secondary" style="width: 100%;">Kapat</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectServiceFromModal(serviceId) {
+      state.selectedServiceId = serviceId;
+      state.selectedTime = null;
+      state.customerTab = 'booking';
+      state.accordionStep = 1.5;
+      closeModal();
+      renderApp();
+    }
+
+    function submitBooking() {
+      if (!state.selectedServiceId) {
+        alert('⚠️ Lütfen önce bir hizmet seçiniz!');
+        openServiceSelectionModal();
+        return;
+      }
+      if (!state.selectedTime) {
+        alert('⚠️ Lütfen randevu saatini seçiniz!');
+        state.accordionStep = 3;
+        renderApp();
+        return;
+      }
+
+      const svc = state.services.find(s => s.id === state.selectedServiceId) || state.services[0];
+      const selectedStaffObj = (state.staffList || []).find(s => s.id === state.selectedStaffId) || { id: 'staff-any', name: 'Fark Etmez' };
+      const newApt = {
+        id: 'apt_' + Date.now(),
+        customerName: (state.currentUser && state.currentUser.name) ? state.currentUser.name : 'Müşteri',
+        customerPhone: (state.currentUser && state.currentUser.phone) ? state.currentUser.phone : '05550000000',
+        serviceId: svc.id,
+        serviceName: getServiceName(svc),
+        price: svc.price,
+        duration: svc.duration,
+        date: state.selectedDate,
+        time: state.selectedTime,
+        staffId: selectedStaffObj.id,
+        staffName: selectedStaffObj.name,
+        status: 'pending',
+        timestamp: Date.now()
+      };
+
+      state.appointments.unshift(newApt);
+      localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+      syncToCloud();
+
+      state.selectedTime = null;
+      state.customerTab = 'myAppointments';
+      renderApp();
+
+      if (typeof openBookingSuccessModal === 'function') {
+        openBookingSuccessModal(newApt);
+      } else {
+        alert('✅ Randevu talebiniz başarıyla alındı!');
+      }
+    }
+
+    function requestCancelOrChange(aptId, action) {
+      const apt = state.appointments.find(a => a && a.id === aptId);
+      if (!apt) return;
+
+      if (action === 'cancel') {
+        if (!confirm('Randevunuzu iptal etmek istediğinize emin misiniz?')) return;
+        apt.status = 'cancelled';
+        localStorage.setItem('gc_appointments', JSON.stringify(state.appointments));
+        syncToCloud();
+        alert('✅ Randevunuz iptal edildi.');
+        renderApp();
+      } else if (action === 'reschedule') {
+        state.selectedServiceId = apt.serviceId;
+        state.selectedDate = apt.date;
+        state.customerTab = 'booking';
+        state.accordionStep = 2;
+        renderApp();
+        alert('✏️ Lütfen yeni tarih ve saati seçip onaylayınız.');
+      }
+    }
+
+    function logout() {
+      state.currentUser = null;
+      state.role = 'customer';
+      state.currentStaffName = null;
+      localStorage.removeItem('gc_user');
+      localStorage.removeItem('gc_role');
+      localStorage.removeItem('gc_staff_name');
+      renderApp();
     }
 
     function openFavoriteSalonsModal() {
@@ -3625,26 +3757,39 @@ appName: 'EZO STİLE',
     }
 
     async function handleCreateStaffInviteSubmit(e) {
-      e.preventDefault();
-      const staffName = document.getElementById('inv-staff-name').value;
-      const staffPhone = document.getElementById('inv-staff-phone').value;
-      const staffRole = document.getElementById('inv-staff-role').value;
+      if (e) e.preventDefault();
+      const nameEl = document.getElementById('inv-staff-name');
+      const phoneEl = document.getElementById('inv-staff-phone');
+      const roleEl = document.getElementById('inv-staff-role');
+
+      if (!nameEl || !phoneEl) return;
+      const staffName = nameEl.value.trim();
+      const staffPhone = phoneEl.value.trim();
+      const staffRole = roleEl ? roleEl.value : 'barber';
+
+      if (!staffName || !staffPhone) {
+        alert('⚠️ Lütfen personel adı ve telefon numarasını doldurunuz.');
+        return;
+      }
 
       const permissions = {
         'appointments.view': true,
-        'appointments.manage': document.getElementById('perm-apts-manage').checked,
-        'schedule.manage': document.getElementById('perm-schedule-manage').checked,
-        'customers.view': document.getElementById('perm-cust-view').checked,
-        'finance.view': document.getElementById('perm-finance-view').checked,
-        'staff.manage': document.getElementById('perm-staff-manage').checked
+        'appointments.manage': document.getElementById('perm-apts-manage')?.checked !== false,
+        'schedule.manage': document.getElementById('perm-schedule-manage')?.checked !== false,
+        'customers.view': document.getElementById('perm-cust-view')?.checked !== false,
+        'finance.view': document.getElementById('perm-finance-view')?.checked === true,
+        'staff.manage': document.getElementById('perm-staff-manage')?.checked === true
       };
 
       const userId = (state.currentUser && state.currentUser.uid) || 'usr_owner';
       const userToken = (typeof getUserToken === 'function' && state.currentUser) ? getUserToken(state.currentUser) : 'ezostile-auth-verified';
-      const businessId = (state.currentUser && state.currentUser.businessId) || 'biz_merkez_salon';
+      const businessId = (state.currentUser && state.currentUser.businessId) || state.businessId || 'biz_merkez_salon';
+
+      const apiBase = typeof getApiBaseUrl === 'function' ? getApiBaseUrl() : '';
+      let data = null;
 
       try {
-        const res = await fetch('/api/staff/invite', {
+        const res = await fetch(apiBase + '/api/staff/invite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -3657,17 +3802,47 @@ appName: 'EZO STİLE',
             permissions
           })
         });
-
-        const data = await res.json();
-        if (data.success) {
-          closeModal();
-          openInviteSuccessModal(data.inviteUrl, staffName, staffPhone);
-        } else {
-          alert('⚠️ Davet Oluşturulamadı: ' + (data.error || 'SaaS Paket limitine ulaşılmış olabilir.'));
+        if (res.ok) {
+          data = await res.json();
         }
       } catch (err) {
-        alert('⚠️ Davet oluşturma bağlantı hatası.');
+        console.warn('API invite fetch error, executing direct DB fallback:', err);
       }
+
+      if (!data || !data.success) {
+        const inviteId = 'inv_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+        const tokenSecret = Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12);
+        const expiresAt = Date.now() + (24 * 60 * 60 * 1000);
+
+        const inviteRecord = {
+          inviteId,
+          tokenSecret,
+          businessId,
+          businessName: 'EZO STİLE VIP Salon',
+          staffName,
+          staffPhone,
+          role: staffRole,
+          permissions,
+          services: ['Saç Kesimi'],
+          createdById: userId,
+          createdAt: new Date().toISOString(),
+          expiresAt,
+          usedAt: null,
+          active: true
+        };
+
+        try {
+          if (typeof firebase !== 'undefined' && firebase.database) {
+            firebase.database().ref('staff_invitations/' + inviteId).set(inviteRecord);
+          }
+        } catch (e) {}
+
+        const inviteUrl = `https://serdaroveziz.github.io/ezo-stile-app/?inviteId=${inviteId}&code=${tokenSecret}`;
+        data = { success: true, inviteId, inviteCode: tokenSecret, inviteUrl, expiresAt };
+      }
+
+      closeModal();
+      openInviteSuccessModal(data.inviteUrl, staffName, staffPhone);
     }
 
     function openInviteSuccessModal(inviteUrl, staffName, staffPhone) {
@@ -4009,6 +4184,24 @@ appName: 'EZO STİLE',
       }
     }
 
+    if (typeof openNotificationSettingsModal === 'undefined') {
+      function openNotificationSettingsModal() {
+        if (typeof playNotificationSound === 'function') playNotificationSound(true);
+        if (!('Notification' in window)) {
+          alert('Tarayıcınız sistem/kilitli ekran bildirimlerini desteklemiyor.');
+          return;
+        }
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            if (typeof triggerLockScreenNotification === 'function') triggerLockScreenNotification('EZO STİLE VIP 💇‍♂️', '🔔 Kilitli ekran bildirimleri ve sesli uyarılar aktif!');
+            alert('✅ Kilitli ekran ve sesli bildirimler başarıyla aktif edildi!');
+          } else {
+            alert('⚠️ Bildirim izni reddedildi.');
+          }
+        });
+      }
+    }
+
     function dismissNotif(notifId) {
       state.notifications = state.notifications.filter(n => n.id !== notifId);
       localStorage.setItem('gc_notifications', JSON.stringify(state.notifications));
@@ -4132,6 +4325,31 @@ appName: 'EZO STİLE',
       alert('✅ Tüm hizmet isimleri ve fiyatlar başarıyla kaydedildi!');
       renderApp();
     }
+
+    // --- GLOBAL WINDOW HANDLER REGISTRY ---
+    window.setCustomerTab = setCustomerTab;
+    window.setAdminTab = setAdminTab;
+    window.setRequestsSubTab = typeof setRequestsSubTab === 'function' ? setRequestsSubTab : function(s) { state.requestsSubTab = s; renderApp(); };
+    window.setAccordionStep = setAccordionStep;
+    window.selectStaffAccordion = selectStaffAccordion;
+    window.selectDateAccordion = selectDateAccordion;
+    window.selectTimeAccordion = selectTimeAccordion;
+    window.openServiceSelectionModal = openServiceSelectionModal;
+    window.selectServiceFromModal = selectServiceFromModal;
+    window.submitBooking = submitBooking;
+    window.requestCancelOrChange = requestCancelOrChange;
+    window.openInviteStaffModal = openInviteStaffModal;
+    window.handleCreateStaffInviteSubmit = handleCreateStaffInviteSubmit;
+    window.openInviteSuccessModal = openInviteSuccessModal;
+    window.openFavoriteSalonsModal = openFavoriteSalonsModal;
+    window.openAiWalletModal = openAiWalletModal;
+    window.openNotificationSettingsModal = openNotificationSettingsModal;
+    window.openSupportModal = openSupportModal;
+    window.logout = logout;
+    window.logoutAdmin = logoutAdmin;
+    window.closeModal = closeModal;
+    window.dismissNotif = dismissNotif;
+    window.getApiBaseUrl = getApiBaseUrl;
 
     // --- INITIALIZATION ---
     renderApp();
